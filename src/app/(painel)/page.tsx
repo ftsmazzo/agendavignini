@@ -1,33 +1,12 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { CalendarioAno } from "@/components/calendario-ano";
-import { isoDe } from "@/lib/calendario";
-
-const contagens = [
-  {
-    href: "/prazos?quando=hoje",
-    rotulo: "Prazos de hoje",
-    detalhe: "cumpridos aparecem aqui",
-    valor: "0",
-  },
-  {
-    href: "/prazos?quando=semana",
-    rotulo: "Prazos da semana",
-    detalhe: "cumpridos aparecem aqui",
-    valor: "0",
-  },
-  {
-    href: "/audiencias",
-    rotulo: "Audiências na semana",
-    detalhe: "as suas aparecem aqui",
-    valor: "0",
-    tom: "hearing" as const,
-  },
-];
+import { contarPainel, hojeNoEscritorio } from "@/lib/contagens";
+import { lerSessao } from "@/lib/sessao";
 
 export default function TelaInicial() {
   return (
-    <Suspense fallback={<p className="text-muted">Abrindo o dia.</p>}>
+    <Suspense fallback={<p className="text-xl text-muted">Abrindo o dia.</p>}>
       <PainelDoDia />
     </Suspense>
   );
@@ -35,20 +14,51 @@ export default function TelaInicial() {
 
 async function PainelDoDia() {
   await connection();
+  const sessao = await lerSessao();
   const agora = new Date();
-  const hoje = isoDe(agora);
+  const hoje = hojeNoEscritorio(agora);
+  const contas = sessao
+    ? await contarPainel(hoje, sessao.id)
+    : {
+        hoje: { total: 0, cumpridos: 0 },
+        semana: { total: 0, cumpridos: 0 },
+        audiencias: 0,
+        minhasAudiencias: 0,
+      };
   const dataLonga = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
     weekday: "long",
     day: "numeric",
     month: "long",
   }).format(agora);
   const dataExibida = dataLonga.charAt(0).toUpperCase() + dataLonga.slice(1);
+  const cartoes = [
+    {
+      href: "/prazos?quando=hoje",
+      rotulo: "Prazos de hoje",
+      valor: contas.hoje.total,
+      detalhe: `${contas.hoje.cumpridos} cumpridos`,
+    },
+    {
+      href: "/prazos?quando=semana",
+      rotulo: "Prazos da semana",
+      valor: contas.semana.total,
+      detalhe: `${contas.semana.cumpridos} cumpridos`,
+    },
+    {
+      href: "/audiencias",
+      rotulo: "Audiências na semana",
+      valor: contas.audiencias,
+      detalhe: `${contas.minhasAudiencias} suas`,
+      tom: "hearing" as const,
+    },
+  ];
 
   return (
     <div className="mx-auto w-full max-w-7xl">
       <p className="text-2xl text-muted">{dataExibida}</p>
       <div className="mt-6 grid border border-line bg-sheet lg:grid-cols-3">
-        {contagens.map((item) => (
+        {cartoes.map((item) => (
           <a
             key={item.href}
             href={item.href}
@@ -64,11 +74,8 @@ async function PainelDoDia() {
           </a>
         ))}
       </div>
-      <p className="mt-4 text-lg text-muted">
-        Os números entram quando a base do escritório estiver carregada.
-      </p>
       <div className="mt-10">
-        <CalendarioAno ano={agora.getFullYear()} hoje={hoje} />
+        <CalendarioAno ano={Number(hoje.slice(0, 4))} hoje={hoje} />
       </div>
     </div>
   );

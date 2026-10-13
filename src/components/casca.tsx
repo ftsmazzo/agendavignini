@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
+import { sair } from "@/app/sair/actions";
 import { AlternarTema } from "@/components/alternar-tema";
 import {
   type GrupoMenu,
@@ -78,7 +79,13 @@ function Grupo({ grupo }: { grupo: GrupoMenu }) {
   );
 }
 
-export function Casca({ children }: { children: ReactNode }) {
+export function Casca({
+  children,
+  usuario,
+}: {
+  children: ReactNode;
+  usuario: { nome: string; admin: boolean };
+}) {
   const [menuAberto, setMenuAberto] = useState(false);
 
   return (
@@ -118,13 +125,17 @@ export function Casca({ children }: { children: ReactNode }) {
                 />
               ),
             )}
-            <p className="mt-6 px-5 py-3 text-lg font-semibold text-rail-muted">
-              Painel do administrador
-            </p>
-            {menuAdmin.map((grupo) => (
-              <Grupo key={grupo.rotulo} grupo={grupo} />
-            ))}
-            <Ligacao href="/admin/relatorios" rotulo="Relatórios" />
+            {usuario.admin ? (
+              <>
+                <p className="mt-6 px-5 py-3 text-lg font-semibold text-rail-muted">
+                  Painel do administrador
+                </p>
+                {menuAdmin.map((grupo) => (
+                  <Grupo key={grupo.rotulo} grupo={grupo} />
+                ))}
+                <Ligacao href="/admin/relatorios" rotulo="Relatórios" />
+              </>
+            ) : null}
           </nav>
         </aside>
 
@@ -152,12 +163,15 @@ export function Casca({ children }: { children: ReactNode }) {
             </p>
             <div className="ml-auto flex items-center gap-3">
               <AlternarTema />
-              <Link
-                href="/entrar"
-                className="bg-pen px-4 py-3 text-lg font-semibold text-sheet"
-              >
-                Entrar
-              </Link>
+              <p className="text-lg text-ink">{usuario.nome}</p>
+              <form action={sair}>
+                <button
+                  type="submit"
+                  className="bg-pen px-4 py-3 text-lg font-semibold text-sheet"
+                >
+                  Sair
+                </button>
+              </form>
             </div>
           </header>
           <main className="flex-1 px-5 py-8 md:px-10">{children}</main>
