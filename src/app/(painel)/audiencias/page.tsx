@@ -1,15 +1,24 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { classeCampo } from "@/components/campo";
 import { exigirUsuario } from "@/lib/acesso";
-import { listarAudiencias } from "@/lib/audiencias";
+import { listarAudiencias, listarAudienciasDaSemana } from "@/lib/audiencias";
 import { hojeNoEscritorio } from "@/lib/contagens";
-import { dataHoraBr, dataIsoValida } from "@/lib/datas";
+import { dataBr, dataHoraBr, dataIsoValida, semanaDe } from "@/lib/datas";
+
+function rotuloDia(iso: string) {
+  const semana = new Intl.DateTimeFormat("pt-BR", {
+    weekday: "short",
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date(`${iso}T12:00:00-03:00`));
+  return `${semana} ${dataBr(iso).slice(0, 5)}`;
+}
 
 export default function Audiencias({
   searchParams,
 }: {
-  searchParams: Promise<{ data?: string }>;
+  searchParams: Promise<{ data?: string; semana?: string; lista?: string }>;
 }) {
   return (
     <Suspense
@@ -23,11 +32,139 @@ export default function Audiencias({
 async function Lista({
   searchParams,
 }: {
-  searchParams: Promise<{ data?: string }>;
+  searchParams: Promise<{ data?: string; semana?: string; lista?: string }>;
 }) {
-  const { data } = await searchParams;
+  const { data, semana, lista } = await searchParams;
+  await connection();
   const usuario = await exigirUsuario();
   const dia = data && dataIsoValida(data) ? data : null;
+  const hoje = hojeNoEscritorio();
+  if (!dia && lista !== "1") {
+    const ancora = semana && dataIsoValida(semana) ? semana : hoje;
+    const quadro = await listarAudienciasDaSemana(ancora, usuario.id);
+    const estaSemana = semanaDe(hoje).inicio === quadro.inicio;
+    return (
+      <section className="mx-auto w-full max-w-7xl">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <Link
+            href={`/audiencias?semana=${quadro.anterior}`}
+            className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
+          >
+            Semana anterior
+          </Link>
+          <h1 className="text-center text-4xl leading-tight font-bold text-ink">
+            Semana de {dataBr(quadro.inicio)} a {dataBr(quadro.sexta)}
+          </h1>
+          <Link
+            href={`/audiencias?semana=${quadro.proxima}`}
+            className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
+          >
+            Próxima semana
+          </Link>
+        </div>
+        <p className="mt-4 flex flex-wrap gap-4 text-lg">
+          {estaSemana ? null : (
+            <Link href="/audiencias" className="text-pen underline">
+              Esta semana
+            </Link>
+          )}
+          <Link href="/audiencias?lista=1" className="text-pen underline">
+            Próximas
+          </Link>
+          <Link
+            href={`/audiencias/impressao?data=${quadro.inicio}`}
+            className="text-pen underline"
+          >
+            Imprimir a semana
+          </Link>
+          {usuario.papel === "admin" ? (
+            <Link href="/admin/audiencias/nova" className="text-pen underline">
+              Adicionar nova
+            </Link>
+          ) : null}
+        </p>
+        <div className="mt-6 grid gap-3 md:grid-cols-5">
+          {quadro.dias.map((coluna) => {
+            const doDia = quadro.itens.filter((item) => item.dia === coluna);
+            return (
+              <section
+                key={coluna}
+                className={
+                  coluna === hoje
+                    ? "border-2 border-pen bg-sheet p-3"
+                    : "border border-line bg-sheet p-3"
+                }
+              >
+                <h2 className="text-xl font-bold text-ink">
+                  <Link
+                    href={`/audiencias?data=${coluna}`}
+                    className="text-pen"
+                  >
+                    {rotuloDia(coluna)} · {doDia.length}
+                  </Link>
+                </h2>
+                {doDia.length === 0 ? (
+                  <p className="mt-4 text-lg text-muted">Nenhuma</p>
+                ) : (
+                  <ul className="mt-4 space-y-3">
+                    {doDia.map((item) => (
+                      <li
+                        key={item.id}
+                        className={
+                          item.minha
+                            ? "border border-hearing p-3"
+                            : "border border-line p-3"
+                        }
+                      >
+                        <p className="text-xl font-bold text-hearing">
+                          {item.hora}
+                          {item.minha ? " · Sua" : ""}
+                        </p>
+                        <p className="mt-1 text-lg font-semibold text-ink">
+                          {item.numeroProcesso || "Sem número"}
+                        </p>
+                        <p className="mt-1 text-lg text-ink">
+                          {[item.reclamante, item.reclamado]
+                            .filter(Boolean)
+                            .join(" × ")}
+                        </p>
+                        <p className="mt-1 text-lg text-muted">
+                          {[item.vara, item.local].filter(Boolean).join(" · ")}
+                        </p>
+                        {item.preposto ? (
+                          <p className="mt-1 text-lg text-muted">
+                            Preposto: {item.preposto}
+                          </p>
+                        ) : null}
+                        {item.advogados.length > 0 ? (
+                          <p className="mt-1 text-lg text-muted">
+                            {item.advogados.join(", ")}
+                          </p>
+                        ) : null}
+                        {item.observacao ? (
+                          <p className="mt-2 text-lg whitespace-pre-wrap text-ink">
+                            {item.observacao}
+                          </p>
+                        ) : null}
+                        {usuario.papel === "admin" ? (
+                          <Link
+                            href={`/admin/audiencias/${item.id}`}
+                            className="mt-2 inline-block text-lg text-pen underline"
+                          >
+                            Editar
+                          </Link>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
   const itens = await listarAudiencias(dia);
 
   return (
@@ -64,9 +201,15 @@ async function Lista({
         >
           Ver
         </button>
+        <Link
+          href={dia ? `/audiencias?semana=${dia}` : "/audiencias"}
+          className="px-2 py-3 text-lg text-pen underline"
+        >
+          Ver a semana
+        </Link>
         {dia ? (
           <Link
-            href="/audiencias"
+            href="/audiencias?lista=1"
             className="px-2 py-3 text-lg text-pen underline"
           >
             Próximas

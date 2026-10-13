@@ -65,6 +65,15 @@ export function dataHoraBr(valor: Date) {
   }).format(valor);
 }
 
+export function somarDias(iso: string, dias: number) {
+  const ano = Number(iso.slice(0, 4));
+  const mes = Number(iso.slice(5, 7));
+  const dia = Number(iso.slice(8, 10));
+  return new Date(Date.UTC(ano, mes - 1, dia + dias))
+    .toISOString()
+    .slice(0, 10);
+}
+
 export function semanaDe(iso: string) {
   const ano = Number(iso.slice(0, 4));
   const mes = Number(iso.slice(5, 7));
