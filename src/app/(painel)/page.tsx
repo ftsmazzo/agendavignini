@@ -69,6 +69,11 @@ async function PainelDoDia({
   return (
     <div className="mx-auto w-full max-w-7xl">
       <p className="text-2xl text-muted">{dataExibida}</p>
+      <p className="mt-2 text-xl">
+        <a href="/resumo" className="text-pen">
+          Seu resumo de hoje
+        </a>
+      </p>
       <div className="mt-6 grid border border-line bg-sheet lg:grid-cols-3">
         {cartoes.map((item) => (
           <a
