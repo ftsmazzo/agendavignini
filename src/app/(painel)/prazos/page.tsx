@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import Link from "next/link";
 import { Suspense } from "react";
 import {
@@ -8,14 +8,51 @@ import {
 } from "@/app/(painel)/admin/prazos/actions";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { obterDb } from "@/db/client";
-import { prazos } from "@/db/schema";
+import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { hojeNoEscritorio } from "@/lib/contagens";
+import { rotuloArea } from "@/lib/resumo";
+
+const AREAS = ["administrativo", "civil", "trabalhista"] as const;
+
+function consultaDaLista(base: {
+  quando?: string;
+  data?: string;
+  area?: string;
+  situacao?: string;
+  meus?: boolean;
+}) {
+  const params = new URLSearchParams();
+  if (base.quando === "hoje" || base.quando === "semana") {
+    params.set("quando", base.quando);
+  }
+  if (base.data) {
+    params.set("data", base.data);
+  }
+  if (base.area) {
+    params.set("area", base.area);
+  }
+  if (base.situacao) {
+    params.set("situacao", base.situacao);
+  }
+  if (base.meus) {
+    params.set("meus", "1");
+  }
+  const texto = params.toString();
+  return texto ? `/prazos?${texto}` : "/prazos";
+}
 
 export default function Prazos({
   searchParams,
 }: {
-  searchParams: Promise<{ data?: string; quando?: string; excluido?: string }>;
+  searchParams: Promise<{
+    data?: string;
+    quando?: string;
+    excluido?: string;
+    area?: string;
+    situacao?: string;
+    meus?: string;
+  }>;
 }) {
   return (
     <Suspense
@@ -43,14 +80,29 @@ function tituloDaLista(quando: string | undefined, data: string | undefined) {
 async function Lista({
   searchParams,
 }: {
-  searchParams: Promise<{ data?: string; quando?: string; excluido?: string }>;
+  searchParams: Promise<{
+    data?: string;
+    quando?: string;
+    excluido?: string;
+    area?: string;
+    situacao?: string;
+    meus?: string;
+  }>;
 }) {
-  const { data, quando, excluido } = await searchParams;
+  const { data, quando, excluido, area, situacao, meus } = await searchParams;
   const usuario = await exigirUsuario();
   const hoje = hojeNoEscritorio();
   const dataPedida = data && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : null;
+  const areaOk = AREAS.find((item) => item === area);
+  const situacaoOk =
+    situacao === "aberto" || situacao === "cumprido" ? situacao : undefined;
+  const soMeus = meus === "1";
+  const recorte = {
+    quando: quando === "hoje" || quando === "semana" ? quando : undefined,
+    data: dataPedida ?? undefined,
+  };
   const db = obterDb();
-  const filtro =
+  const filtroData =
     quando === "hoje"
       ? eq(prazos.data, hoje)
       : quando === "semana"
@@ -58,15 +110,25 @@ async function Lista({
         : dataPedida
           ? eq(prazos.data, dataPedida)
           : sql`false`;
+  const filtros = [filtroData];
+  if (areaOk) {
+    filtros.push(eq(prazos.area, areaOk));
+  }
+  if (situacaoOk) {
+    filtros.push(eq(prazos.situacao, situacaoOk));
+  }
+  if (soMeus) {
+    filtros.push(
+      sql`exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id} and usuario_id = ${usuario.id})`,
+    );
+  }
 
-  const voltar =
-    quando === "hoje"
-      ? "/prazos?quando=hoje"
-      : quando === "semana"
-        ? "/prazos?quando=semana"
-        : dataPedida
-          ? `/prazos?data=${dataPedida}`
-          : "/prazos";
+  const voltar = consultaDaLista({
+    ...recorte,
+    area: areaOk,
+    situacao: situacaoOk,
+    meus: soMeus,
+  });
 
   const itens = await db
     .select({
@@ -79,19 +141,93 @@ async function Lista({
       situacao: prazos.situacao,
     })
     .from(prazos)
-    .where(and(filtro))
-    .orderBy(asc(prazos.data), asc(prazos.id))
+    .where(and(...filtros))
+    .orderBy(asc(prazos.data), asc(prazos.titulo), asc(prazos.id))
     .limit(300);
+
+  const ids = itens.map((item) => item.id);
+  const vinculos =
+    ids.length === 0
+      ? []
+      : await db
+          .select({
+            prazoId: prazosUsuarios.prazoId,
+            usuarioId: prazosUsuarios.usuarioId,
+            nome: usuarios.nome,
+            sobrenome: usuarios.sobrenome,
+          })
+          .from(prazosUsuarios)
+          .innerJoin(usuarios, eq(usuarios.id, prazosUsuarios.usuarioId))
+          .where(inArray(prazosUsuarios.prazoId, ids))
+          .orderBy(asc(usuarios.nome));
+  const advogados = new Map<number, string[]>();
+  const meusIds = new Set<number>();
+  for (const vinculo of vinculos) {
+    const lista = advogados.get(vinculo.prazoId) ?? [];
+    lista.push(`${vinculo.nome} ${vinculo.sobrenome}`.trim());
+    advogados.set(vinculo.prazoId, lista);
+    if (vinculo.usuarioId === usuario.id) {
+      meusIds.add(vinculo.prazoId);
+    }
+  }
+  const diaImpressao = quando === "hoje" ? hoje : dataPedida;
+  const filtrosVisiveis: Array<{
+    rotulo: string;
+    href: string;
+    ativo: boolean;
+  }> = [
+    {
+      rotulo: "Mostrar todos",
+      href: consultaDaLista(recorte),
+      ativo: !areaOk && !situacaoOk && !soMeus,
+    },
+    ...AREAS.map((item) => ({
+      rotulo: rotuloArea(item),
+      href: consultaDaLista({ ...recorte, area: item }),
+      ativo: areaOk === item && !situacaoOk && !soMeus,
+    })),
+    {
+      rotulo: "Cumprido",
+      href: consultaDaLista({ ...recorte, situacao: "cumprido" }),
+      ativo: situacaoOk === "cumprido" && !areaOk && !soMeus,
+    },
+    {
+      rotulo: "Não cumprido",
+      href: consultaDaLista({ ...recorte, situacao: "aberto" }),
+      ativo: situacaoOk === "aberto" && !areaOk && !soMeus,
+    },
+    {
+      rotulo: "Meus prazos",
+      href: consultaDaLista({ ...recorte, meus: true }),
+      ativo: soMeus && !areaOk && !situacaoOk,
+    },
+  ];
 
   return (
     <section className="mx-auto w-full max-w-5xl">
       <h1 className="text-4xl leading-tight font-bold text-ink">
         {tituloDaLista(quando, dataPedida ?? undefined)}
       </h1>
-      {quando === "hoje" || dataPedida ? (
-        <p className="mt-3">
+      <nav aria-label="Filtrar a lista" className="mt-6 flex flex-wrap gap-2">
+        {filtrosVisiveis.map((filtro) => (
           <Link
-            href={`/prazos/impressao?data=${quando === "hoje" ? hoje : dataPedida}`}
+            key={filtro.rotulo}
+            href={filtro.href}
+            aria-current={filtro.ativo ? "page" : undefined}
+            className={
+              filtro.ativo
+                ? "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
+                : "border border-line bg-sheet px-3 py-2 text-lg text-ink"
+            }
+          >
+            {filtro.rotulo}
+          </Link>
+        ))}
+      </nav>
+      {diaImpressao ? (
+        <p className="mt-4">
+          <Link
+            href={`/prazos/impressao?data=${diaImpressao}${areaOk ? `&area=${areaOk}` : ""}`}
             className="text-lg text-pen"
           >
             Imprimir este dia
@@ -115,12 +251,19 @@ async function Lista({
           {itens.map((item) => (
             <li key={item.id} className="px-6 py-5">
               <p className="text-lg text-muted">
-                {item.area} · {item.data.split("-").reverse().join("/")} ·{" "}
+                {rotuloArea(item.area)} ·{" "}
+                {item.data.split("-").reverse().join("/")} ·{" "}
                 {item.situacao === "cumprido" ? "Cumprido" : "Em aberto"}
+                {meusIds.has(item.id) ? " · Seu prazo" : ""}
               </p>
               <h2 className="mt-1 text-2xl font-semibold text-ink">
                 {item.titulo}
               </h2>
+              {(advogados.get(item.id) ?? []).length > 0 ? (
+                <p className="mt-2 text-lg text-muted">
+                  {(advogados.get(item.id) ?? []).join(", ")}
+                </p>
+              ) : null}
               {item.observacao ? (
                 <p className="mt-3 text-xl whitespace-pre-wrap text-ink">
                   {item.observacao}
