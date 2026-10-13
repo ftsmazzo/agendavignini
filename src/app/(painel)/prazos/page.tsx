@@ -196,33 +196,65 @@ async function Lista({
           .orderBy(asc(prazos.data))
       : [];
   const diaAberto = dataPedida ?? (quando === "hoje" ? hoje : "");
+  const grupos = await db
+    .select({
+      area: prazos.area,
+      situacao: prazos.situacao,
+      total: sql<number>`count(*)::int`,
+    })
+    .from(prazos)
+    .where(filtroData)
+    .groupBy(prazos.area, prazos.situacao);
+  const porArea = { administrativo: 0, civil: 0, trabalhista: 0 };
+  let cumpridos = 0;
+  let abertos = 0;
+  let total = 0;
+  for (const grupo of grupos) {
+    porArea[grupo.area] += grupo.total;
+    total += grupo.total;
+    if (grupo.situacao === "cumprido") {
+      cumpridos += grupo.total;
+    } else {
+      abertos += grupo.total;
+    }
+  }
+  const [meusConta] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(prazos)
+    .where(
+      and(
+        filtroData,
+        sql`exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id} and usuario_id = ${usuario.id})`,
+      ),
+    );
+  const meusTotal = meusConta?.total ?? 0;
   const filtrosVisiveis: Array<{
     rotulo: string;
     href: string;
     ativo: boolean;
   }> = [
     {
-      rotulo: "Mostrar todos",
+      rotulo: `Mostrar todos (${total})`,
       href: consultaDaLista(recorte),
       ativo: !areaOk && !situacaoOk && !soMeus,
     },
     ...AREAS.map((item) => ({
-      rotulo: rotuloArea(item),
+      rotulo: `${rotuloArea(item)} (${porArea[item]})`,
       href: consultaDaLista({ ...recorte, area: item }),
       ativo: areaOk === item && !situacaoOk && !soMeus,
     })),
     {
-      rotulo: "Cumprido",
+      rotulo: `Cumprido (${cumpridos})`,
       href: consultaDaLista({ ...recorte, situacao: "cumprido" }),
       ativo: situacaoOk === "cumprido" && !areaOk && !soMeus,
     },
     {
-      rotulo: "Não cumprido",
+      rotulo: `Não cumprido (${abertos})`,
       href: consultaDaLista({ ...recorte, situacao: "aberto" }),
       ativo: situacaoOk === "aberto" && !areaOk && !soMeus,
     },
     {
-      rotulo: "Meus prazos",
+      rotulo: `Meus prazos (${meusTotal})`,
       href: consultaDaLista({ ...recorte, meus: true }),
       ativo: soMeus && !areaOk && !situacaoOk,
     },
