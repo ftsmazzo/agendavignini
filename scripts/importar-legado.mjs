@@ -234,19 +234,46 @@ function testarLeitor() {
   console.log("leitor ok");
 }
 
-function dataValida(valor) {
+function calendarioValido(ano, mes, dia) {
+  const data = new Date(Date.UTC(ano, mes - 1, dia));
   return (
-    typeof valor === "string" &&
-    /^\d{4}-\d{2}-\d{2}$/.test(valor) &&
-    valor !== "0000-00-00"
+    data.getUTCFullYear() === ano &&
+    data.getUTCMonth() === mes - 1 &&
+    data.getUTCDate() === dia
   );
 }
 
+function dataValida(valor) {
+  if (typeof valor !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+    return false;
+  }
+  const [ano, mes, dia] = valor.split("-").map(Number);
+  return ano >= 1900 && ano <= 2100 && calendarioValido(ano, mes, dia);
+}
+
 function horaValida(valor) {
+  if (typeof valor !== "string") {
+    return false;
+  }
+  const match = valor.match(
+    /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/,
+  );
+  if (!match) {
+    return false;
+  }
+  const ano = Number(match[1]);
+  const mes = Number(match[2]);
+  const dia = Number(match[3]);
+  const hora = Number(match[4]);
+  const minuto = Number(match[5]);
+  const segundo = Number(match[6]);
   return (
-    typeof valor === "string" &&
-    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(valor) &&
-    !valor.startsWith("0000-00-00")
+    ano >= 1900 &&
+    ano <= 2100 &&
+    hora <= 23 &&
+    minuto <= 59 &&
+    segundo <= 59 &&
+    calendarioValido(ano, mes, dia)
   );
 }
 
@@ -404,7 +431,10 @@ async function importar(caminho, url) {
             cumprido_em: autor && autor > 0 ? hora : null,
           });
           if (lotes.prazos.length >= 80) {
-            await gravarLote(tx, "prazos", lotes.prazos);
+            const quantidade = await gravarLote(tx, "prazos", lotes.prazos);
+            if (quantidade && idsPrazos.size % 8000 < 80) {
+              console.log(`prazos ${idsPrazos.size}`);
+            }
           }
         } else if (tabela === "prazosUsuarios") {
           const prazoId = inteiro(registro.idPrazo);
