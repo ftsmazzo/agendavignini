@@ -1,22 +1,33 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { CalendarioAno } from "@/components/calendario-ano";
-import { contarPainel, hojeNoEscritorio } from "@/lib/contagens";
+import { CalendarioMes } from "@/components/calendario-mes";
+import { lerMes } from "@/lib/calendario";
+import { contarPainel, hojeNoEscritorio, marcasDoMes } from "@/lib/contagens";
 import { lerSessao } from "@/lib/sessao";
 
-export default function TelaInicial() {
+export default function TelaInicial({
+  searchParams,
+}: {
+  searchParams: Promise<{ mes?: string }>;
+}) {
   return (
     <Suspense fallback={<p className="text-xl text-muted">Abrindo o dia.</p>}>
-      <PainelDoDia />
+      <PainelDoDia searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function PainelDoDia() {
+async function PainelDoDia({
+  searchParams,
+}: {
+  searchParams: Promise<{ mes?: string }>;
+}) {
   await connection();
+  const { mes } = await searchParams;
   const sessao = await lerSessao();
   const agora = new Date();
   const hoje = hojeNoEscritorio(agora);
+  const recorte = lerMes(mes, hoje);
   const contas = sessao
     ? await contarPainel(hoje, sessao.id)
     : {
@@ -25,6 +36,7 @@ async function PainelDoDia() {
         audiencias: 0,
         minhasAudiencias: 0,
       };
+  const marcas = await marcasDoMes(recorte.ano, recorte.mes, hoje);
   const dataLonga = new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",
     weekday: "long",
@@ -74,9 +86,12 @@ async function PainelDoDia() {
           </a>
         ))}
       </div>
-      <div className="mt-10">
-        <CalendarioAno ano={Number(hoje.slice(0, 4))} hoje={hoje} />
-      </div>
+      <CalendarioMes
+        ano={recorte.ano}
+        mes={recorte.mes}
+        hoje={hoje}
+        marcas={marcas}
+      />
     </div>
   );
 }

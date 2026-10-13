@@ -1,6 +1,7 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { obterDb } from "@/db/client";
 import { audiencias, audienciasUsuarios, prazos } from "@/db/schema";
+import { fimDoMes } from "@/lib/calendario";
 
 export function hojeNoEscritorio(agora = new Date()) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -63,4 +64,39 @@ export async function contarPainel(hoje: string, usuarioId: number) {
     audiencias: audienciasConta?.total ?? 0,
     minhasAudiencias: minhas?.total ?? 0,
   };
+}
+
+export type MarcaDia = "vencido" | "atual" | "em-dia" | "concluido";
+
+export async function marcasDoMes(ano: number, mes: number, hoje: string) {
+  const inicio = `${ano}-${String(mes).padStart(2, "0")}-01`;
+  const db = obterDb();
+  const linhas = await db
+    .select({
+      data: prazos.data,
+      abertos: sql<number>`count(*) filter (where ${prazos.situacao} = 'aberto')::int`,
+      total: sql<number>`count(*)::int`,
+    })
+    .from(prazos)
+    .where(and(gte(prazos.data, inicio), lte(prazos.data, fimDoMes(ano, mes))))
+    .groupBy(prazos.data);
+
+  const marcas: Record<string, MarcaDia> = {};
+  for (const linha of linhas) {
+    if (!linha.data) {
+      continue;
+    }
+    if (linha.abertos > 0) {
+      if (linha.data < hoje) {
+        marcas[linha.data] = "vencido";
+      } else if (linha.data === hoje) {
+        marcas[linha.data] = "atual";
+      } else {
+        marcas[linha.data] = "em-dia";
+      }
+    } else if (linha.total > 0) {
+      marcas[linha.data] = "concluido";
+    }
+  }
+  return marcas;
 }
