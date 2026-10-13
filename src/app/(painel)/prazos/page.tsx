@@ -15,7 +15,7 @@ import { hojeNoEscritorio } from "@/lib/contagens";
 export default function Prazos({
   searchParams,
 }: {
-  searchParams: Promise<{ data?: string; quando?: string }>;
+  searchParams: Promise<{ data?: string; quando?: string; excluido?: string }>;
 }) {
   return (
     <Suspense
@@ -43,9 +43,9 @@ function tituloDaLista(quando: string | undefined, data: string | undefined) {
 async function Lista({
   searchParams,
 }: {
-  searchParams: Promise<{ data?: string; quando?: string }>;
+  searchParams: Promise<{ data?: string; quando?: string; excluido?: string }>;
 }) {
-  const { data, quando } = await searchParams;
+  const { data, quando, excluido } = await searchParams;
   const usuario = await exigirUsuario();
   const hoje = hojeNoEscritorio();
   const dataPedida = data && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : null;
@@ -88,6 +88,11 @@ async function Lista({
       <h1 className="text-4xl leading-tight font-bold text-ink">
         {tituloDaLista(quando, dataPedida ?? undefined)}
       </h1>
+      {excluido ? (
+        <output className="mt-4 block text-xl text-done">
+          Prazo excluído.
+        </output>
+      ) : null}
       <p className="mt-3 text-xl text-muted">
         {itens.length === 300
           ? "Mostrando os 300 primeiros."
