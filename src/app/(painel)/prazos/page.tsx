@@ -11,9 +11,18 @@ import { obterDb } from "@/db/client";
 import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { hojeNoEscritorio } from "@/lib/contagens";
+import { dataBr } from "@/lib/datas";
 import { rotuloArea } from "@/lib/resumo";
 
 const AREAS = ["administrativo", "civil", "trabalhista"] as const;
+
+function rotuloDia(iso: string) {
+  const semana = new Intl.DateTimeFormat("pt-BR", {
+    weekday: "short",
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date(`${iso}T12:00:00-03:00`));
+  return `${semana} ${dataBr(iso).slice(0, 5)}`;
+}
 
 function consultaDaLista(base: {
   quando?: string;
@@ -171,6 +180,22 @@ async function Lista({
     }
   }
   const diaImpressao = quando === "hoje" ? hoje : dataPedida;
+  const ancora = dataPedida ?? hoje;
+  const diasDaSemana =
+    quando === "semana" || quando === "hoje" || dataPedida
+      ? await db
+          .select({
+            data: prazos.data,
+            total: sql<number>`count(*)::int`,
+          })
+          .from(prazos)
+          .where(
+            sql`extract(week from ${prazos.data}) = extract(week from ${ancora}::date) and extract(year from ${prazos.data}) = extract(year from ${ancora}::date)`,
+          )
+          .groupBy(prazos.data)
+          .orderBy(asc(prazos.data))
+      : [];
+  const diaAberto = dataPedida ?? (quando === "hoje" ? hoje : "");
   const filtrosVisiveis: Array<{
     rotulo: string;
     href: string;
@@ -208,6 +233,24 @@ async function Lista({
       <h1 className="text-4xl leading-tight font-bold text-ink">
         {tituloDaLista(quando, dataPedida ?? undefined)}
       </h1>
+      {diasDaSemana.length > 0 ? (
+        <nav aria-label="Dias da semana" className="mt-6 flex flex-wrap gap-2">
+          {diasDaSemana.map((dia) => (
+            <Link
+              key={dia.data}
+              href={`/prazos?data=${dia.data}`}
+              aria-current={dia.data === diaAberto ? "page" : undefined}
+              className={
+                dia.data === diaAberto
+                  ? "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
+                  : "border border-line bg-sheet px-3 py-2 text-lg text-ink"
+              }
+            >
+              {rotuloDia(dia.data)} · {dia.total}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
       <nav aria-label="Filtrar a lista" className="mt-6 flex flex-wrap gap-2">
         {filtrosVisiveis.map((filtro) => (
           <Link
