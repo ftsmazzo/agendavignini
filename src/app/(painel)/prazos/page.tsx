@@ -88,6 +88,16 @@ async function Lista({
       <h1 className="text-4xl leading-tight font-bold text-ink">
         {tituloDaLista(quando, dataPedida ?? undefined)}
       </h1>
+      {quando === "hoje" || dataPedida ? (
+        <p className="mt-3">
+          <Link
+            href={`/prazos/impressao?data=${quando === "hoje" ? hoje : dataPedida}`}
+            className="text-lg text-pen"
+          >
+            Imprimir este dia
+          </Link>
+        </p>
+      ) : null}
       {excluido ? (
         <output className="mt-4 block text-xl text-done">
           Prazo excluído.

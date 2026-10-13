@@ -65,6 +65,20 @@ export function dataHoraBr(valor: Date) {
   }).format(valor);
 }
 
+export function semanaDe(iso: string) {
+  const ano = Number(iso.slice(0, 4));
+  const mes = Number(iso.slice(5, 7));
+  const dia = Number(iso.slice(8, 10));
+  const data = new Date(Date.UTC(ano, mes - 1, dia));
+  const distancia = data.getUTCDay() === 0 ? 6 : data.getUTCDay() - 1;
+  const inicio = new Date(Date.UTC(ano, mes - 1, dia - distancia));
+  const fim = new Date(inicio.getTime() + 6 * 24 * 60 * 60 * 1000);
+  return {
+    inicio: inicio.toISOString().slice(0, 10),
+    fim: fim.toISOString().slice(0, 10),
+  };
+}
+
 export function caminhoInterno(valor: string, fallback: string) {
   if (
     !valor.startsWith("/") ||

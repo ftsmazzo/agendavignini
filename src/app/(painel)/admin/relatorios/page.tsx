@@ -1,4 +1,5 @@
 import { and, asc, eq, gte, lte, or, sql } from "drizzle-orm";
+import Link from "next/link";
 import { Suspense } from "react";
 import { classeCampo } from "@/components/campo";
 import { obterDb } from "@/db/client";
@@ -148,6 +149,14 @@ async function Painel({
             {`${escolhido.nome} ${escolhido.sobrenome}`.trim()} entre{" "}
             {dataBr(inicioOk)} e {dataBr(fimOk)}
           </h2>
+          <p className="mt-3">
+            <Link
+              href={`/admin/relatorios/impressao?advogado=${id}&inicio=${inicioOk}&fim=${fimOk}`}
+              className="text-lg text-pen"
+            >
+              Imprimir
+            </Link>
+          </p>
           <p className="mt-3 text-xl text-muted">
             {itens.length === 500
               ? "Mostrando os 500 primeiros."

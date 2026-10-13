@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { classeCampo } from "@/components/campo";
 import { exigirUsuario } from "@/lib/acesso";
 import { listarAudiencias } from "@/lib/audiencias";
+import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataHoraBr, dataIsoValida } from "@/lib/datas";
 
 export default function Audiencias({
@@ -71,6 +72,12 @@ async function Lista({
             Próximas
           </Link>
         ) : null}
+        <Link
+          href={`/audiencias/impressao?data=${dia ?? hojeNoEscritorio()}`}
+          className="px-2 py-3 text-lg text-pen underline"
+        >
+          Imprimir a semana
+        </Link>
       </form>
       <p className="mt-4 text-xl text-muted">
         {dia
