@@ -355,6 +355,12 @@ async function Lista({
                 </details>
               ) : null}
               <div className="mt-4 flex flex-wrap gap-3">
+                <Link
+                  href={`/prazos/impressao?id=${item.id}`}
+                  className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+                >
+                  Imprimir
+                </Link>
                 {item.situacao === "aberto" ? (
                   <form action={cumprir}>
                     <input type="hidden" name="id" value={item.id} />

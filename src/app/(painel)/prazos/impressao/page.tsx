@@ -10,10 +10,18 @@ import { rotuloArea, statusDoPrazo } from "@/lib/resumo";
 
 const AREAS = ["administrativo", "civil", "trabalhista"] as const;
 
+function idPedido(valor: string | undefined) {
+  if (!valor || !/^\d{1,9}$/.test(valor)) {
+    return null;
+  }
+  const numero = Number(valor);
+  return numero > 0 ? numero : null;
+}
+
 export default function ImpressaoPrazos({
   searchParams,
 }: {
-  searchParams: Promise<{ data?: string; area?: string }>;
+  searchParams: Promise<{ data?: string; area?: string; id?: string }>;
 }) {
   return (
     <Suspense fallback={<p className="text-xl text-muted">Abrindo a folha.</p>}>
@@ -25,14 +33,21 @@ export default function ImpressaoPrazos({
 async function Folha({
   searchParams,
 }: {
-  searchParams: Promise<{ data?: string; area?: string }>;
+  searchParams: Promise<{ data?: string; area?: string; id?: string }>;
 }) {
-  const { data, area } = await searchParams;
+  const { data, area, id } = await searchParams;
   await exigirUsuario();
+  const pedido = idPedido(id);
+  const unico = id !== undefined;
   const dia = data && dataIsoValida(data) ? data : "";
   const tipo = AREAS.find((item) => item === area) ?? null;
   const db = obterDb();
-  const linhas = dia
+  const filtro = pedido
+    ? eq(prazos.id, pedido)
+    : dia
+      ? and(eq(prazos.data, dia), tipo ? eq(prazos.area, tipo) : undefined)
+      : undefined;
+  const linhas = filtro
     ? await db
         .select({
           id: prazos.id,
@@ -48,9 +63,7 @@ async function Folha({
         })
         .from(prazos)
         .leftJoin(usuarios, eq(usuarios.id, prazos.cumpridoPorId))
-        .where(
-          and(eq(prazos.data, dia), tipo ? eq(prazos.area, tipo) : undefined),
-        )
+        .where(filtro)
         .orderBy(
           sql`case ${prazos.area} when 'administrativo' then 1 when 'civil' then 2 else 3 end`,
           asc(prazos.id),
@@ -78,26 +91,35 @@ async function Folha({
     advogados.set(vinculo.prazoId, lista);
   }
 
+  const diaVolta = unico ? (linhas[0]?.data ?? "") : dia;
+  const titulo = unico
+    ? (linhas[0]?.titulo ?? "Prazo não encontrado")
+    : dia
+      ? `Prazos de ${dataBr(dia)}`
+      : "Informe o dia";
+
   return (
     <section className="mx-auto w-full max-w-4xl">
       <div className="nao-imprimir flex flex-wrap items-center gap-3">
         <BotaoImprimir />
         <Link
-          href={dia ? `/prazos?data=${dia}` : "/prazos"}
+          href={diaVolta ? `/prazos?data=${diaVolta}` : "/prazos"}
           className="text-lg text-pen"
         >
           Voltar
         </Link>
-        {AREAS.map((item) => (
-          <Link
-            key={item}
-            href={`/prazos/impressao?data=${dia}&area=${item}`}
-            className="text-lg text-pen"
-          >
-            {rotuloArea(item)}
-          </Link>
-        ))}
-        {tipo ? (
+        {unico
+          ? null
+          : AREAS.map((item) => (
+              <Link
+                key={item}
+                href={`/prazos/impressao?data=${dia}&area=${item}`}
+                className="text-lg text-pen"
+              >
+                {rotuloArea(item)}
+              </Link>
+            ))}
+        {!unico && tipo ? (
           <Link
             href={`/prazos/impressao?data=${dia}`}
             className="text-lg text-pen"
@@ -107,7 +129,7 @@ async function Folha({
         ) : null}
       </div>
       <h1 className="mt-6 text-4xl leading-tight font-bold text-ink">
-        {dia ? `Prazos de ${dataBr(dia)}` : "Informe o dia"}
+        {titulo}
       </h1>
       {linhas.length === 0 ? (
         <p className="mt-8 text-xl text-ink">Nenhum prazo nesta folha.</p>
