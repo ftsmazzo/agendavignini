@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { excluirPrazo, salvarPrazo } from "@/app/(painel)/admin/prazos/actions";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { Campo, classeCampo } from "@/components/campo";
+import { sugerirPublicacao } from "@/lib/publicacao";
 
 const AREAS = [
   { valor: "administrativo", rotulo: "Administrativo" },
@@ -35,12 +36,75 @@ export function FormularioPrazo({
   hoje: string;
 }) {
   const [estado, acao, pendente] = useActionState(salvarPrazo, { erro: "" });
+  const [rascunho, setRascunho] = useState("");
+  const [avisos, setAvisos] = useState<string[]>([]);
+  const [area, setArea] = useState(prazo?.area ?? "administrativo");
+  const [data, setData] = useState(prazo?.data ?? hoje);
+  const [titulo, setTitulo] = useState(prazo?.titulo ?? "");
+  const [observacao, setObservacao] = useState(prazo?.observacao ?? "");
+  const [conteudo, setConteudo] = useState(prazo?.conteudo ?? "");
+  const [advogadosMarcados, setAdvogadosMarcados] = useState(
+    advogados.map(String),
+  );
+
+  function aplicarSugestao() {
+    const sugestao = sugerirPublicacao(rascunho, hoje, responsaveis);
+    setAvisos(sugestao.avisos);
+    if (sugestao.area) {
+      setArea(sugestao.area);
+    }
+    if (sugestao.data) {
+      setData(sugestao.data);
+    }
+    if (sugestao.titulo) {
+      setTitulo(sugestao.titulo);
+    }
+    if (sugestao.observacao) {
+      setObservacao(sugestao.observacao);
+    }
+    if (sugestao.conteudo) {
+      setConteudo(sugestao.conteudo);
+    }
+    if (sugestao.advogados.length > 0) {
+      setAdvogadosMarcados(sugestao.advogados.map(String));
+    }
+  }
 
   return (
     <div className="mx-auto w-full max-w-3xl">
       <h1 className="text-4xl leading-tight font-bold text-ink">
         {prazo ? "Editar prazo" : "Adicionar prazo"}
       </h1>
+      {prazo ? null : (
+        <div className="mt-8">
+          <Campo id="publicacao" rotulo="Colar publicação">
+            <textarea
+              id="publicacao"
+              value={rascunho}
+              rows={8}
+              onChange={(evento) => setRascunho(evento.target.value)}
+              className={classeCampo}
+            />
+          </Campo>
+          <button
+            type="button"
+            onClick={aplicarSugestao}
+            className="mt-3 border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
+          >
+            Sugerir campos
+          </button>
+          <p className="mt-3 text-lg text-muted">
+            A sugestão só preenche. O prazo só entra quando você salva.
+          </p>
+          {avisos.length > 0 ? (
+            <ul className="mt-3 list-disc pl-6 text-lg text-ink">
+              {avisos.map((aviso) => (
+                <li key={aviso}>{aviso}</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      )}
       <form action={acao} className="mt-8 space-y-5">
         {prazo ? <input type="hidden" name="id" value={prazo.id} /> : null}
         <div className="grid gap-5 md:grid-cols-2">
@@ -48,7 +112,8 @@ export function FormularioPrazo({
             <select
               id="area"
               name="area"
-              defaultValue={prazo?.area ?? "administrativo"}
+              value={area}
+              onChange={(evento) => setArea(evento.target.value)}
               className={classeCampo}
             >
               {AREAS.map((item) => (
@@ -65,7 +130,8 @@ export function FormularioPrazo({
               type="date"
               required
               min={prazo ? undefined : hoje}
-              defaultValue={prazo?.data ?? hoje}
+              value={data}
+              onChange={(evento) => setData(evento.target.value)}
               className={classeCampo}
             />
           </Campo>
@@ -75,7 +141,8 @@ export function FormularioPrazo({
             id="titulo"
             name="titulo"
             required
-            defaultValue={prazo?.titulo ?? ""}
+            value={titulo}
+            onChange={(evento) => setTitulo(evento.target.value)}
             className={classeCampo}
           />
         </Campo>
@@ -84,7 +151,8 @@ export function FormularioPrazo({
             id="observacao"
             name="observacao"
             rows={5}
-            defaultValue={prazo?.observacao ?? ""}
+            value={observacao}
+            onChange={(evento) => setObservacao(evento.target.value)}
             className={classeCampo}
           />
         </Campo>
@@ -93,7 +161,8 @@ export function FormularioPrazo({
             id="conteudo"
             name="conteudo"
             rows={12}
-            defaultValue={prazo?.conteudo ?? ""}
+            value={conteudo}
+            onChange={(evento) => setConteudo(evento.target.value)}
             className={classeCampo}
           />
         </Campo>
@@ -121,7 +190,12 @@ export function FormularioPrazo({
             multiple
             required
             size={8}
-            defaultValue={advogados.map(String)}
+            value={advogadosMarcados}
+            onChange={(evento) =>
+              setAdvogadosMarcados(
+                [...evento.target.selectedOptions].map((opcao) => opcao.value),
+              )
+            }
             className={classeCampo}
           >
             {responsaveis.map((pessoa) => (
