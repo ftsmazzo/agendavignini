@@ -1,7 +1,15 @@
 import { and, asc, eq, sql } from "drizzle-orm";
+import Link from "next/link";
 import { Suspense } from "react";
+import {
+  cumprir,
+  desfazer,
+  excluirPrazo,
+} from "@/app/(painel)/admin/prazos/actions";
+import { BotaoExcluir } from "@/components/botao-excluir";
 import { obterDb } from "@/db/client";
 import { prazos } from "@/db/schema";
+import { exigirUsuario } from "@/lib/acesso";
 import { hojeNoEscritorio } from "@/lib/contagens";
 
 export default function Prazos({
@@ -38,6 +46,7 @@ async function Lista({
   searchParams: Promise<{ data?: string; quando?: string }>;
 }) {
   const { data, quando } = await searchParams;
+  const usuario = await exigirUsuario();
   const hoje = hojeNoEscritorio();
   const dataPedida = data && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : null;
   const db = obterDb();
@@ -49,6 +58,15 @@ async function Lista({
         : dataPedida
           ? eq(prazos.data, dataPedida)
           : sql`false`;
+
+  const voltar =
+    quando === "hoje"
+      ? "/prazos?quando=hoje"
+      : quando === "semana"
+        ? "/prazos?quando=semana"
+        : dataPedida
+          ? `/prazos?data=${dataPedida}`
+          : "/prazos";
 
   const itens = await db
     .select({
@@ -103,6 +121,50 @@ async function Lista({
                   </p>
                 </details>
               ) : null}
+              <div className="mt-4 flex flex-wrap gap-3">
+                {item.situacao === "aberto" ? (
+                  <form action={cumprir}>
+                    <input type="hidden" name="id" value={item.id} />
+                    <input type="hidden" name="voltar" value={voltar} />
+                    <button
+                      type="submit"
+                      className="bg-pen px-4 py-2 text-lg font-semibold text-sheet"
+                    >
+                      Cumprir
+                    </button>
+                  </form>
+                ) : null}
+                {usuario.papel === "admin" && item.situacao === "cumprido" ? (
+                  <form action={desfazer}>
+                    <input type="hidden" name="id" value={item.id} />
+                    <input type="hidden" name="voltar" value={voltar} />
+                    <button
+                      type="submit"
+                      className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+                    >
+                      Desfazer
+                    </button>
+                  </form>
+                ) : null}
+                {usuario.papel === "admin" ? (
+                  <>
+                    <Link
+                      href={`/admin/prazos/${item.id}`}
+                      className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+                    >
+                      Editar
+                    </Link>
+                    <BotaoExcluir
+                      action={excluirPrazo}
+                      pergunta="Excluir este prazo?"
+                      rotulo="Excluir"
+                    >
+                      <input type="hidden" name="id" value={item.id} />
+                      <input type="hidden" name="voltar" value={voltar} />
+                    </BotaoExcluir>
+                  </>
+                ) : null}
+              </div>
             </li>
           ))}
         </ul>
