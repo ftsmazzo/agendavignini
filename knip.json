@@ -1,0 +1,8 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["src/db/client.ts"],
+  "ignoreIssues": {
+    "src/db/schema.ts": ["exports"],
+    "src/db/client.ts": ["exports"]
+  }
+}

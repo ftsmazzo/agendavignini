@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --paper: #e7edf5;
+  --sheet: #ffffff;
+  --ink: #172033;
+  --muted: #4d5d73;
+  --line: #d3dbe6;
+  --pen: #1d4e89;
+  --pen-soft: #e5f0fb;
+  --done: #1f6b45;
+  --hearing: #8a3e2f;
+  --rail: #1c2838;
+  --rail-ink: #f7f9fc;
+  --rail-muted: #c5d0de;
+  --rail-line: #31445c;
+  --rail-active: #2e4460;
+}
+
+.dark {
+  --paper: #0e141c;
+  --sheet: #18212c;
+  --ink: #f2f5f9;
+  --muted: #b7c3d4;
+  --line: #2c3a4c;
+  --pen: #9ec0ea;
+  --pen-soft: #24364c;
+  --done: #9ed7b8;
+  --hearing: #f0c2b6;
+  --rail: #121820;
+  --rail-ink: #f7f9fc;
+  --rail-muted: #c5d0de;
+  --rail-line: #2a3848;
+  --rail-active: #243246;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-sheet: var(--sheet);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-pen: var(--pen);
+  --color-pen-soft: var(--pen-soft);
+  --color-done: var(--done);
+  --color-hearing: var(--hearing);
+  --color-rail: var(--rail);
+  --color-rail-ink: var(--rail-ink);
+  --color-rail-muted: var(--rail-muted);
+  --color-rail-line: var(--rail-line);
+  --color-rail-active: var(--rail-active);
+  --font-sans: var(--font-source), "Segoe UI", sans-serif;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-source), "Segoe UI", sans-serif;
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 3px solid var(--pen);
+  outline-offset: 3px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
