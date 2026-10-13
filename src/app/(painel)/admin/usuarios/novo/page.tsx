@@ -1,9 +1,5 @@
-import { Tela } from "@/components/tela";
+import { FormularioUsuario } from "@/components/formulario-usuario";
 
 export default function NovoUsuario() {
-  return (
-    <Tela titulo="Adicionar usuário">
-      <p>Cadastro de login, papel e se a pessoa entra no relatório.</p>
-    </Tela>
-  );
+  return <FormularioUsuario proprio={false} />;
 }
