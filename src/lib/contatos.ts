@@ -49,18 +49,13 @@ export function numeroWhatsapp(
   celular: string | null | undefined,
   telefone: string | null | undefined,
 ) {
-  const candidato = digitos(celular) || digitos(telefone);
-  if (!candidato) {
-    return null;
-  }
-  if (candidato.startsWith("55") && candidato.length >= 12) {
-    return candidato;
-  }
-  if (candidato.length === 10 || candidato.length === 11) {
-    return `55${candidato}`;
-  }
-  if (candidato.length >= 12) {
-    return candidato;
+  for (const origem of [celular, telefone]) {
+    for (const parte of partes(origem)) {
+      const numero = normalizar(parte);
+      if (numero) {
+        return numero;
+      }
+    }
   }
   return null;
 }
@@ -78,14 +73,35 @@ export function emailDeContato(email: string | null | undefined) {
   return texto;
 }
 
-function digitos(valor: string | null | undefined) {
-  return (valor ?? "").replace(/\D/g, "");
+function partes(valor: string | null | undefined) {
+  return (valor ?? "")
+    .split(/[/;,]|\s+e\s+|\s+ou\s+/i)
+    .map((parte) => parte.replace(/\D/g, ""))
+    .filter(Boolean);
+}
+
+function normalizar(bruto: string) {
+  let numero = bruto.startsWith("00") ? bruto.slice(2) : bruto;
+  if (numero.startsWith("0")) {
+    numero = numero.replace(/^0+/, "");
+  }
+  if (
+    numero.startsWith("55") &&
+    (numero.length === 12 || numero.length === 13)
+  ) {
+    return numero;
+  }
+  if (numero.length === 10 || numero.length === 11) {
+    return `55${numero}`;
+  }
+  return null;
 }
 
 export function agruparContatos(itens: ContatoLista[]) {
   const grupos: Array<{ letra: string; itens: ContatoLista[] }> = [];
   for (const item of itens) {
-    const letra = item.nome.trim().charAt(0).toLocaleUpperCase("pt-BR") || "#";
+    const base = item.nome.trim().replace(/^[^0-9A-Za-zÀ-ÿ]+/, "");
+    const letra = base.charAt(0).toLocaleUpperCase("pt-BR") || "#";
     const ultimo = grupos.at(-1);
     if (!ultimo || ultimo.letra !== letra) {
       grupos.push({ letra, itens: [item] });
