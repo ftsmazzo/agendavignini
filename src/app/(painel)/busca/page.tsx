@@ -127,7 +127,9 @@ async function Resultado({
               <p className="mt-3 text-xl text-muted">
                 {itens.length === 80
                   ? "80 prazos mais recentes."
-                  : `${itens.length} prazos.`}
+                  : itens.length === 1
+                    ? "1 prazo."
+                    : `${itens.length} prazos.`}
               </p>
               <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
                 {itens.map((item) => (
@@ -157,7 +159,9 @@ async function Resultado({
               <p className="mt-3 text-xl text-muted">
                 {sessoes.length === 40
                   ? "40 audiências mais recentes."
-                  : `${sessoes.length} audiências.`}
+                  : sessoes.length === 1
+                    ? "1 audiência."
+                    : `${sessoes.length} audiências.`}
               </p>
               <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
                 {sessoes.map((item) => {
