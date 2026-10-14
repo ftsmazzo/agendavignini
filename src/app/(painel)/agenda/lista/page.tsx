@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { buscarContatos } from "@/lib/contatos";
+import { AcoesContato } from "@/components/acoes-contato";
+import { agruparContatos, buscarContatos } from "@/lib/contatos";
 
 export default function ListaAgenda({
   searchParams,
@@ -22,12 +23,32 @@ async function Tabela({
   const { q } = await searchParams;
   const termo = q?.trim().slice(0, 80) ?? "";
   const itens = await buscarContatos(termo);
+  const grupos = agruparContatos(itens);
 
   return (
     <section className="mx-auto w-full max-w-5xl">
       <h1 className="text-4xl leading-tight font-bold text-ink">
         Lista de contatos
       </h1>
+      <nav aria-label="Forma da agenda" className="mt-6 flex flex-wrap gap-2">
+        <Link
+          href={termo ? `/agenda?q=${encodeURIComponent(termo)}` : "/agenda"}
+          className="border border-line bg-sheet px-3 py-2 text-lg text-ink"
+        >
+          Por letra
+        </Link>
+        <Link
+          href={
+            termo
+              ? `/agenda/lista?q=${encodeURIComponent(termo)}`
+              : "/agenda/lista"
+          }
+          aria-current="page"
+          className="bg-pen px-3 py-2 text-lg font-semibold text-sheet"
+        >
+          Lista
+        </Link>
+      </nav>
       <search className="mt-6 block">
         <form method="get">
           <label htmlFor="filtrar-contato" className="sr-only">
@@ -43,39 +64,60 @@ async function Tabela({
           />
         </form>
       </search>
-      <div className="mt-6 overflow-x-auto border border-line bg-sheet">
-        <table className="w-full border-collapse text-left text-xl">
-          <thead>
-            <tr className="border-b border-line text-muted">
-              <th className="px-4 py-3 font-semibold">Nome</th>
-              <th className="px-4 py-3 font-semibold">Telefone</th>
-              <th className="px-4 py-3 font-semibold">E-mail</th>
-            </tr>
-          </thead>
-          <tbody>
-            {itens.map((item) => (
-              <tr
-                key={item.id}
-                className="border-b border-line last:border-b-0"
-              >
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/agenda/${item.id}`}
-                    className="text-pen underline"
-                  >
-                    {item.nome}
-                  </Link>
-                </td>
-                <td className="px-4 py-3">{item.telefone}</td>
-                <td className="px-4 py-3">{item.email}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {itens.length === 0 ? (
-        <p className="mt-6 text-xl text-ink">Nenhum contato com esse texto.</p>
+      <p className="mt-4 text-xl text-muted">
+        {itens.length === 1 ? "1 contato." : `${itens.length} contatos.`}
+      </p>
+      {grupos.length > 1 ? (
+        <nav aria-label="Letras" className="mt-4 flex flex-wrap gap-2">
+          {grupos.map((grupo) => (
+            <a
+              key={grupo.letra}
+              href={`#lista-${grupo.letra}`}
+              className="border border-line bg-sheet px-3 py-1 text-lg font-semibold text-ink"
+            >
+              {grupo.letra}
+            </a>
+          ))}
+        </nav>
       ) : null}
+      {grupos.length === 0 ? (
+        <p className="mt-8 text-xl text-ink">Nenhum contato com esse texto.</p>
+      ) : (
+        grupos.map((grupo) => (
+          <section
+            key={grupo.letra}
+            id={`lista-${grupo.letra}`}
+            className="mt-8"
+          >
+            <h2 className="text-3xl font-bold text-ink">{grupo.letra}</h2>
+            <ul className="mt-3 divide-y divide-line border border-line bg-sheet">
+              {grupo.itens.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-xl font-semibold text-ink">
+                      {item.nome}
+                    </p>
+                    <p className="text-lg text-muted">
+                      {[item.celular, item.telefone, item.email]
+                        .filter(Boolean)
+                        .join(" · ") || "Sem telefone e sem e-mail"}
+                    </p>
+                  </div>
+                  <AcoesContato
+                    id={item.id}
+                    telefone={item.telefone}
+                    celular={item.celular}
+                    email={item.email}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      )}
     </section>
   );
 }

@@ -45,6 +45,43 @@ export async function buscarContatos(termo: string) {
     .orderBy(asc(contatos.nome));
 }
 
+export function numeroWhatsapp(
+  celular: string | null | undefined,
+  telefone: string | null | undefined,
+) {
+  const candidato = digitos(celular) || digitos(telefone);
+  if (!candidato) {
+    return null;
+  }
+  if (candidato.startsWith("55") && candidato.length >= 12) {
+    return candidato;
+  }
+  if (candidato.length === 10 || candidato.length === 11) {
+    return `55${candidato}`;
+  }
+  if (candidato.length >= 12) {
+    return candidato;
+  }
+  return null;
+}
+
+export function emailDeContato(email: string | null | undefined) {
+  const texto = email?.trim() ?? "";
+  if (
+    !texto ||
+    texto.length > 180 ||
+    /\s/.test(texto) ||
+    !texto.includes("@")
+  ) {
+    return null;
+  }
+  return texto;
+}
+
+function digitos(valor: string | null | undefined) {
+  return (valor ?? "").replace(/\D/g, "");
+}
+
 export function agruparContatos(itens: ContatoLista[]) {
   const grupos: Array<{ letra: string; itens: ContatoLista[] }> = [];
   for (const item of itens) {

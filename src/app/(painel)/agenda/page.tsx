@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { AcoesContato } from "@/components/acoes-contato";
 import { agruparContatos, buscarContatos } from "@/lib/contatos";
 import { dataBr } from "@/lib/datas";
 
@@ -43,6 +44,25 @@ async function Lista({
           Contato excluído.
         </output>
       ) : null}
+      <nav aria-label="Forma da agenda" className="mt-6 flex flex-wrap gap-2">
+        <Link
+          href={termo ? `/agenda?q=${encodeURIComponent(termo)}` : "/agenda"}
+          aria-current="page"
+          className="bg-pen px-3 py-2 text-lg font-semibold text-sheet"
+        >
+          Por letra
+        </Link>
+        <Link
+          href={
+            termo
+              ? `/agenda/lista?q=${encodeURIComponent(termo)}`
+              : "/agenda/lista"
+          }
+          className="border border-line bg-sheet px-3 py-2 text-lg text-ink"
+        >
+          Lista
+        </Link>
+      </nav>
       <search className="mt-6 block">
         <form method="get">
           <label htmlFor="pesquisar-contato" className="sr-only">
@@ -61,11 +81,28 @@ async function Lista({
       <p className="mt-4 text-xl text-muted">
         {itens.length === 1 ? "1 contato." : `${itens.length} contatos.`}
       </p>
+      {grupos.length > 1 ? (
+        <nav aria-label="Letras" className="mt-4 flex flex-wrap gap-2">
+          {grupos.map((grupo) => (
+            <a
+              key={grupo.letra}
+              href={`#letra-${grupo.letra}`}
+              className="border border-line bg-sheet px-3 py-1 text-lg font-semibold text-ink"
+            >
+              {grupo.letra}
+            </a>
+          ))}
+        </nav>
+      ) : null}
       {grupos.length === 0 ? (
         <p className="mt-8 text-xl text-ink">Nenhum contato com esse texto.</p>
       ) : (
         grupos.map((grupo) => (
-          <section key={grupo.letra} className="mt-8">
+          <section
+            key={grupo.letra}
+            id={`letra-${grupo.letra}`}
+            className="mt-8"
+          >
             <h2 className="text-3xl font-bold text-ink">{grupo.letra}</h2>
             <ul className="mt-4 grid gap-4 md:grid-cols-2">
               {grupo.itens.map((item) => (
@@ -80,12 +117,14 @@ async function Lista({
                     {item.endereco ? <p>{item.endereco}</p> : null}
                     {item.nascimento ? <p>{dataBr(item.nascimento)}</p> : null}
                   </div>
-                  <Link
-                    href={`/agenda/${item.id}`}
-                    className="mt-4 inline-block bg-pen px-4 py-3 text-lg font-semibold text-sheet"
-                  >
-                    Editar
-                  </Link>
+                  <div className="mt-4">
+                    <AcoesContato
+                      id={item.id}
+                      telefone={item.telefone}
+                      celular={item.celular}
+                      email={item.email}
+                    />
+                  </div>
                 </li>
               ))}
             </ul>
