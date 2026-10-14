@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, gte, lte, sql } from "drizzle-orm";
 import { obterDb } from "@/db/client";
 import {
   audiencias,
@@ -250,4 +250,240 @@ export async function filaDoDia(dia: string) {
   }
 
   return fila;
+}
+
+type PainelPeriodo = {
+  total: number;
+  vencidos: number;
+  porCumprir: number;
+  cumpridos: number;
+  audiencias: number;
+  semAdvogado: number;
+  areas: Array<{
+    area: keyof typeof areas;
+    total: number;
+    abertos: number;
+  }>;
+  pessoas: Array<{ id: number; nome: string; total: number }>;
+  dias: Array<{ data: string; total: number; abertos: number }>;
+};
+
+function filtroDoAdvogado(advogadoId: number | null) {
+  if (advogadoId === null) {
+    return undefined;
+  }
+  if (advogadoId === 0) {
+    return sql`not exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id})`;
+  }
+  return sql`(
+    ${prazos.cumpridoPorId} = ${advogadoId}
+    or exists (
+      select 1 from prazos_usuarios
+      where prazo_id = ${prazos.id} and usuario_id = ${advogadoId}
+    )
+  )`;
+}
+
+function filtroDaAudiencia(advogadoId: number | null) {
+  if (advogadoId === null) {
+    return undefined;
+  }
+  if (advogadoId === 0) {
+    return sql`not exists (select 1 from audiencias_usuarios where audiencia_id = ${audiencias.id})`;
+  }
+  return sql`exists (
+    select 1 from audiencias_usuarios
+    where audiencia_id = ${audiencias.id} and usuario_id = ${advogadoId}
+  )`;
+}
+
+export async function painelDoPeriodo(
+  inicio: string,
+  fim: string,
+  hoje: string,
+  advogadoId: number | null,
+) {
+  const db = obterDb();
+  const filtro = filtroDoAdvogado(advogadoId);
+  const linhas = await db
+    .select({
+      data: prazos.data,
+      area: prazos.area,
+      situacao: prazos.situacao,
+      total: sql<number>`count(*)::int`,
+    })
+    .from(prazos)
+    .where(and(gte(prazos.data, inicio), lte(prazos.data, fim), filtro))
+    .groupBy(prazos.data, prazos.area, prazos.situacao);
+
+  const diaAudiencia = sql`(${audiencias.dataHora} at time zone 'America/Sao_Paulo')::date`;
+  const [contaAudiencias] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(audiencias)
+    .where(
+      and(
+        sql`${diaAudiencia} >= ${inicio}::date`,
+        sql`${diaAudiencia} <= ${fim}::date`,
+        filtroDaAudiencia(advogadoId),
+      ),
+    );
+
+  const [semMarcacao] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(prazos)
+    .where(
+      and(
+        gte(prazos.data, inicio),
+        lte(prazos.data, fim),
+        sql`not exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id})`,
+        advogadoId && advogadoId > 0 ? sql`false` : undefined,
+      ),
+    );
+
+  const pessoas =
+    advogadoId === null
+      ? await db
+          .select({
+            id: usuarios.id,
+            nome: usuarios.nome,
+            sobrenome: usuarios.sobrenome,
+            total: sql<number>`count(distinct ${prazos.id})::int`,
+          })
+          .from(usuarios)
+          .innerJoin(
+            prazos,
+            and(
+              gte(prazos.data, inicio),
+              lte(prazos.data, fim),
+              sql`(
+                ${prazos.cumpridoPorId} = ${usuarios.id}
+                or exists (
+                  select 1 from prazos_usuarios
+                  where prazo_id = ${prazos.id} and usuario_id = ${usuarios.id}
+                )
+              )`,
+            ),
+          )
+          .where(eq(usuarios.ativo, true))
+          .groupBy(usuarios.id, usuarios.nome, usuarios.sobrenome)
+      : [];
+
+  const areas: PainelPeriodo["areas"] = [
+    { area: "administrativo", total: 0, abertos: 0 },
+    { area: "civil", total: 0, abertos: 0 },
+    { area: "trabalhista", total: 0, abertos: 0 },
+  ];
+  const porDia = new Map<string, { total: number; abertos: number }>();
+  let total = 0;
+  let vencidos = 0;
+  let porCumprir = 0;
+  let cumpridos = 0;
+
+  for (const linha of linhas) {
+    const area = areas.find((item) => item.area === linha.area);
+    if (area) {
+      area.total += linha.total;
+      if (linha.situacao === "aberto") {
+        area.abertos += linha.total;
+      }
+    }
+    const dia = porDia.get(linha.data) ?? { total: 0, abertos: 0 };
+    dia.total += linha.total;
+    total += linha.total;
+    if (linha.situacao === "cumprido") {
+      cumpridos += linha.total;
+    } else if (linha.data < hoje) {
+      vencidos += linha.total;
+      dia.abertos += linha.total;
+    } else {
+      porCumprir += linha.total;
+      dia.abertos += linha.total;
+    }
+    porDia.set(linha.data, dia);
+  }
+
+  return {
+    total,
+    vencidos,
+    porCumprir,
+    cumpridos,
+    audiencias: contaAudiencias?.total ?? 0,
+    semAdvogado: advogadoId && advogadoId > 0 ? 0 : (semMarcacao?.total ?? 0),
+    areas,
+    pessoas: pessoas
+      .map((pessoa) => ({
+        id: pessoa.id,
+        nome: `${pessoa.nome} ${pessoa.sobrenome}`.trim(),
+        total: pessoa.total,
+      }))
+      .sort(
+        (a, b) => b.total - a.total || a.nome.localeCompare(b.nome, "pt-BR"),
+      ),
+    dias: [...porDia.entries()]
+      .map(([data, conta]) => ({ data, ...conta }))
+      .sort((a, b) => a.data.localeCompare(b.data)),
+  } satisfies PainelPeriodo;
+}
+
+export async function itensDoDia(dia: string, advogadoId: number | null) {
+  const db = obterDb();
+  const filtro = filtroDoAdvogado(advogadoId);
+  const diaAudiencia = sql`(${audiencias.dataHora} at time zone 'America/Sao_Paulo')::date`;
+  const [prazosDia, audienciasDia] = await Promise.all([
+    db
+      .select({
+        id: prazos.id,
+        area: prazos.area,
+        data: prazos.data,
+        titulo: prazos.titulo,
+        conteudo: prazos.conteudo,
+        situacao: prazos.situacao,
+        cumpridoNome: usuarios.nome,
+        cumpridoSobrenome: usuarios.sobrenome,
+        cumpridoEm: prazos.cumpridoEm,
+      })
+      .from(prazos)
+      .leftJoin(usuarios, eq(usuarios.id, prazos.cumpridoPorId))
+      .where(and(eq(prazos.data, dia), filtro))
+      .orderBy(asc(prazos.titulo), asc(prazos.id)),
+    db
+      .select({
+        id: audiencias.id,
+        numeroProcesso: audiencias.numeroProcesso,
+        vara: audiencias.vara,
+        local: audiencias.local,
+        reclamante: audiencias.reclamante,
+        reclamado: audiencias.reclamado,
+        preposto: audiencias.preposto,
+        dataHora: audiencias.dataHora,
+      })
+      .from(audiencias)
+      .where(
+        and(sql`${diaAudiencia} = ${dia}::date`, filtroDaAudiencia(advogadoId)),
+      )
+      .orderBy(asc(audiencias.dataHora), asc(audiencias.id)),
+  ]);
+
+  const ordem = { administrativo: 0, civil: 1, trabalhista: 2 };
+  return {
+    prazos: prazosDia
+      .map((item) => ({
+        id: item.id,
+        area: item.area,
+        data: item.data,
+        titulo: item.titulo,
+        conteudo: item.conteudo,
+        situacao: item.situacao,
+        cumpridoPor: item.cumpridoNome
+          ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
+          : null,
+        cumpridoEm: item.cumpridoEm,
+      }))
+      .sort(
+        (a, b) =>
+          ordem[a.area] - ordem[b.area] ||
+          a.titulo.localeCompare(b.titulo, "pt-BR"),
+      ),
+    audiencias: audienciasDia,
+  };
 }
