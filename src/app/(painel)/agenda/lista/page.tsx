@@ -26,7 +26,7 @@ async function Tabela({
   const grupos = agruparContatos(itens);
 
   return (
-    <section className="mx-auto w-full max-w-7xl">
+    <section className="w-full">
       <h1 className="text-4xl leading-tight font-bold text-ink">
         Lista de contatos
       </h1>

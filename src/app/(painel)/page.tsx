@@ -70,7 +70,7 @@ async function PainelDoDia({
   ];
 
   return (
-    <div className="mx-auto w-full max-w-7xl">
+    <div className="w-full">
       <p className="text-2xl text-muted">{dataExibida}</p>
       <p className="mt-2 text-xl">
         <a href="/resumo" className="text-pen">

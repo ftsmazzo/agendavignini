@@ -29,7 +29,7 @@ async function Lista({
   const grupos = agruparContatos(itens);
 
   return (
-    <section className="mx-auto w-full max-w-7xl">
+    <section className="w-full">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-4xl leading-tight font-bold text-ink">Agenda</h1>
         <Link
