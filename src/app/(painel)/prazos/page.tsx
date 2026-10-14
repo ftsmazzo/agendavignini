@@ -305,13 +305,22 @@ async function Lista({
         ))}
       </nav>
       {diaImpressao ? (
-        <p className="mt-4">
+        <p className="mt-4 flex flex-wrap gap-4">
           <Link
             href={`/prazos/impressao?data=${diaImpressao}${areaOk ? `&area=${areaOk}` : ""}`}
             className="text-lg text-pen"
           >
             Imprimir este dia
           </Link>
+          {AREAS.map((item) => (
+            <Link
+              key={item}
+              href={`/prazos/impressao?data=${diaImpressao}&area=${item}`}
+              className="text-lg text-pen"
+            >
+              {rotuloArea(item)}
+            </Link>
+          ))}
         </p>
       ) : null}
       {excluido ? (
@@ -326,112 +335,175 @@ async function Lista({
       </p>
       {itens.length === 0 ? (
         <p className="mt-8 text-xl text-ink">Nenhum prazo neste recorte.</p>
+      ) : quando === "semana" ? (
+        <div className="mt-8 space-y-10">
+          {[...new Set(itens.map((item) => item.data))].map((dataDia) => (
+            <section key={dataDia}>
+              <h2 className="text-2xl font-bold text-ink">
+                <Link href={`/prazos?data=${dataDia}`} className="text-pen">
+                  {rotuloDia(dataDia)} ·{" "}
+                  {itens.filter((item) => item.data === dataDia).length}
+                </Link>
+              </h2>
+              <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
+                {itens
+                  .filter((item) => item.data === dataDia)
+                  .map((item) => (
+                    <li
+                      key={item.id}
+                      className={`px-6 py-5 ${faixaDaArea(item.area)}`}
+                    >
+                      <CartaoPrazo
+                        item={item}
+                        advogados={advogados.get(item.id) ?? []}
+                        seu={meusIds.has(item.id)}
+                        voltar={voltar}
+                        admin={usuario.papel === "admin"}
+                      />
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          ))}
+        </div>
       ) : (
         <ul className="mt-8 divide-y divide-line border border-line bg-sheet">
           {itens.map((item) => (
             <li key={item.id} className={`px-6 py-5 ${faixaDaArea(item.area)}`}>
-              <p className="text-lg text-muted">
-                {rotuloArea(item.area)} · {dataBr(item.data)} ·{" "}
-                {statusDoPrazo({
-                  situacao: item.situacao,
-                  cumpridoPor: item.cumpridoNome
-                    ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-                    : null,
-                  cumpridoEm: item.cumpridoEm,
-                })}
-                {meusIds.has(item.id) ? " · Seu prazo" : ""}
-              </p>
-              <h2 className="mt-1 text-2xl font-semibold text-ink">
-                {item.titulo}
-              </h2>
-              <CorpoPrazo
-                temCorpo={
-                  (advogados.get(item.id) ?? []).length > 0 ||
-                  Boolean(item.observacao) ||
-                  Boolean(item.conteudo)
-                }
-                corpo={
-                  <>
-                    {(advogados.get(item.id) ?? []).length > 0 ? (
-                      <p className="mt-2 text-lg text-muted">
-                        {(advogados.get(item.id) ?? []).join(", ")}
-                      </p>
-                    ) : null}
-                    {item.observacao ? (
-                      <p className="mt-3 text-xl whitespace-pre-wrap text-ink">
-                        {item.observacao}
-                      </p>
-                    ) : null}
-                    {item.conteudo ? (
-                      <details className="mt-3">
-                        <summary className="cursor-pointer text-lg text-pen">
-                          Ver publicação
-                        </summary>
-                        <p className="mt-3 text-lg whitespace-pre-wrap text-ink">
-                          {item.conteudo}
-                        </p>
-                      </details>
-                    ) : null}
-                  </>
-                }
-                acoes={
-                  <>
-                    <Link
-                      href={`/prazos/impressao?id=${item.id}`}
-                      className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
-                    >
-                      Imprimir
-                    </Link>
-                    {item.situacao === "aberto" ? (
-                      <form action={cumprir}>
-                        <input type="hidden" name="id" value={item.id} />
-                        <input type="hidden" name="voltar" value={voltar} />
-                        <button
-                          type="submit"
-                          className="bg-pen px-4 py-2 text-lg font-semibold text-sheet"
-                        >
-                          Cumprir
-                        </button>
-                      </form>
-                    ) : null}
-                    {usuario.papel === "admin" &&
-                    item.situacao === "cumprido" ? (
-                      <form action={desfazer}>
-                        <input type="hidden" name="id" value={item.id} />
-                        <input type="hidden" name="voltar" value={voltar} />
-                        <button
-                          type="submit"
-                          className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
-                        >
-                          Desfazer
-                        </button>
-                      </form>
-                    ) : null}
-                    {usuario.papel === "admin" ? (
-                      <>
-                        <Link
-                          href={`/admin/prazos/${item.id}`}
-                          className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
-                        >
-                          Editar
-                        </Link>
-                        <BotaoExcluir
-                          action={excluirPrazo}
-                          pergunta="Excluir este prazo?"
-                          rotulo="Excluir"
-                        >
-                          <input type="hidden" name="id" value={item.id} />
-                          <input type="hidden" name="voltar" value={voltar} />
-                        </BotaoExcluir>
-                      </>
-                    ) : null}
-                  </>
-                }
+              <CartaoPrazo
+                item={item}
+                advogados={advogados.get(item.id) ?? []}
+                seu={meusIds.has(item.id)}
+                voltar={voltar}
+                admin={usuario.papel === "admin"}
               />
             </li>
           ))}
         </ul>
       )}
     </section>
+  );
+}
+
+function CartaoPrazo({
+  item,
+  advogados,
+  seu,
+  voltar,
+  admin,
+}: {
+  item: {
+    id: number;
+    area: "administrativo" | "civil" | "trabalhista";
+    data: string;
+    titulo: string;
+    observacao: string;
+    conteudo: string;
+    situacao: "aberto" | "cumprido";
+    cumpridoNome: string | null;
+    cumpridoSobrenome: string | null;
+    cumpridoEm: Date | null;
+  };
+  advogados: string[];
+  seu: boolean;
+  voltar: string;
+  admin: boolean;
+}) {
+  return (
+    <>
+      <p className="text-lg text-muted">
+        {rotuloArea(item.area)} · {dataBr(item.data)} ·{" "}
+        {statusDoPrazo({
+          situacao: item.situacao,
+          cumpridoPor: item.cumpridoNome
+            ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
+            : null,
+          cumpridoEm: item.cumpridoEm,
+        })}
+        {seu ? " · Seu prazo" : ""}
+      </p>
+      <h3 className="mt-1 text-2xl font-semibold text-ink">{item.titulo}</h3>
+      <CorpoPrazo
+        temCorpo={
+          advogados.length > 0 ||
+          Boolean(item.observacao) ||
+          Boolean(item.conteudo)
+        }
+        corpo={
+          <>
+            {advogados.length > 0 ? (
+              <p className="mt-2 text-lg text-muted">{advogados.join(", ")}</p>
+            ) : null}
+            {item.observacao ? (
+              <p className="mt-3 text-xl whitespace-pre-wrap text-ink">
+                {item.observacao}
+              </p>
+            ) : null}
+            {item.conteudo ? (
+              <details className="mt-3">
+                <summary className="cursor-pointer text-lg text-pen">
+                  Ver publicação
+                </summary>
+                <p className="mt-3 text-lg whitespace-pre-wrap text-ink">
+                  {item.conteudo}
+                </p>
+              </details>
+            ) : null}
+          </>
+        }
+        acoes={
+          <>
+            <Link
+              href={`/prazos/impressao?id=${item.id}`}
+              className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+            >
+              Imprimir
+            </Link>
+            {item.situacao === "aberto" ? (
+              <form action={cumprir}>
+                <input type="hidden" name="id" value={item.id} />
+                <input type="hidden" name="voltar" value={voltar} />
+                <button
+                  type="submit"
+                  className="bg-pen px-4 py-2 text-lg font-semibold text-sheet"
+                >
+                  Cumprir
+                </button>
+              </form>
+            ) : null}
+            {admin && item.situacao === "cumprido" ? (
+              <form action={desfazer}>
+                <input type="hidden" name="id" value={item.id} />
+                <input type="hidden" name="voltar" value={voltar} />
+                <button
+                  type="submit"
+                  className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+                >
+                  Desfazer
+                </button>
+              </form>
+            ) : null}
+            {admin ? (
+              <>
+                <Link
+                  href={`/admin/prazos/${item.id}`}
+                  className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+                >
+                  Editar
+                </Link>
+                <BotaoExcluir
+                  action={excluirPrazo}
+                  pergunta="Excluir este prazo?"
+                  rotulo="Excluir"
+                >
+                  <input type="hidden" name="id" value={item.id} />
+                  <input type="hidden" name="voltar" value={voltar} />
+                </BotaoExcluir>
+              </>
+            ) : null}
+          </>
+        }
+      />
+    </>
   );
 }
