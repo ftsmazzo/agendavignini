@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { excluirPrazo, salvarPrazo } from "@/app/(painel)/admin/prazos/actions";
 import { BotaoExcluir } from "@/components/botao-excluir";
+import { CaixasAdvogados } from "@/components/caixas-advogados";
 import { Campo, classeCampo } from "@/components/campo";
 import { sugerirPublicacao } from "@/lib/publicacao";
 
@@ -197,32 +198,12 @@ export function FormularioPrazo({
           Vale quando o status é cumprido. Em branco, grava o horário deste
           salvamento.
         </p>
-        <Campo id="advogados" rotulo="Advogados">
-          <select
-            id="advogados"
-            name="advogados"
-            multiple
-            required
-            size={8}
-            value={advogadosMarcados}
-            onChange={(evento) =>
-              setAdvogadosMarcados(
-                [...evento.target.selectedOptions].map((opcao) => opcao.value),
-              )
-            }
-            className={classeCampo}
-          >
-            {responsaveis.map((pessoa) => (
-              <option key={pessoa.id} value={pessoa.id}>
-                {pessoa.nome}
-              </option>
-            ))}
-          </select>
-        </Campo>
-        <p className="text-lg text-muted">
-          Segure Ctrl para marcar mais de um advogado. Pelo menos um é
-          obrigatório.
-        </p>
+        <CaixasAdvogados
+          pessoas={responsaveis}
+          marcados={advogadosMarcados}
+          onChange={setAdvogadosMarcados}
+        />
+        <p className="text-lg text-muted">Pelo menos um advogado.</p>
         {estado.erro ? (
           <p className="text-lg text-hearing" role="alert">
             {estado.erro}

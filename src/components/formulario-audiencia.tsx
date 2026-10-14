@@ -6,6 +6,7 @@ import {
   salvarAudiencia,
 } from "@/app/(painel)/admin/audiencias/actions";
 import { BotaoExcluir } from "@/components/botao-excluir";
+import { CaixasAdvogados } from "@/components/caixas-advogados";
 import { Campo, classeCampo } from "@/components/campo";
 
 type Pessoa = { id: number; nome: string };
@@ -111,22 +112,10 @@ export function FormularioAudiencia({
             className={classeCampo}
           />
         </Campo>
-        <Campo id="advogados" rotulo="Advogados">
-          <select
-            id="advogados"
-            name="advogados"
-            multiple
-            size={8}
-            defaultValue={advogados.map(String)}
-            className={classeCampo}
-          >
-            {responsaveis.map((pessoa) => (
-              <option key={pessoa.id} value={pessoa.id}>
-                {pessoa.nome}
-              </option>
-            ))}
-          </select>
-        </Campo>
+        <CaixasAdvogados
+          pessoas={responsaveis}
+          marcados={advogados.map(String)}
+        />
         {estado.erro ? (
           <p className="text-lg text-hearing" role="alert">
             {estado.erro}
