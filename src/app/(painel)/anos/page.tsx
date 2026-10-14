@@ -34,7 +34,7 @@ async function Lista() {
         {linhas.map((linha) => (
           <li key={linha.ano}>
             <Link
-              href={`/?mes=${linha.ano}-01`}
+              href={`/anos/${linha.ano}`}
               className="block border border-line bg-sheet px-4 py-5 text-center text-3xl font-bold text-ink"
             >
               {linha.ano}

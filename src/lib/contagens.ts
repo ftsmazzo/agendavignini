@@ -68,19 +68,10 @@ export async function contarPainel(hoje: string, usuarioId: number) {
 
 export type MarcaDia = "vencido" | "atual" | "em-dia" | "concluido";
 
-export async function marcasDoMes(ano: number, mes: number, hoje: string) {
-  const inicio = `${ano}-${String(mes).padStart(2, "0")}-01`;
-  const db = obterDb();
-  const linhas = await db
-    .select({
-      data: prazos.data,
-      abertos: sql<number>`count(*) filter (where ${prazos.situacao} = 'aberto')::int`,
-      total: sql<number>`count(*)::int`,
-    })
-    .from(prazos)
-    .where(and(gte(prazos.data, inicio), lte(prazos.data, fimDoMes(ano, mes))))
-    .groupBy(prazos.data);
-
+function marcarDias(
+  linhas: Array<{ data: string | null; abertos: number; total: number }>,
+  hoje: string,
+) {
   const marcas: Record<string, MarcaDia> = {};
   for (const linha of linhas) {
     if (!linha.data) {
@@ -99,4 +90,33 @@ export async function marcasDoMes(ano: number, mes: number, hoje: string) {
     }
   }
   return marcas;
+}
+
+const colunasDoDia = {
+  data: prazos.data,
+  abertos: sql<number>`count(*) filter (where ${prazos.situacao} = 'aberto')::int`,
+  total: sql<number>`count(*)::int`,
+};
+
+export async function marcasDoMes(ano: number, mes: number, hoje: string) {
+  const inicio = `${ano}-${String(mes).padStart(2, "0")}-01`;
+  const db = obterDb();
+  const linhas = await db
+    .select(colunasDoDia)
+    .from(prazos)
+    .where(and(gte(prazos.data, inicio), lte(prazos.data, fimDoMes(ano, mes))))
+    .groupBy(prazos.data);
+  return marcarDias(linhas, hoje);
+}
+
+export async function marcasDoAno(ano: number, hoje: string) {
+  const db = obterDb();
+  const linhas = await db
+    .select(colunasDoDia)
+    .from(prazos)
+    .where(
+      and(gte(prazos.data, `${ano}-01-01`), lte(prazos.data, `${ano}-12-31`)),
+    )
+    .groupBy(prazos.data);
+  return marcarDias(linhas, hoje);
 }
