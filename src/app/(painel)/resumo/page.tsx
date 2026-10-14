@@ -10,12 +10,32 @@ import { listarPessoas } from "@/lib/pessoas";
 import {
   faixaDaArea,
   itensDoDia,
+  marcaDoPrazo,
   painelDoPeriodo,
   resumoDoDia,
   rotuloArea,
   statusDoPrazo,
   textoDoResumo,
 } from "@/lib/resumo";
+
+const TOM = {
+  vermelho: "bg-late text-late-ink",
+  amarelo: "bg-today-mark text-today-ink",
+  verde: "bg-done-mark text-done-ink",
+} as const;
+
+const PONTO = {
+  vermelho: "bg-late",
+  amarelo: "bg-today-mark",
+  verde: "bg-done-mark",
+} as const;
+
+function tomDoDia(data: string, abertos: number, hoje: string) {
+  if (abertos === 0) {
+    return "verde" as const;
+  }
+  return marcaDoPrazo("aberto", data, hoje).tom;
+}
 
 const BARRA = {
   administrativo: "bg-area-admin",
@@ -352,6 +372,21 @@ async function Corpo({
         ))}
       </div>
 
+      <ul className="mt-4 flex flex-wrap gap-3 text-lg text-ink">
+        <li className="inline-flex items-center gap-2">
+          <span className="inline-block h-4 w-4 rounded-full bg-late" />
+          Vencido
+        </li>
+        <li className="inline-flex items-center gap-2">
+          <span className="inline-block h-4 w-4 rounded-full bg-today-mark" />
+          Perto, hoje ou nos dois dias seguintes
+        </li>
+        <li className="inline-flex items-center gap-2">
+          <span className="inline-block h-4 w-4 rounded-full bg-done-mark" />
+          Cumprido ou no prazo
+        </li>
+      </ul>
+
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <section className="border border-line bg-sheet p-5">
           <h2 className="text-2xl font-semibold text-ink">Áreas</h2>
@@ -442,7 +477,12 @@ async function Corpo({
                   : "border border-line bg-sheet px-3 py-2 text-lg text-ink"
               }
             >
-              {dataBr(dia.data)}
+              <span className="flex items-center gap-2">
+                <span
+                  className={`inline-block h-3 w-3 rounded-full ${PONTO[tomDoDia(dia.data, dia.abertos, hoje)]}`}
+                />
+                {dataBr(dia.data)}
+              </span>
               <span className="mt-1 block text-base font-normal">
                 {dia.total === 1 ? "1 prazo" : `${dia.total} prazos`}
                 {dia.abertos > 0 ? ` · ${dia.abertos} em aberto` : ""}
@@ -484,34 +524,44 @@ async function Corpo({
             <p className="mt-4 text-xl text-ink">Nenhum prazo neste dia.</p>
           ) : (
             <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
-              {itens.prazos.map((item) => (
-                <li
-                  key={item.id}
-                  className={`px-5 py-4 ${faixaDaArea(item.area)}`}
-                >
-                  <p className="text-lg text-muted">
-                    {rotuloArea(item.area)} · {statusDoPrazo(item)}
-                  </p>
-                  <h3 className="mt-1 text-2xl font-semibold text-ink">
-                    <Link
-                      href={`/prazos?data=${item.data}`}
-                      className="text-ink"
-                    >
-                      {item.titulo}
-                    </Link>
-                  </h3>
-                  {item.conteudo ? (
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-lg text-pen">
-                        Ver publicação
-                      </summary>
-                      <p className="mt-2 text-lg whitespace-pre-wrap text-ink">
-                        {item.conteudo}
+              {itens.prazos.map((item) => {
+                const marca = marcaDoPrazo(item.situacao, item.data, hoje);
+                return (
+                  <li
+                    key={item.id}
+                    className={`px-5 py-4 ${faixaDaArea(item.area)}`}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-lg text-muted">
+                        {rotuloArea(item.area)} · {statusDoPrazo(item)}
                       </p>
-                    </details>
-                  ) : null}
-                </li>
-              ))}
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-base font-semibold ${TOM[marca.tom]}`}
+                      >
+                        {marca.texto}
+                      </span>
+                    </div>
+                    <h3 className="mt-1 text-2xl font-semibold text-ink">
+                      <Link
+                        href={`/prazos?data=${item.data}`}
+                        className="text-ink"
+                      >
+                        {item.titulo}
+                      </Link>
+                    </h3>
+                    {item.conteudo ? (
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-lg text-pen">
+                          Ver publicação
+                        </summary>
+                        <p className="mt-2 text-lg whitespace-pre-wrap text-ink">
+                          {item.conteudo}
+                        </p>
+                      </details>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

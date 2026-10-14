@@ -7,7 +7,7 @@ import {
   prazosUsuarios,
   usuarios,
 } from "@/db/schema";
-import { dataBr, dataHoraBr } from "@/lib/datas";
+import { dataBr, dataHoraBr, somarDias } from "@/lib/datas";
 
 const areas = {
   administrativo: "Administrativo",
@@ -69,6 +69,26 @@ const FAIXA = {
   civil: "border-l-4 border-area-civil",
   trabalhista: "border-l-4 border-area-trab",
 } as const;
+
+export function marcaDoPrazo(
+  situacao: "aberto" | "cumprido",
+  data: string,
+  hoje: string,
+) {
+  if (situacao === "cumprido") {
+    return { tom: "verde" as const, texto: "Cumprido" };
+  }
+  if (data < hoje) {
+    return { tom: "vermelho" as const, texto: "Vencido" };
+  }
+  if (data <= somarDias(hoje, 2)) {
+    return {
+      tom: "amarelo" as const,
+      texto: data === hoje ? "Vence hoje" : "Perto",
+    };
+  }
+  return { tom: "verde" as const, texto: "No prazo" };
+}
 
 export function rotuloArea(area: keyof typeof areas) {
   return areas[area];
