@@ -13,7 +13,7 @@ import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr } from "@/lib/datas";
-import { rotuloArea } from "@/lib/resumo";
+import { rotuloArea, statusDoPrazo } from "@/lib/resumo";
 
 const AREAS = ["administrativo", "civil", "trabalhista"] as const;
 
@@ -149,8 +149,12 @@ async function Lista({
       observacao: prazos.observacao,
       conteudo: prazos.conteudo,
       situacao: prazos.situacao,
+      cumpridoNome: usuarios.nome,
+      cumpridoSobrenome: usuarios.sobrenome,
+      cumpridoEm: prazos.cumpridoEm,
     })
     .from(prazos)
+    .leftJoin(usuarios, eq(usuarios.id, prazos.cumpridoPorId))
     .where(and(...filtros))
     .orderBy(asc(prazos.data), asc(prazos.titulo), asc(prazos.id))
     .limit(300);
@@ -327,9 +331,14 @@ async function Lista({
           {itens.map((item) => (
             <li key={item.id} className="px-6 py-5">
               <p className="text-lg text-muted">
-                {rotuloArea(item.area)} ·{" "}
-                {item.data.split("-").reverse().join("/")} ·{" "}
-                {item.situacao === "cumprido" ? "Cumprido" : "Em aberto"}
+                {rotuloArea(item.area)} · {dataBr(item.data)} ·{" "}
+                {statusDoPrazo({
+                  situacao: item.situacao,
+                  cumpridoPor: item.cumpridoNome
+                    ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
+                    : null,
+                  cumpridoEm: item.cumpridoEm,
+                })}
                 {meusIds.has(item.id) ? " · Seu prazo" : ""}
               </p>
               <h2 className="mt-1 text-2xl font-semibold text-ink">

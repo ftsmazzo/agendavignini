@@ -47,7 +47,11 @@ export function assuntoDoDia(dia: string) {
   return `Prazos e Audiências para ${dataBr(dia)} - Agenda Coelho Vignini`;
 }
 
-export function statusDoPrazo(item: PrazoDoDia) {
+export function statusDoPrazo(item: {
+  situacao: PrazoDoDia["situacao"];
+  cumpridoPor: string | null;
+  cumpridoEm: Date | null;
+}) {
   if (item.situacao !== "cumprido") {
     return "Não cumprido";
   }

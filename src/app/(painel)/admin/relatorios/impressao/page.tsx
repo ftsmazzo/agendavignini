@@ -132,11 +132,6 @@ async function Folha({
             <p className="mt-2 text-lg text-ink">
               {rotuloArea(item.area)} · {dataBr(item.data)} ·{" "}
               {statusDoPrazo({
-                id: item.id,
-                area: item.area,
-                data: item.data,
-                titulo: item.titulo,
-                conteudo: item.conteudo,
                 situacao: item.situacao,
                 cumpridoPor: item.cumpridoNome
                   ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()

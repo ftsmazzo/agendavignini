@@ -4,10 +4,10 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { classeCampo } from "@/components/campo";
 import { obterDb } from "@/db/client";
-import { prazos } from "@/db/schema";
+import { prazos, usuarios } from "@/db/schema";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr, dataIsoValida } from "@/lib/datas";
-import { rotuloArea } from "@/lib/resumo";
+import { rotuloArea, statusDoPrazo } from "@/lib/resumo";
 
 export default function ListarPrazosAdmin({
   searchParams,
@@ -131,10 +131,20 @@ async function Lista({
       area: prazos.area,
       titulo: prazos.titulo,
       situacao: prazos.situacao,
+      observacao: prazos.observacao,
+      conteudo: prazos.conteudo,
+      cumpridoNome: usuarios.nome,
+      cumpridoSobrenome: usuarios.sobrenome,
+      cumpridoEm: prazos.cumpridoEm,
     })
     .from(prazos)
-    .where(and(eq(prazos.data, dia)))
-    .orderBy(asc(prazos.id))
+    .leftJoin(usuarios, eq(usuarios.id, prazos.cumpridoPorId))
+    .where(eq(prazos.data, dia))
+    .orderBy(
+      sql`case ${prazos.area} when 'administrativo' then 1 when 'civil' then 2 else 3 end`,
+      asc(prazos.titulo),
+      asc(prazos.id),
+    )
     .limit(300);
 
   return (
@@ -196,7 +206,13 @@ async function Lista({
             <li key={item.id} className="px-6 py-5">
               <p className="text-lg text-muted">
                 {rotuloArea(item.area)} ·{" "}
-                {item.situacao === "cumprido" ? "Cumprido" : "Em aberto"}
+                {statusDoPrazo({
+                  situacao: item.situacao,
+                  cumpridoPor: item.cumpridoNome
+                    ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
+                    : null,
+                  cumpridoEm: item.cumpridoEm,
+                })}
               </p>
               <Link
                 href={`/admin/prazos/${item.id}`}
@@ -204,6 +220,21 @@ async function Lista({
               >
                 {item.titulo}
               </Link>
+              {item.observacao ? (
+                <p className="mt-3 text-xl whitespace-pre-wrap text-ink">
+                  {item.observacao}
+                </p>
+              ) : null}
+              {item.conteudo ? (
+                <details className="mt-3">
+                  <summary className="cursor-pointer text-lg text-pen">
+                    Ver publicação
+                  </summary>
+                  <p className="mt-3 text-lg whitespace-pre-wrap text-ink">
+                    {item.conteudo}
+                  </p>
+                </details>
+              ) : null}
             </li>
           ))}
         </ul>

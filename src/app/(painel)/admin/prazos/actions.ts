@@ -26,6 +26,7 @@ function atualizarListas() {
   revalidatePath("/");
   revalidatePath("/prazos");
   revalidatePath("/admin/prazos");
+  revalidatePath("/admin/relatorios");
   revalidatePath("/busca");
 }
 
