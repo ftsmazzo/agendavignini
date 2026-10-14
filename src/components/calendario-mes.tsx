@@ -38,11 +38,13 @@ export function CalendarioMes({
   mes,
   hoje,
   marcas,
+  atual = false,
 }: {
   ano: number;
   mes: number;
   hoje: string;
   marcas: Record<string, MarcaDia>;
+  atual?: boolean;
 }) {
   const grade = montarMes(ano, mes);
   const anterior = deslocarMes(ano, mes, -1);
@@ -55,22 +57,46 @@ export function CalendarioMes({
   }
 
   return (
-    <section className="mx-auto mt-10 max-w-3xl">
+    <section
+      className={
+        atual
+          ? "mx-auto mt-10 max-w-3xl border-4 border-pen bg-sheet p-4"
+          : "mx-auto mt-10 max-w-3xl"
+      }
+    >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link
           href={`/?mes=${chaveMes(anterior.ano, anterior.mes)}`}
           className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
         >
-          {nomeAnterior}
+          Anterior
+          <span className="mt-1 block text-base font-normal text-muted">
+            {nomeAnterior}
+          </span>
         </Link>
         <h2 className="text-center text-4xl leading-none font-bold text-ink">
           {grade.nome} {grade.ano}
+          {atual ? (
+            <span className="mt-2 block text-lg font-semibold text-pen">
+              Mês atual
+            </span>
+          ) : (
+            <Link
+              href="/"
+              className="mt-2 block text-lg font-semibold text-pen"
+            >
+              Mês atual
+            </Link>
+          )}
         </h2>
         <Link
           href={`/?mes=${chaveMes(proximo.ano, proximo.mes)}`}
-          className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
+          className="border border-line bg-sheet px-4 py-3 text-right text-lg font-semibold text-ink"
         >
-          {nomeProximo}
+          Próximo
+          <span className="mt-1 block text-base font-normal text-muted">
+            {nomeProximo}
+          </span>
         </Link>
       </div>
       <table className="mt-6 w-full border-collapse">

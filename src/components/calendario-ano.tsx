@@ -53,8 +53,16 @@ export function CalendarioAno({
         for (let inicio = 0; inicio < grade.dias.length; inicio += 7) {
           semanas.push(grade.dias.slice(inicio, inicio + 7));
         }
+        const mesAtual =
+          grade.ano === Number(hoje.slice(0, 4)) &&
+          grade.mes === Number(hoje.slice(5, 7));
         return (
-          <section key={grade.mes}>
+          <section
+            key={grade.mes}
+            className={
+              mesAtual ? "border-4 border-pen bg-sheet p-3" : undefined
+            }
+          >
             <h2 className="text-2xl font-bold text-ink">
               <Link
                 href={`/?mes=${chaveMes(grade.ano, grade.mes)}`}

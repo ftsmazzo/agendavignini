@@ -1,14 +1,8 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { CalendarioAno } from "@/components/calendario-ano";
 import { CalendarioMes } from "@/components/calendario-mes";
 import { lerMes } from "@/lib/calendario";
-import {
-  contarPainel,
-  hojeNoEscritorio,
-  marcasDoAno,
-  marcasDoMes,
-} from "@/lib/contagens";
+import { contarPainel, hojeNoEscritorio, marcasDoMes } from "@/lib/contagens";
 import { lerSessao } from "@/lib/sessao";
 
 export default function TelaInicial({
@@ -34,8 +28,9 @@ async function PainelDoDia({
   const agora = new Date();
   const hoje = hojeNoEscritorio(agora);
   const anoHoje = Number(hoje.slice(0, 4));
-  const verMes = Boolean(mes);
+  const mesHoje = Number(hoje.slice(5, 7));
   const recorte = lerMes(mes, hoje);
+  const mesAtual = recorte.ano === anoHoje && recorte.mes === mesHoje;
   const contas = sessao
     ? await contarPainel(hoje, sessao.id)
     : {
@@ -44,9 +39,7 @@ async function PainelDoDia({
         audiencias: 0,
         minhasAudiencias: 0,
       };
-  const marcas = verMes
-    ? await marcasDoMes(recorte.ano, recorte.mes, hoje)
-    : await marcasDoAno(anoHoje, hoje);
+  const marcas = await marcasDoMes(recorte.ano, recorte.mes, hoje);
   const dataLonga = new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",
     weekday: "long",
@@ -101,26 +94,13 @@ async function PainelDoDia({
           </a>
         ))}
       </div>
-      {verMes ? (
-        <>
-          <p className="mt-8">
-            <a
-              href={recorte.ano === anoHoje ? "/" : `/anos/${recorte.ano}`}
-              className="text-lg text-pen"
-            >
-              Ano de {recorte.ano}
-            </a>
-          </p>
-          <CalendarioMes
-            ano={recorte.ano}
-            mes={recorte.mes}
-            hoje={hoje}
-            marcas={marcas}
-          />
-        </>
-      ) : (
-        <CalendarioAno ano={anoHoje} hoje={hoje} marcas={marcas} />
-      )}
+      <CalendarioMes
+        ano={recorte.ano}
+        mes={recorte.mes}
+        hoje={hoje}
+        marcas={marcas}
+        atual={mesAtual}
+      />
     </div>
   );
 }
