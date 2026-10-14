@@ -1,8 +1,65 @@
-import { and, asc, eq, gte, inArray, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt, or, sql } from "drizzle-orm";
 import { obterDb } from "@/db/client";
 import { audiencias, audienciasUsuarios, usuarios } from "@/db/schema";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { semanaDe, somarDias } from "@/lib/datas";
+
+function padrao(termo: string) {
+  const limpo = termo.replace(/[\\%_]/g, (caractere) => `\\${caractere}`);
+  return `%${limpo}%`;
+}
+
+const anoDaAudiencia = sql`extract(year from (${audiencias.dataHora} at time zone 'America/Sao_Paulo'))`;
+
+export async function anosDasAudiencias() {
+  const db = obterDb();
+  return db
+    .select({
+      ano: sql<number>`${anoDaAudiencia}::int`,
+      total: sql<number>`count(*)::int`,
+    })
+    .from(audiencias)
+    .groupBy(anoDaAudiencia)
+    .orderBy(desc(anoDaAudiencia));
+}
+
+export async function listarAudienciasAdmin(opcoes: {
+  ano: number | null;
+  termo: string;
+}) {
+  const db = obterDb();
+  const termo = opcoes.termo.trim();
+  const filtroTexto = termo
+    ? or(
+        sql`${audiencias.numeroProcesso} ilike ${padrao(termo)}`,
+        sql`${audiencias.vara} ilike ${padrao(termo)}`,
+        sql`${audiencias.local} ilike ${padrao(termo)}`,
+        sql`${audiencias.reclamante} ilike ${padrao(termo)}`,
+        sql`${audiencias.reclamado} ilike ${padrao(termo)}`,
+        sql`${audiencias.preposto} ilike ${padrao(termo)}`,
+      )
+    : undefined;
+  const filtroAno =
+    termo || opcoes.ano === null
+      ? undefined
+      : sql`${anoDaAudiencia} = ${opcoes.ano}`;
+
+  return db
+    .select({
+      id: audiencias.id,
+      numeroProcesso: audiencias.numeroProcesso,
+      dataHora: audiencias.dataHora,
+      vara: audiencias.vara,
+      local: audiencias.local,
+      reclamante: audiencias.reclamante,
+      reclamado: audiencias.reclamado,
+      preposto: audiencias.preposto,
+    })
+    .from(audiencias)
+    .where(and(filtroTexto, filtroAno))
+    .orderBy(desc(audiencias.dataHora), desc(audiencias.id))
+    .limit(termo ? 80 : 500);
+}
 
 export async function listarAudiencias(dia: string | null) {
   const db = obterDb();
