@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { CalendarioMes } from "@/components/calendario-mes";
 import { lerMes } from "@/lib/calendario";
-import { contarPainel, hojeNoEscritorio, marcasDoMes } from "@/lib/contagens";
+import { contarPainel, hojeNoEscritorio, resumosDoMes } from "@/lib/contagens";
 import { lerSessao } from "@/lib/sessao";
 
 export default function TelaInicial({
@@ -39,7 +39,7 @@ async function PainelDoDia({
         audiencias: 0,
         minhasAudiencias: 0,
       };
-  const marcas = await marcasDoMes(recorte.ano, recorte.mes, hoje);
+  const resumos = await resumosDoMes(recorte.ano, recorte.mes);
   const dataLonga = new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",
     weekday: "long",
@@ -98,7 +98,7 @@ async function PainelDoDia({
         ano={recorte.ano}
         mes={recorte.mes}
         hoje={hoje}
-        marcas={marcas}
+        resumos={resumos}
         atual={mesAtual}
       />
     </div>

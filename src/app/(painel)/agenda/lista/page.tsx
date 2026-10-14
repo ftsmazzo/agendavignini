@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { AcoesContato } from "@/components/acoes-contato";
+import { AcoesContato, NumerosContato } from "@/components/acoes-contato";
 import { agruparContatos, buscarContatos } from "@/lib/contatos";
 
 export default function ListaAgenda({
@@ -26,7 +26,7 @@ async function Tabela({
   const grupos = agruparContatos(itens);
 
   return (
-    <section className="mx-auto w-full max-w-5xl">
+    <section className="mx-auto w-full max-w-7xl">
       <h1 className="text-4xl leading-tight font-bold text-ink">
         Lista de contatos
       </h1>
@@ -100,18 +100,15 @@ async function Tabela({
                     <p className="text-xl font-semibold text-ink">
                       {item.nome}
                     </p>
-                    <p className="text-lg text-muted">
-                      {[item.celular, item.telefone, item.email]
-                        .filter(Boolean)
-                        .join(" · ") || "Sem telefone e sem e-mail"}
-                    </p>
+                    <NumerosContato
+                      telefone={item.telefone}
+                      celular={item.celular}
+                    />
+                    {item.email ? (
+                      <p className="text-lg text-muted">{item.email}</p>
+                    ) : null}
                   </div>
-                  <AcoesContato
-                    id={item.id}
-                    telefone={item.telefone}
-                    celular={item.celular}
-                    email={item.email}
-                  />
+                  <AcoesContato id={item.id} email={item.email} />
                 </li>
               ))}
             </ul>

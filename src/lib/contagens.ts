@@ -98,15 +98,69 @@ const colunasDoDia = {
   total: sql<number>`count(*)::int`,
 };
 
-export async function marcasDoMes(ano: number, mes: number, hoje: string) {
+export type ResumoDia = {
+  abertos: number;
+  cumpridos: number;
+  administrativo: number;
+  civil: number;
+  trabalhista: number;
+  audiencias: number;
+};
+
+export async function resumosDoMes(ano: number, mes: number) {
   const inicio = `${ano}-${String(mes).padStart(2, "0")}-01`;
+  const fim = fimDoMes(ano, mes);
   const db = obterDb();
   const linhas = await db
-    .select(colunasDoDia)
+    .select({
+      data: prazos.data,
+      area: prazos.area,
+      abertos: sql<number>`count(*) filter (where ${prazos.situacao} = 'aberto')::int`,
+      cumpridos: sql<number>`count(*) filter (where ${prazos.situacao} = 'cumprido')::int`,
+    })
     .from(prazos)
-    .where(and(gte(prazos.data, inicio), lte(prazos.data, fimDoMes(ano, mes))))
-    .groupBy(prazos.data);
-  return marcarDias(linhas, hoje);
+    .where(and(gte(prazos.data, inicio), lte(prazos.data, fim)))
+    .groupBy(prazos.data, prazos.area);
+
+  const diaAudiencia = sql<string>`to_char(${audiencias.dataHora} at time zone 'America/Sao_Paulo', 'YYYY-MM-DD')`;
+  const oitivas = await db
+    .select({
+      data: diaAudiencia,
+      total: sql<number>`count(*)::int`,
+    })
+    .from(audiencias)
+    .where(
+      sql`(${audiencias.dataHora} at time zone 'America/Sao_Paulo')::date between ${inicio}::date and ${fim}::date`,
+    )
+    .groupBy(diaAudiencia);
+
+  const resumos: Record<string, ResumoDia> = {};
+  const garantir = (data: string) => {
+    const atual = resumos[data] ?? {
+      abertos: 0,
+      cumpridos: 0,
+      administrativo: 0,
+      civil: 0,
+      trabalhista: 0,
+      audiencias: 0,
+    };
+    resumos[data] = atual;
+    return atual;
+  };
+
+  for (const linha of linhas) {
+    const dia = garantir(linha.data);
+    const quantidade = linha.abertos + linha.cumpridos;
+    dia.abertos += linha.abertos;
+    dia.cumpridos += linha.cumpridos;
+    dia[linha.area] += quantidade;
+  }
+  for (const linha of oitivas) {
+    if (linha.data) {
+      garantir(linha.data).audiencias += linha.total;
+    }
+  }
+  return resumos;
 }
 
 export async function marcasDoAno(ano: number, hoje: string) {

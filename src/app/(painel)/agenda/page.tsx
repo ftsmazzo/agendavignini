@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { AcoesContato } from "@/components/acoes-contato";
+import { AcoesContato, NumerosContato } from "@/components/acoes-contato";
 import { agruparContatos, buscarContatos } from "@/lib/contatos";
 import { dataBr } from "@/lib/datas";
 
@@ -29,7 +29,7 @@ async function Lista({
   const grupos = agruparContatos(itens);
 
   return (
-    <section className="mx-auto w-full max-w-5xl">
+    <section className="mx-auto w-full max-w-7xl">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <h1 className="text-4xl leading-tight font-bold text-ink">Agenda</h1>
         <Link
@@ -104,26 +104,23 @@ async function Lista({
             className="mt-8"
           >
             <h2 className="text-3xl font-bold text-ink">{grupo.letra}</h2>
-            <ul className="mt-4 grid gap-4 md:grid-cols-2">
+            <ul className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {grupo.itens.map((item) => (
                 <li key={item.id} className="border border-line bg-sheet p-5">
                   <h3 className="text-2xl font-semibold text-ink">
                     {item.nome}
                   </h3>
-                  <div className="mt-3 space-y-1 text-xl text-ink">
-                    {item.telefone ? <p>{item.telefone}</p> : null}
-                    {item.celular ? <p>{item.celular}</p> : null}
+                  <div className="mt-3 space-y-2 text-xl text-ink">
+                    <NumerosContato
+                      telefone={item.telefone}
+                      celular={item.celular}
+                    />
                     {item.email ? <p>{item.email}</p> : null}
                     {item.endereco ? <p>{item.endereco}</p> : null}
                     {item.nascimento ? <p>{dataBr(item.nascimento)}</p> : null}
                   </div>
                   <div className="mt-4">
-                    <AcoesContato
-                      id={item.id}
-                      telefone={item.telefone}
-                      celular={item.celular}
-                      email={item.email}
-                    />
+                    <AcoesContato id={item.id} email={item.email} />
                   </div>
                 </li>
               ))}

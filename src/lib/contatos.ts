@@ -45,19 +45,48 @@ export async function buscarContatos(termo: string) {
     .orderBy(asc(contatos.nome));
 }
 
-export function numeroWhatsapp(
+type NumeroMarcado = {
+  id: string;
+  texto: string;
+  whatsapp: string | null;
+};
+
+export function numerosDoContato(
   celular: string | null | undefined,
   telefone: string | null | undefined,
 ) {
+  const vistos = new Set<string>();
+  const saida: NumeroMarcado[] = [];
   for (const origem of [celular, telefone]) {
-    for (const parte of partes(origem)) {
-      const numero = normalizar(parte);
-      if (numero) {
-        return numero;
+    for (const pedaco of separar(origem)) {
+      const achados = extrair(pedaco);
+      if (achados.length === 0) {
+        saida.push({
+          id: `texto-${saida.length}`,
+          texto: pedaco,
+          whatsapp: null,
+        });
+        continue;
+      }
+      if (achados.length === 1) {
+        const whatsapp = achados[0];
+        if (!whatsapp || vistos.has(whatsapp)) {
+          continue;
+        }
+        vistos.add(whatsapp);
+        saida.push({ id: whatsapp, texto: pedaco, whatsapp });
+        continue;
+      }
+      for (const whatsapp of achados) {
+        if (vistos.has(whatsapp)) {
+          continue;
+        }
+        vistos.add(whatsapp);
+        saida.push({ id: whatsapp, texto: formatar(whatsapp), whatsapp });
       }
     }
   }
-  return null;
+  return saida;
 }
 
 export function emailDeContato(email: string | null | undefined) {
@@ -73,28 +102,79 @@ export function emailDeContato(email: string | null | undefined) {
   return texto;
 }
 
-function partes(valor: string | null | undefined) {
+const DDD_INVALIDO = new Set([
+  20, 23, 25, 26, 29, 30, 36, 39, 40, 50, 52, 56, 57, 58, 59, 60, 70, 72, 76,
+  78, 80, 90,
+]);
+
+function separar(valor: string | null | undefined) {
   return (valor ?? "")
-    .split(/[/;,]|\s+e\s+|\s+ou\s+/i)
-    .map((parte) => parte.replace(/\D/g, ""))
+    .split(/\s*(?:\/|;|\||,|\be\b|\bou\b|ramal|r\.)\s*/i)
+    .map((parte) => parte.trim())
     .filter(Boolean);
 }
 
-function normalizar(bruto: string) {
-  let numero = bruto.startsWith("00") ? bruto.slice(2) : bruto;
-  if (numero.startsWith("0")) {
-    numero = numero.replace(/^0+/, "");
+function dddValido(ddd: string) {
+  const numero = Number(ddd);
+  return numero >= 11 && numero <= 99 && !DDD_INVALIDO.has(numero);
+}
+
+function extrair(texto: string) {
+  const digitos = texto.replace(/\D/g, "").replace(/^00/, "");
+  const numeros: string[] = [];
+  let indice = 0;
+  while (indice < digitos.length) {
+    if (digitos[indice] === "0") {
+      indice += 1;
+      continue;
+    }
+    const achado = tentar(digitos.slice(indice));
+    if (!achado) {
+      indice += 1;
+      continue;
+    }
+    numeros.push(achado.whatsapp);
+    indice += achado.consumidos;
   }
-  if (
-    numero.startsWith("55") &&
-    (numero.length === 12 || numero.length === 13)
-  ) {
-    return numero;
+  return numeros;
+}
+
+function tentar(resto: string) {
+  const opcoes: Array<{ whatsapp: string; consumidos: number }> = [];
+  if (resto.startsWith("55") && resto.length >= 12) {
+    const corpo = resto.slice(2);
+    if (
+      corpo.length >= 11 &&
+      corpo[2] === "9" &&
+      dddValido(corpo.slice(0, 2))
+    ) {
+      opcoes.push({ whatsapp: `55${corpo.slice(0, 11)}`, consumidos: 13 });
+    } else if (
+      corpo.length >= 10 &&
+      corpo[2] !== "9" &&
+      dddValido(corpo.slice(0, 2))
+    ) {
+      opcoes.push({ whatsapp: `55${corpo.slice(0, 10)}`, consumidos: 12 });
+    }
   }
-  if (numero.length === 10 || numero.length === 11) {
-    return `55${numero}`;
+  if (resto.length >= 11 && resto[2] === "9" && dddValido(resto.slice(0, 2))) {
+    opcoes.push({ whatsapp: `55${resto.slice(0, 11)}`, consumidos: 11 });
   }
-  return null;
+  if (resto.length >= 10 && resto[2] !== "9" && dddValido(resto.slice(0, 2))) {
+    opcoes.push({ whatsapp: `55${resto.slice(0, 10)}`, consumidos: 10 });
+  }
+  opcoes.sort((a, b) => b.consumidos - a.consumidos);
+  return opcoes[0] ?? null;
+}
+
+function formatar(whatsapp: string) {
+  const corpo = whatsapp.slice(2);
+  const ddd = corpo.slice(0, 2);
+  const resto = corpo.slice(2);
+  if (resto.length === 9) {
+    return `(${ddd}) ${resto.slice(0, 5)}-${resto.slice(5)}`;
+  }
+  return `(${ddd}) ${resto.slice(0, 4)}-${resto.slice(4)}`;
 }
 
 export function agruparContatos(itens: ContatoLista[]) {
