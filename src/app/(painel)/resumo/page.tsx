@@ -557,6 +557,11 @@ async function Corpo({
                         {item.titulo}
                       </Link>
                     </h3>
+                    {item.advogados.length > 0 ? (
+                      <p className="mt-2 text-lg text-ink">
+                        {item.advogados.join(", ")}
+                      </p>
+                    ) : null}
                     {item.conteudo ? (
                       <details className="mt-2">
                         <summary className="cursor-pointer text-lg text-pen">

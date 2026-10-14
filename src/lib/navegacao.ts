@@ -32,6 +32,7 @@ export const menuAdmin: GrupoMenu[] = [
       { href: "/admin/prazos/novo", rotulo: "Adicionar novo" },
       { href: "/admin/prazos", rotulo: "Listar" },
       { href: "/admin/prazos/sem-advogado", rotulo: "Sem advogado" },
+      { href: "/admin/prazos/tirar-advogado", rotulo: "Tirar advogado" },
     ],
   },
   {

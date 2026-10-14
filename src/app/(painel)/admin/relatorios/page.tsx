@@ -75,18 +75,27 @@ async function Painel({
 }) {
   const { advogado, inicio, fim, area, situacao, data } = await searchParams;
   const db = obterDb();
-  const marcados = await db
+  const pessoas = await db
     .select({
       id: usuarios.id,
       nome: usuarios.nome,
       sobrenome: usuarios.sobrenome,
     })
     .from(usuarios)
-    .where(and(eq(usuarios.ativo, true), eq(usuarios.entraNoRelatorio, true)))
-    .orderBy(asc(usuarios.nome));
-  const pessoas =
-    marcados.length > 0
-      ? marcados
+    .where(
+      and(
+        eq(usuarios.ativo, true),
+        or(
+          eq(usuarios.entraNoRelatorio, true),
+          sql`exists (select 1 from prazos_usuarios where usuario_id = ${usuarios.id})`,
+          sql`exists (select 1 from prazos where cumprido_por_id = ${usuarios.id})`,
+        ),
+      ),
+    )
+    .orderBy(asc(usuarios.nome), asc(usuarios.sobrenome));
+  const lista =
+    pessoas.length > 0
+      ? pessoas
       : await db
           .select({
             id: usuarios.id,
@@ -95,7 +104,7 @@ async function Painel({
           })
           .from(usuarios)
           .where(eq(usuarios.ativo, true))
-          .orderBy(asc(usuarios.nome));
+          .orderBy(asc(usuarios.nome), asc(usuarios.sobrenome));
 
   const id = Number(advogado);
   const inicioOk = inicio && dataIsoValida(inicio) ? inicio : "";
@@ -106,7 +115,7 @@ async function Painel({
     inicioOk !== "" &&
     fimOk !== "" &&
     inicioOk <= fimOk;
-  const escolhido = pessoas.find((pessoa) => pessoa.id === id);
+  const escolhido = lista.find((pessoa) => pessoa.id === id);
   const areaOk = AREAS.find((item) => item === area);
   const situacaoOk =
     situacao === "aberto" || situacao === "cumprido" ? situacao : undefined;
@@ -266,7 +275,7 @@ async function Painel({
             defaultValue={escolhido ? String(escolhido.id) : ""}
             className={classeCampo}
           >
-            {pessoas.map((pessoa) => (
+            {lista.map((pessoa) => (
               <option key={pessoa.id} value={pessoa.id}>
                 {`${pessoa.nome} ${pessoa.sobrenome}`.trim()}
               </option>

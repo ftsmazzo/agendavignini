@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { obterDb } from "@/db/client";
 import {
   audiencias,
@@ -485,6 +485,26 @@ export async function itensDoDia(dia: string, advogadoId: number | null) {
   ]);
 
   const ordem = { administrativo: 0, civil: 1, trabalhista: 2 };
+  const ids = prazosDia.map((item) => item.id);
+  const vinculos =
+    ids.length === 0
+      ? []
+      : await db
+          .select({
+            prazoId: prazosUsuarios.prazoId,
+            nome: usuarios.nome,
+            sobrenome: usuarios.sobrenome,
+          })
+          .from(prazosUsuarios)
+          .innerJoin(usuarios, eq(usuarios.id, prazosUsuarios.usuarioId))
+          .where(inArray(prazosUsuarios.prazoId, ids))
+          .orderBy(asc(usuarios.nome), asc(usuarios.sobrenome));
+  const nomes = new Map<number, string[]>();
+  for (const vinculo of vinculos) {
+    const lista = nomes.get(vinculo.prazoId) ?? [];
+    lista.push(`${vinculo.nome} ${vinculo.sobrenome}`.trim());
+    nomes.set(vinculo.prazoId, lista);
+  }
   return {
     prazos: prazosDia
       .map((item) => ({
@@ -498,6 +518,7 @@ export async function itensDoDia(dia: string, advogadoId: number | null) {
           ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
           : null,
         cumpridoEm: item.cumpridoEm,
+        advogados: nomes.get(item.id) ?? [],
       }))
       .sort(
         (a, b) =>
