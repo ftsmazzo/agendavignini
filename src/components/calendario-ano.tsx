@@ -19,6 +19,13 @@ const APARENCIA: Record<MarcaDia, string> = {
   concluido: "bg-done-mark text-done-ink",
 };
 
+const LEGENDA: Array<{ marca: MarcaDia; texto: string }> = [
+  { marca: "vencido", texto: "Aberto e já passou" },
+  { marca: "atual", texto: "Aberto hoje" },
+  { marca: "em-dia", texto: "Aberto à frente" },
+  { marca: "concluido", texto: "Tudo cumprido" },
+];
+
 const ROTULO: Record<MarcaDia, string> = {
   vencido: "prazo em aberto já vencido",
   atual: "prazo de hoje em aberto",
@@ -112,6 +119,14 @@ export function CalendarioAno({
           </section>
         );
       })}
+      <ul className="mt-6 flex flex-wrap gap-3 text-lg md:col-span-2 xl:col-span-3">
+        {LEGENDA.map((item) => (
+          <li key={item.marca} className="flex items-center gap-2">
+            <span className={`inline-block h-5 w-5 ${APARENCIA[item.marca]}`} />
+            {item.texto}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

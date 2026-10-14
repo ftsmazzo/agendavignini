@@ -64,8 +64,18 @@ export function statusDoPrazo(item: {
   return "Cumprido";
 }
 
+const FAIXA = {
+  administrativo: "border-l-4 border-area-admin",
+  civil: "border-l-4 border-area-civil",
+  trabalhista: "border-l-4 border-area-trab",
+} as const;
+
 export function rotuloArea(area: keyof typeof areas) {
   return areas[area];
+}
+
+export function faixaDaArea(area: keyof typeof areas) {
+  return FAIXA[area];
 }
 
 function carimbo(agora: Date) {

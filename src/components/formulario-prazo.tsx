@@ -29,6 +29,7 @@ export function FormularioPrazo({
     observacao: string;
     conteudo: string;
     cumpridoPorId: number | null;
+    cumpridoEm: string;
   };
   pessoas: Pessoa[];
   responsaveis: Pessoa[];
@@ -183,6 +184,19 @@ export function FormularioPrazo({
             ))}
           </select>
         </Campo>
+        <Campo id="cumpridoEm" rotulo="Data / hora cumprido">
+          <input
+            id="cumpridoEm"
+            name="cumpridoEm"
+            type="datetime-local"
+            defaultValue={prazo?.cumpridoEm ?? ""}
+            className={classeCampo}
+          />
+        </Campo>
+        <p className="text-lg text-muted">
+          Vale quando o status é cumprido. Em branco, grava o horário deste
+          salvamento.
+        </p>
         <Campo id="advogados" rotulo="Advogados">
           <select
             id="advogados"

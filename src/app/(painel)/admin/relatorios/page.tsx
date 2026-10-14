@@ -12,7 +12,7 @@ import { CorpoPrazo } from "@/components/corpo-prazo";
 import { obterDb } from "@/db/client";
 import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { dataBr, dataIsoValida } from "@/lib/datas";
-import { rotuloArea, statusDoPrazo } from "@/lib/resumo";
+import { faixaDaArea, rotuloArea, statusDoPrazo } from "@/lib/resumo";
 
 const AREAS = ["administrativo", "civil", "trabalhista"] as const;
 
@@ -374,7 +374,10 @@ async function Painel({
           ) : (
             <ul className="mt-6 divide-y divide-line border border-line bg-sheet">
               {itens.map((item) => (
-                <li key={item.id} className="px-6 py-5">
+                <li
+                  key={item.id}
+                  className={`px-6 py-5 ${faixaDaArea(item.area)}`}
+                >
                   <p className="text-lg text-muted">
                     {rotuloArea(item.area)} · {dataBr(item.data)} ·{" "}
                     {statusDoPrazo({

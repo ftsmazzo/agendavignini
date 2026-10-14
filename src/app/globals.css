@@ -21,6 +21,9 @@
   --done-mark: #1f6b45;
   --done-ink: #ffffff;
   --weekend: #d7e0ec;
+  --area-admin: #1f6b45;
+  --area-civil: #1d4e89;
+  --area-trab: #0f6f8a;
   --rail: #1c2838;
   --rail-ink: #f7f9fc;
   --rail-muted: #c5d0de;
@@ -47,6 +50,9 @@
   --done-mark: #8ed0ae;
   --done-ink: #0d1c14;
   --weekend: #243140;
+  --area-admin: #9ed7b8;
+  --area-civil: #9ec0ea;
+  --area-trab: #8fd0e0;
   --rail: #121820;
   --rail-ink: #f7f9fc;
   --rail-muted: #c5d0de;
@@ -73,6 +79,9 @@
   --color-done-mark: var(--done-mark);
   --color-done-ink: var(--done-ink);
   --color-weekend: var(--weekend);
+  --color-area-admin: var(--area-admin);
+  --color-area-civil: var(--area-civil);
+  --color-area-trab: var(--area-trab);
   --color-rail: var(--rail);
   --color-rail-ink: var(--rail-ink);
   --color-rail-muted: var(--rail-muted);

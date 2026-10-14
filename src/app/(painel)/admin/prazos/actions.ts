@@ -7,7 +7,12 @@ import { obterDb } from "@/db/client";
 import { auditoria, prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirAdmin, exigirUsuario } from "@/lib/acesso";
 import { hojeNoEscritorio } from "@/lib/contagens";
-import { caminhoInterno, dataIsoValida, ehFimDeSemana } from "@/lib/datas";
+import {
+  caminhoInterno,
+  dataIsoValida,
+  ehFimDeSemana,
+  instanteEscritorio,
+} from "@/lib/datas";
 
 const AREAS = new Set(["administrativo", "civil", "trabalhista"]);
 
@@ -44,6 +49,13 @@ export async function salvarPrazo(
     .trim()
     .slice(0, 200000);
   const cumpridoBruto = texto(formData, "cumpridoPor", 12);
+  const cumpridoEmBruto = texto(formData, "cumpridoEm", 16);
+  const cumpridoEmInformado = cumpridoEmBruto
+    ? instanteEscritorio(cumpridoEmBruto)
+    : null;
+  if (cumpridoEmBruto && !cumpridoEmInformado) {
+    return { erro: "Informe a data e a hora em que foi cumprido." };
+  }
   const ids = [
     ...new Set(
       formData
@@ -119,25 +131,15 @@ export async function salvarPrazo(
 
   if (id) {
     const [atual] = await db
-      .select({
-        situacao: prazos.situacao,
-        cumpridoPorId: prazos.cumpridoPorId,
-        cumpridoEm: prazos.cumpridoEm,
-      })
+      .select({ id: prazos.id })
       .from(prazos)
       .where(eq(prazos.id, id))
       .limit(1);
     if (!atual) {
       return { erro: "Esse prazo não está mais na lista." };
     }
-    const manteve =
-      situacao === "cumprido" &&
-      atual.situacao === "cumprido" &&
-      atual.cumpridoPorId === cumpridoPorId;
-    let cumpridoEm: Date | null = null;
-    if (situacao === "cumprido") {
-      cumpridoEm = manteve && atual.cumpridoEm ? atual.cumpridoEm : new Date();
-    }
+    const cumpridoEm =
+      situacao === "cumprido" ? (cumpridoEmInformado ?? new Date()) : null;
     await db.transaction(async (tx) => {
       await tx
         .update(prazos)
@@ -179,7 +181,8 @@ export async function salvarPrazo(
         conteudo,
         situacao,
         cumpridoPorId,
-        cumpridoEm: situacao === "cumprido" ? new Date() : null,
+        cumpridoEm:
+          situacao === "cumprido" ? (cumpridoEmInformado ?? new Date()) : null,
       })
       .returning({ id: prazos.id });
     if (!criado) {

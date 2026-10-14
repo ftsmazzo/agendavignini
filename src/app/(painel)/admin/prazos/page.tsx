@@ -7,7 +7,7 @@ import { obterDb } from "@/db/client";
 import { prazos, usuarios } from "@/db/schema";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr, dataIsoValida } from "@/lib/datas";
-import { rotuloArea, statusDoPrazo } from "@/lib/resumo";
+import { faixaDaArea, rotuloArea, statusDoPrazo } from "@/lib/resumo";
 
 export default function ListarPrazosAdmin({
   searchParams,
@@ -203,7 +203,7 @@ async function Lista({
       ) : (
         <ul className="mt-6 divide-y divide-line border border-line bg-sheet">
           {itens.map((item) => (
-            <li key={item.id} className="px-6 py-5">
+            <li key={item.id} className={`px-6 py-5 ${faixaDaArea(item.area)}`}>
               <p className="text-lg text-muted">
                 {rotuloArea(item.area)} ·{" "}
                 {statusDoPrazo({

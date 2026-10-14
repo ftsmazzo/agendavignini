@@ -5,6 +5,7 @@ import { FormularioPrazo } from "@/components/formulario-prazo";
 import { obterDb } from "@/db/client";
 import { prazos, prazosUsuarios } from "@/db/schema";
 import { hojeNoEscritorio } from "@/lib/contagens";
+import { paraCampoDataHora } from "@/lib/datas";
 import { listarPessoas } from "@/lib/pessoas";
 
 export default function EditarPrazo({
@@ -71,6 +72,9 @@ async function Editor({
           observacao: prazo.observacao,
           conteudo: prazo.conteudo,
           cumpridoPorId: prazo.cumpridoPorId,
+          cumpridoEm: prazo.cumpridoEm
+            ? paraCampoDataHora(prazo.cumpridoEm)
+            : "",
         }}
         pessoas={pessoas}
         responsaveis={responsaveis}

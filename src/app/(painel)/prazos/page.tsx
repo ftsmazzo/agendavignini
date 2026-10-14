@@ -13,7 +13,7 @@ import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr } from "@/lib/datas";
-import { rotuloArea, statusDoPrazo } from "@/lib/resumo";
+import { faixaDaArea, rotuloArea, statusDoPrazo } from "@/lib/resumo";
 
 const AREAS = ["administrativo", "civil", "trabalhista"] as const;
 
@@ -329,7 +329,7 @@ async function Lista({
       ) : (
         <ul className="mt-8 divide-y divide-line border border-line bg-sheet">
           {itens.map((item) => (
-            <li key={item.id} className="px-6 py-5">
+            <li key={item.id} className={`px-6 py-5 ${faixaDaArea(item.area)}`}>
               <p className="text-lg text-muted">
                 {rotuloArea(item.area)} · {dataBr(item.data)} ·{" "}
                 {statusDoPrazo({
