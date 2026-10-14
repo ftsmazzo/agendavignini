@@ -13,7 +13,11 @@ import { faixaDaArea, marcaDoPrazo, rotuloArea } from "@/lib/resumo";
 export default function SemAdvogado({
   searchParams,
 }: {
-  searchParams: Promise<{ dia?: string; marcados?: string }>;
+  searchParams: Promise<{
+    dia?: string;
+    marcados?: string;
+    advogados?: string;
+  }>;
 }) {
   return (
     <Suspense
@@ -29,10 +33,18 @@ export default function SemAdvogado({
 async function Lista({
   searchParams,
 }: {
-  searchParams: Promise<{ dia?: string; marcados?: string }>;
+  searchParams: Promise<{
+    dia?: string;
+    marcados?: string;
+    advogados?: string;
+  }>;
 }) {
   await connection();
-  const { dia: diaPedido, marcados } = await searchParams;
+  const {
+    dia: diaPedido,
+    marcados,
+    advogados: advogadosPedido,
+  } = await searchParams;
   const hoje = hojeNoEscritorio();
   const db = obterDb();
   const semVinculo = sql`not exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id})`;
@@ -71,6 +83,16 @@ async function Lista({
   const pessoas = (await listarPessoas())
     .filter((pessoa) => pessoa.ativo)
     .map((pessoa) => ({ id: pessoa.id, nome: pessoa.nome }));
+  const ativos = new Set(pessoas.map((pessoa) => pessoa.id));
+  const equipe = [
+    ...new Set(
+      (advogadosPedido ?? "")
+        .split(",")
+        .map((valor) => Number(valor))
+        .filter((valor) => ativos.has(valor)),
+    ),
+  ].slice(0, 20);
+  const seguir = equipe.length > 0;
   const quantidadeMarcada = /^\d{1,4}$/.test(marcados ?? "")
     ? Number(marcados)
     : 0;
@@ -80,6 +102,14 @@ async function Lista({
       ordem[a.area] - ordem[b.area] ||
       a.titulo.localeCompare(b.titulo, "pt-BR"),
   );
+
+  function endereco(data: string) {
+    const params = new URLSearchParams({ dia: data });
+    if (equipe.length > 0) {
+      params.set("advogados", equipe.join(","));
+    }
+    return `/admin/prazos/sem-advogado?${params}`;
+  }
 
   return (
     <section className="w-full">
@@ -110,7 +140,7 @@ async function Lista({
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             {anterior ? (
               <Link
-                href={`/admin/prazos/sem-advogado?dia=${anterior.data}`}
+                href={endereco(anterior.data)}
                 className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
               >
                 Anterior
@@ -129,7 +159,7 @@ async function Lista({
             </h2>
             {proximo ? (
               <Link
-                href={`/admin/prazos/sem-advogado?dia=${proximo.data}`}
+                href={endereco(proximo.data)}
                 className="border border-line bg-sheet px-4 py-3 text-right text-lg font-semibold text-ink"
               >
                 Próximo
@@ -159,6 +189,9 @@ async function Lista({
                 ))}
               </select>
             </div>
+            {equipe.length > 0 ? (
+              <input type="hidden" name="advogados" value={equipe.join(",")} />
+            ) : null}
             <button
               type="submit"
               className="bg-pen px-4 py-3 text-lg font-semibold text-sheet"
@@ -172,7 +205,7 @@ async function Lista({
             </p>
           ) : (
             <FormularioResponsavel
-              key={dia}
+              key={`${dia}-${equipe.join("-")}`}
               dia={dia}
               itens={itens.map((item) => ({
                 id: item.id,
@@ -182,6 +215,8 @@ async function Lista({
                 marca: marcaDoPrazo(item.situacao, item.data, hoje).texto,
               }))}
               pessoas={pessoas}
+              advogadosIniciais={equipe}
+              seguir={seguir}
             />
           )}
         </>

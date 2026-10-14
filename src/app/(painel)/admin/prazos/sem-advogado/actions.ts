@@ -1,6 +1,6 @@
 "use server";
 
-import { and, gte, inArray, sql } from "drizzle-orm";
+import { and, asc, gte, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { obterDb } from "@/db/client";
@@ -96,5 +96,21 @@ export async function marcarResponsaveis(
   revalidatePath("/admin/prazos");
   revalidatePath("/admin/prazos/sem-advogado");
   revalidatePath("/admin/relatorios");
-  redirect(`/admin/prazos/sem-advogado?dia=${dia}&marcados=${gravados}`);
+  const [seguinte] = await db
+    .select({ data: prazos.data })
+    .from(prazos)
+    .where(
+      and(
+        gte(prazos.data, dia),
+        sql`not exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id})`,
+      ),
+    )
+    .groupBy(prazos.data)
+    .orderBy(asc(prazos.data))
+    .limit(1);
+  const destino = seguinte?.data ?? dia;
+  const equipe = advogados.join(",");
+  redirect(
+    `/admin/prazos/sem-advogado?dia=${destino}&marcados=${gravados}&advogados=${equipe}`,
+  );
 }

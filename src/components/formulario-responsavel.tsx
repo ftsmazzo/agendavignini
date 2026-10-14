@@ -16,15 +16,21 @@ export function FormularioResponsavel({
   dia,
   itens,
   pessoas,
+  advogadosIniciais,
+  seguir,
 }: {
   dia: string;
   itens: PrazoAberto[];
   pessoas: Array<{ id: number; nome: string }>;
+  advogadosIniciais: number[];
+  seguir: boolean;
 }) {
   const [estado, acao, pendente] = useActionState(marcarResponsaveis, {
     erro: "",
   });
-  const [ids, setIds] = useState<number[]>([]);
+  const [ids, setIds] = useState<number[]>(() =>
+    seguir ? itens.map((item) => item.id) : [],
+  );
   const todos = itens.length > 0 && ids.length === itens.length;
 
   function alternar(id: number, ligado: boolean) {
@@ -36,7 +42,15 @@ export function FormularioResponsavel({
   return (
     <form action={acao} className="mt-8">
       <input type="hidden" name="dia" value={dia} />
-      <CaixasAdvogados pessoas={pessoas} marcados={[]} />
+      <CaixasAdvogados
+        pessoas={pessoas}
+        marcados={advogadosIniciais.map(String)}
+      />
+      {seguir ? (
+        <p className="mt-4 text-xl text-ink">
+          Os mesmos advogados continuam marcados, e os prazos deste dia também.
+        </p>
+      ) : null}
       {estado.erro ? (
         <p role="alert" className="mt-4 text-xl text-late">
           {estado.erro}
