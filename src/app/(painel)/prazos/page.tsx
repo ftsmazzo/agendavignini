@@ -7,6 +7,7 @@ import {
   excluirPrazo,
 } from "@/app/(painel)/admin/prazos/actions";
 import { BotaoExcluir } from "@/components/botao-excluir";
+import { CorpoPrazo } from "@/components/corpo-prazo";
 import { obterDb } from "@/db/client";
 import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
@@ -334,76 +335,90 @@ async function Lista({
               <h2 className="mt-1 text-2xl font-semibold text-ink">
                 {item.titulo}
               </h2>
-              {(advogados.get(item.id) ?? []).length > 0 ? (
-                <p className="mt-2 text-lg text-muted">
-                  {(advogados.get(item.id) ?? []).join(", ")}
-                </p>
-              ) : null}
-              {item.observacao ? (
-                <p className="mt-3 text-xl whitespace-pre-wrap text-ink">
-                  {item.observacao}
-                </p>
-              ) : null}
-              {item.conteudo ? (
-                <details className="mt-3">
-                  <summary className="cursor-pointer text-lg text-pen">
-                    Ver publicação
-                  </summary>
-                  <p className="mt-3 text-lg whitespace-pre-wrap text-ink">
-                    {item.conteudo}
-                  </p>
-                </details>
-              ) : null}
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Link
-                  href={`/prazos/impressao?id=${item.id}`}
-                  className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
-                >
-                  Imprimir
-                </Link>
-                {item.situacao === "aberto" ? (
-                  <form action={cumprir}>
-                    <input type="hidden" name="id" value={item.id} />
-                    <input type="hidden" name="voltar" value={voltar} />
-                    <button
-                      type="submit"
-                      className="bg-pen px-4 py-2 text-lg font-semibold text-sheet"
-                    >
-                      Cumprir
-                    </button>
-                  </form>
-                ) : null}
-                {usuario.papel === "admin" && item.situacao === "cumprido" ? (
-                  <form action={desfazer}>
-                    <input type="hidden" name="id" value={item.id} />
-                    <input type="hidden" name="voltar" value={voltar} />
-                    <button
-                      type="submit"
-                      className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
-                    >
-                      Desfazer
-                    </button>
-                  </form>
-                ) : null}
-                {usuario.papel === "admin" ? (
+              <CorpoPrazo
+                temCorpo={
+                  (advogados.get(item.id) ?? []).length > 0 ||
+                  Boolean(item.observacao) ||
+                  Boolean(item.conteudo)
+                }
+                corpo={
+                  <>
+                    {(advogados.get(item.id) ?? []).length > 0 ? (
+                      <p className="mt-2 text-lg text-muted">
+                        {(advogados.get(item.id) ?? []).join(", ")}
+                      </p>
+                    ) : null}
+                    {item.observacao ? (
+                      <p className="mt-3 text-xl whitespace-pre-wrap text-ink">
+                        {item.observacao}
+                      </p>
+                    ) : null}
+                    {item.conteudo ? (
+                      <details className="mt-3">
+                        <summary className="cursor-pointer text-lg text-pen">
+                          Ver publicação
+                        </summary>
+                        <p className="mt-3 text-lg whitespace-pre-wrap text-ink">
+                          {item.conteudo}
+                        </p>
+                      </details>
+                    ) : null}
+                  </>
+                }
+                acoes={
                   <>
                     <Link
-                      href={`/admin/prazos/${item.id}`}
+                      href={`/prazos/impressao?id=${item.id}`}
                       className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
                     >
-                      Editar
+                      Imprimir
                     </Link>
-                    <BotaoExcluir
-                      action={excluirPrazo}
-                      pergunta="Excluir este prazo?"
-                      rotulo="Excluir"
-                    >
-                      <input type="hidden" name="id" value={item.id} />
-                      <input type="hidden" name="voltar" value={voltar} />
-                    </BotaoExcluir>
+                    {item.situacao === "aberto" ? (
+                      <form action={cumprir}>
+                        <input type="hidden" name="id" value={item.id} />
+                        <input type="hidden" name="voltar" value={voltar} />
+                        <button
+                          type="submit"
+                          className="bg-pen px-4 py-2 text-lg font-semibold text-sheet"
+                        >
+                          Cumprir
+                        </button>
+                      </form>
+                    ) : null}
+                    {usuario.papel === "admin" &&
+                    item.situacao === "cumprido" ? (
+                      <form action={desfazer}>
+                        <input type="hidden" name="id" value={item.id} />
+                        <input type="hidden" name="voltar" value={voltar} />
+                        <button
+                          type="submit"
+                          className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+                        >
+                          Desfazer
+                        </button>
+                      </form>
+                    ) : null}
+                    {usuario.papel === "admin" ? (
+                      <>
+                        <Link
+                          href={`/admin/prazos/${item.id}`}
+                          className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+                        >
+                          Editar
+                        </Link>
+                        <BotaoExcluir
+                          action={excluirPrazo}
+                          pergunta="Excluir este prazo?"
+                          rotulo="Excluir"
+                        >
+                          <input type="hidden" name="id" value={item.id} />
+                          <input type="hidden" name="voltar" value={voltar} />
+                        </BotaoExcluir>
+                      </>
+                    ) : null}
                   </>
-                ) : null}
-              </div>
+                }
+              />
             </li>
           ))}
         </ul>
