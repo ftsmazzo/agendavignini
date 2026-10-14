@@ -412,7 +412,15 @@ async function Corpo({
 
         {admin && advogado === null ? (
           <section className="border border-line bg-sheet p-5">
-            <h2 className="text-2xl font-semibold text-ink">Advogados</h2>
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <h2 className="text-2xl font-semibold text-ink">Advogados</h2>
+              <Link
+                href="/admin/prazos/sem-advogado"
+                className="text-lg font-semibold text-pen"
+              >
+                Marcar os sem advogado
+              </Link>
+            </div>
             <ul className="mt-4 space-y-3">
               <li>
                 <Link href={ligaAdvogado(recorte, 0)} className="block">
