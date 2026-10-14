@@ -22,23 +22,40 @@ const DIAS = [
   { id: "sabado", letra: "S" },
 ];
 
+function comSuas(href: string, suas: boolean) {
+  if (!suas) {
+    return href;
+  }
+  return href.includes("?") ? `${href}&minhas=1` : `${href}?minhas=1`;
+}
+
 function Vistas({
   semana,
   mes,
   ativo,
+  suas,
 }: {
   semana: string;
   mes: string;
   ativo: "semana" | "mes" | "lista" | "dia";
+  suas: boolean;
 }) {
   const itens = [
     {
       id: "semana" as const,
       rotulo: "Semana",
-      href: `/audiencias?semana=${semana}`,
+      href: comSuas(`/audiencias?semana=${semana}`, suas),
     },
-    { id: "mes" as const, rotulo: "Mês", href: `/audiencias?mes=${mes}` },
-    { id: "lista" as const, rotulo: "Próximas", href: "/audiencias?lista=1" },
+    {
+      id: "mes" as const,
+      rotulo: "Mês",
+      href: comSuas(`/audiencias?mes=${mes}`, suas),
+    },
+    {
+      id: "lista" as const,
+      rotulo: "Próximas",
+      href: comSuas("/audiencias?lista=1", suas),
+    },
   ];
   return (
     <nav aria-label="Forma de ver" className="flex flex-wrap gap-2">
@@ -60,6 +77,35 @@ function Vistas({
   );
 }
 
+function Recorte({ base, suas }: { base: string; suas: boolean }) {
+  return (
+    <nav aria-label="De quem" className="flex flex-wrap gap-2">
+      <Link
+        href={base}
+        aria-current={suas ? undefined : "page"}
+        className={
+          suas
+            ? "border border-line bg-sheet px-3 py-2 text-lg text-ink"
+            : "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
+        }
+      >
+        Todas
+      </Link>
+      <Link
+        href={comSuas(base, true)}
+        aria-current={suas ? "page" : undefined}
+        className={
+          suas
+            ? "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
+            : "border border-line bg-sheet px-3 py-2 text-lg text-ink"
+        }
+      >
+        Suas
+      </Link>
+    </nav>
+  );
+}
+
 function rotuloDia(iso: string) {
   const semana = new Intl.DateTimeFormat("pt-BR", {
     weekday: "short",
@@ -76,6 +122,7 @@ export default function Audiencias({
     semana?: string;
     lista?: string;
     mes?: string;
+    minhas?: string;
   }>;
 }) {
   return (
@@ -95,9 +142,11 @@ async function Lista({
     semana?: string;
     lista?: string;
     mes?: string;
+    minhas?: string;
   }>;
 }) {
-  const { data, semana, lista, mes } = await searchParams;
+  const { data, semana, lista, mes, minhas } = await searchParams;
+  const suas = minhas === "1";
   await connection();
   const usuario = await exigirUsuario();
   const dia = data && dataIsoValida(data) ? data : null;
@@ -109,7 +158,8 @@ async function Lista({
       const grade = montarMes(ano, numero);
       const anterior = deslocarMes(ano, numero, -1);
       const proximo = deslocarMes(ano, numero, 1);
-      const itens = await listarAudienciasDoMes(ano, numero, usuario.id);
+      const carregadas = await listarAudienciasDoMes(ano, numero, usuario.id);
+      const itens = suas ? carregadas.filter((item) => item.minha) : carregadas;
       const porDia = new Map<string, typeof itens>();
       for (const item of itens) {
         const listaDia = porDia.get(item.dia) ?? [];
@@ -125,7 +175,10 @@ async function Lista({
         <section className="mx-auto w-full max-w-5xl">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <Link
-              href={`/audiencias?mes=${chaveMes(anterior.ano, anterior.mes)}`}
+              href={comSuas(
+                `/audiencias?mes=${chaveMes(anterior.ano, anterior.mes)}`,
+                suas,
+              )}
               className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
             >
               {montarMes(anterior.ano, anterior.mes).nome}
@@ -134,7 +187,10 @@ async function Lista({
               {grade.nome} {grade.ano}
             </h1>
             <Link
-              href={`/audiencias?mes=${chaveMes(proximo.ano, proximo.mes)}`}
+              href={comSuas(
+                `/audiencias?mes=${chaveMes(proximo.ano, proximo.mes)}`,
+                suas,
+              )}
               className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
             >
               {montarMes(proximo.ano, proximo.mes).nome}
@@ -145,6 +201,11 @@ async function Lista({
               ativo="mes"
               mes={chaveMes(ano, numero)}
               semana={`${chaveMes(ano, numero)}-01`}
+              suas={suas}
+            />
+            <Recorte
+              base={`/audiencias?mes=${chaveMes(ano, numero)}`}
+              suas={suas}
             />
             <Link
               href={`/audiencias/impressao?data=${chaveMes(ano, numero)}-01`}
@@ -187,7 +248,10 @@ async function Lista({
                       <td key={celula.chave} className="p-1">
                         {celula.iso && celula.dia ? (
                           <Link
-                            href={`/audiencias?data=${celula.iso}`}
+                            href={comSuas(
+                              `/audiencias?data=${celula.iso}`,
+                              suas,
+                            )}
                             aria-current={hojeMarcado ? "date" : undefined}
                             aria-label={
                               total > 1
@@ -223,7 +287,10 @@ async function Lista({
           {diasComAudiencia.map((coluna) => (
             <section key={coluna} className="mt-8">
               <h2 className="text-2xl font-bold text-ink">
-                <Link href={`/audiencias?data=${coluna}`} className="text-pen">
+                <Link
+                  href={comSuas(`/audiencias?data=${coluna}`, suas)}
+                  className="text-pen"
+                >
                   {rotuloDia(coluna)}
                 </Link>
               </h2>
@@ -256,13 +323,19 @@ async function Lista({
   }
   if (!dia && lista !== "1") {
     const ancora = semana && dataIsoValida(semana) ? semana : hoje;
-    const quadro = await listarAudienciasDaSemana(ancora, usuario.id);
+    const quadroCheio = await listarAudienciasDaSemana(ancora, usuario.id);
+    const quadro = suas
+      ? {
+          ...quadroCheio,
+          itens: quadroCheio.itens.filter((item) => item.minha),
+        }
+      : quadroCheio;
     const estaSemana = semanaDe(hoje).inicio === quadro.inicio;
     return (
       <section className="mx-auto w-full max-w-7xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link
-            href={`/audiencias?semana=${quadro.anterior}`}
+            href={comSuas(`/audiencias?semana=${quadro.anterior}`, suas)}
             className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
           >
             Semana anterior
@@ -271,7 +344,7 @@ async function Lista({
             Semana de {dataBr(quadro.inicio)} a {dataBr(quadro.sexta)}
           </h1>
           <Link
-            href={`/audiencias?semana=${quadro.proxima}`}
+            href={comSuas(`/audiencias?semana=${quadro.proxima}`, suas)}
             className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
           >
             Próxima semana
@@ -282,9 +355,19 @@ async function Lista({
             ativo="semana"
             semana={quadro.inicio}
             mes={quadro.inicio.slice(0, 7)}
+            suas={suas}
+          />
+          <Recorte
+            base={
+              estaSemana ? "/audiencias" : `/audiencias?semana=${quadro.inicio}`
+            }
+            suas={suas}
           />
           {estaSemana ? null : (
-            <Link href="/audiencias" className="text-lg text-pen underline">
+            <Link
+              href={comSuas("/audiencias", suas)}
+              className="text-lg text-pen underline"
+            >
               Esta semana
             </Link>
           )}
@@ -314,7 +397,7 @@ async function Lista({
               >
                 <h2 className="text-xl font-bold text-ink">
                   <Link
-                    href={`/audiencias?data=${coluna}`}
+                    href={comSuas(`/audiencias?data=${coluna}`, suas)}
                     className="text-pen"
                   >
                     {rotuloDia(coluna)} · {doDia.length}
@@ -382,7 +465,8 @@ async function Lista({
       </section>
     );
   }
-  const itens = await listarAudiencias(dia);
+  const carregadas = await listarAudiencias(dia, usuario.id);
+  const itens = suas ? carregadas.filter((item) => item.minha) : carregadas;
 
   return (
     <section className="mx-auto w-full max-w-5xl">
@@ -404,7 +488,14 @@ async function Lista({
           ativo={dia ? "dia" : "lista"}
           semana={dia ?? hoje}
           mes={(dia ?? hoje).slice(0, 7)}
+          suas={suas}
         />
+        <div className="mt-4">
+          <Recorte
+            base={dia ? `/audiencias?data=${dia}` : "/audiencias?lista=1"}
+            suas={suas}
+          />
+        </div>
       </div>
       <form method="get" className="mt-6 flex flex-wrap items-end gap-3">
         <div>
@@ -418,6 +509,7 @@ async function Lista({
             defaultValue={dia ?? ""}
             className={classeCampo}
           />
+          {suas ? <input type="hidden" name="minhas" value="1" /> : null}
         </div>
         <button
           type="submit"
@@ -426,14 +518,17 @@ async function Lista({
           Ver
         </button>
         <Link
-          href={dia ? `/audiencias?semana=${dia}` : "/audiencias"}
+          href={comSuas(
+            dia ? `/audiencias?semana=${dia}` : "/audiencias",
+            suas,
+          )}
           className="px-2 py-3 text-lg text-pen underline"
         >
           Ver a semana
         </Link>
         {dia ? (
           <Link
-            href="/audiencias?lista=1"
+            href={comSuas("/audiencias?lista=1", suas)}
             className="px-2 py-3 text-lg text-pen underline"
           >
             Próximas

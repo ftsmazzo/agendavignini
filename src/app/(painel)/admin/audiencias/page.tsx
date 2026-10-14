@@ -47,7 +47,7 @@ async function Lista({
   const anos = await anosDasAudiencias();
   const anoPedido =
     ano && /^\d{4}$/.test(ano) ? Number(ano) : (anos[0]?.ano ?? null);
-  const doDia = dia ? await listarAudiencias(dia) : [];
+  const doDia = dia ? await listarAudiencias(dia, 0) : [];
   const itens = dia
     ? []
     : await listarAudienciasAdmin({

@@ -62,7 +62,7 @@ export async function listarAudienciasAdmin(opcoes: {
     .limit(termo ? 80 : 500);
 }
 
-export async function listarAudiencias(dia: string | null) {
+export async function listarAudiencias(dia: string | null, usuarioId: number) {
   const db = obterDb();
   const hoje = hojeNoEscritorio();
   const inicio = new Date(`${dia ?? hoje}T00:00:00-03:00`);
@@ -90,6 +90,7 @@ export async function listarAudiencias(dia: string | null) {
   const vinculos = await db
     .select({
       audienciaId: audienciasUsuarios.audienciaId,
+      usuarioId: audienciasUsuarios.usuarioId,
       nome: usuarios.nome,
       sobrenome: usuarios.sobrenome,
     })
@@ -103,15 +104,20 @@ export async function listarAudiencias(dia: string | null) {
     );
 
   const nomes = new Map<number, string[]>();
+  const minhas = new Set<number>();
   for (const vinculo of vinculos) {
     const lista = nomes.get(vinculo.audienciaId) ?? [];
     lista.push(`${vinculo.nome} ${vinculo.sobrenome}`.trim());
     nomes.set(vinculo.audienciaId, lista);
+    if (vinculo.usuarioId === usuarioId) {
+      minhas.add(vinculo.audienciaId);
+    }
   }
 
   return linhas.map((linha) => ({
     ...linha,
     advogados: nomes.get(linha.id) ?? [],
+    minha: minhas.has(linha.id),
   }));
 }
 
