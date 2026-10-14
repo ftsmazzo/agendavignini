@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, gte, inArray, lt, or, sql } from "drizzle-orm";
 import { obterDb } from "@/db/client";
 import { audiencias, audienciasUsuarios, usuarios } from "@/db/schema";
+import { fimDoMes } from "@/lib/calendario";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { semanaDe, somarDias } from "@/lib/datas";
 
@@ -151,6 +152,44 @@ export async function listarAudienciasDaSemana(
     )
     .orderBy(asc(audiencias.dataHora), asc(audiencias.id));
 
+  return {
+    inicio: semana.inicio,
+    sexta: dias[4] ?? semana.inicio,
+    anterior: somarDias(semana.inicio, -7),
+    proxima: somarDias(semana.inicio, 7),
+    dias,
+    itens: await marcarAudiencias(linhas, usuarioId),
+  };
+}
+
+export async function listarAudienciasDoMes(
+  ano: number,
+  mes: number,
+  usuarioId: number,
+) {
+  const inicio = `${ano}-${String(mes).padStart(2, "0")}-01`;
+  const fim = fimDoMes(ano, mes);
+  const db = obterDb();
+  const diaLocal = sql`(${audiencias.dataHora} at time zone 'America/Sao_Paulo')::date`;
+  const linhas = await db
+    .select()
+    .from(audiencias)
+    .where(
+      and(
+        sql`${diaLocal} >= ${inicio}::date`,
+        sql`${diaLocal} <= ${fim}::date`,
+      ),
+    )
+    .orderBy(asc(audiencias.dataHora), asc(audiencias.id));
+
+  return marcarAudiencias(linhas, usuarioId);
+}
+
+async function marcarAudiencias(
+  linhas: Array<typeof audiencias.$inferSelect>,
+  usuarioId: number,
+) {
+  const db = obterDb();
   const vinculos =
     linhas.length === 0
       ? []
@@ -182,25 +221,18 @@ export async function listarAudienciasDaSemana(
     }
   }
 
-  return {
-    inicio: semana.inicio,
-    sexta: dias[4] ?? semana.inicio,
-    anterior: somarDias(semana.inicio, -7),
-    proxima: somarDias(semana.inicio, 7),
-    dias,
-    itens: linhas.map((linha) => ({
-      id: linha.id,
-      dia: diaNoEscritorio(linha.dataHora),
-      hora: horaNoEscritorio(linha.dataHora),
-      numeroProcesso: linha.numeroProcesso,
-      vara: linha.vara,
-      local: linha.local,
-      reclamante: linha.reclamante,
-      reclamado: linha.reclamado,
-      preposto: linha.preposto,
-      observacao: linha.observacao,
-      advogados: nomes.get(linha.id) ?? [],
-      minha: minhas.has(linha.id),
-    })),
-  };
+  return linhas.map((linha) => ({
+    id: linha.id,
+    dia: diaNoEscritorio(linha.dataHora),
+    hora: horaNoEscritorio(linha.dataHora),
+    numeroProcesso: linha.numeroProcesso,
+    vara: linha.vara,
+    local: linha.local,
+    reclamante: linha.reclamante,
+    reclamado: linha.reclamado,
+    preposto: linha.preposto,
+    observacao: linha.observacao,
+    advogados: nomes.get(linha.id) ?? [],
+    minha: minhas.has(linha.id),
+  }));
 }

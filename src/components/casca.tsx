@@ -100,13 +100,13 @@ export function Casca({
           </div>
           <form action="/busca" className="border-b border-rail-line p-4">
             <label htmlFor="busca" className="sr-only">
-              Pesquisar um prazo
+              Pesquisar prazo ou audiência
             </label>
             <input
               id="busca"
               name="q"
               type="search"
-              placeholder="Pesquisar um prazo"
+              placeholder="Prazo ou audiência"
               className="w-full border border-rail-line bg-rail-active px-4 py-3 text-lg text-rail-ink placeholder:text-rail-muted"
             />
           </form>
