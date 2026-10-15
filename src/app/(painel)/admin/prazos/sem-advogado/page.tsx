@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lt, sql } from "drizzle-orm";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
@@ -17,6 +17,7 @@ export default function SemAdvogado({
     dia?: string;
     marcados?: string;
     advogados?: string;
+    fila?: string;
   }>;
 }) {
   return (
@@ -35,6 +36,7 @@ async function Lista({
     dia?: string;
     marcados?: string;
     advogados?: string;
+    fila?: string;
   }>;
 }) {
   await connection();
@@ -42,22 +44,31 @@ async function Lista({
     dia: diaPedido,
     marcados,
     advogados: advogadosPedido,
+    fila,
   } = await searchParams;
+  const emAtraso = fila === "atraso";
   const hoje = hojeNoEscritorio();
   const db = obterDb();
   const semVinculo = sql`not exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id})`;
+  const recorte = emAtraso
+    ? and(eq(prazos.situacao, "aberto"), lt(prazos.data, hoje), semVinculo)
+    : and(gte(prazos.data, hoje), semVinculo);
   const dias = await db
     .select({
       data: prazos.data,
       total: sql<number>`count(*)::int`,
     })
     .from(prazos)
-    .where(and(gte(prazos.data, hoje), semVinculo))
+    .where(recorte)
     .groupBy(prazos.data)
-    .orderBy(asc(prazos.data));
+    .orderBy(emAtraso ? desc(prazos.data) : asc(prazos.data));
   const total = dias.reduce((soma, dia) => soma + dia.total, 0);
   const pedido =
-    diaPedido && dataIsoValida(diaPedido) && diaPedido >= hoje ? diaPedido : "";
+    diaPedido &&
+    dataIsoValida(diaPedido) &&
+    (emAtraso ? diaPedido < hoje : diaPedido >= hoje)
+      ? diaPedido
+      : "";
   const dia = dias.some((item) => item.data === pedido)
     ? pedido
     : (dias[0]?.data ?? hoje);
@@ -74,9 +85,20 @@ async function Lista({
             data: prazos.data,
             titulo: prazos.titulo,
             situacao: prazos.situacao,
+            processo: sql<
+              string | null
+            >`substring((${prazos.titulo} || ' ' || ${prazos.observacao} || ' ' || ${prazos.conteudo}) from '[0-9]{7}-[0-9]{2}\\.[0-9]{4}\\.[0-9]\\.[0-9]{2}\\.[0-9]{4}')`,
           })
           .from(prazos)
-          .where(and(eq(prazos.data, dia), semVinculo))
+          .where(
+            emAtraso
+              ? and(
+                  eq(prazos.data, dia),
+                  eq(prazos.situacao, "aberto"),
+                  semVinculo,
+                )
+              : and(eq(prazos.data, dia), semVinculo),
+          )
           .orderBy(asc(prazos.titulo), asc(prazos.id));
   const pessoas = (await listarPessoas())
     .filter((pessoa) => pessoa.ativo)
@@ -103,6 +125,9 @@ async function Lista({
 
   function endereco(data: string) {
     const params = new URLSearchParams({ dia: data });
+    if (emAtraso) {
+      params.set("fila", "atraso");
+    }
     if (equipe.length > 0) {
       params.set("advogados", equipe.join(","));
     }
@@ -111,10 +136,35 @@ async function Lista({
 
   return (
     <section className="entrada mx-auto w-full max-w-5xl">
-      <h1 className="titulo-pagina">Sem advogado</h1>
+      <h1 className="titulo-pagina">
+        {emAtraso ? "Vencidos sem dono" : "Sem advogado"}
+      </h1>
       <p className="subtitulo-pagina">
-        Prazos de hoje em diante que ainda não têm responsável.
+        {emAtraso
+          ? "Prazos em aberto que já venceram e ainda não têm responsável. O dia mais recente aparece primeiro."
+          : "Prazos de hoje em diante que ainda não têm responsável."}
       </p>
+      <nav aria-label="Qual fila" className="mt-6 flex flex-wrap gap-2">
+        <Link
+          href="/admin/prazos/sem-advogado"
+          aria-current={emAtraso ? undefined : "page"}
+          className="chip"
+        >
+          Daqui pra frente
+        </Link>
+        <Link
+          href="/admin/prazos/sem-advogado?fila=atraso"
+          aria-current={emAtraso ? "page" : undefined}
+          className="chip"
+        >
+          Em atraso
+        </Link>
+        {emAtraso ? (
+          <Link href="/admin/relatorios" className="btn-texto px-2">
+            Ver quem está livre
+          </Link>
+        ) : null}
+      </nav>
       <p className="mt-3">
         <span className={total === 0 ? "selo selo-ok" : "selo selo-atraso"}>
           {total === 1
@@ -131,7 +181,9 @@ async function Lista({
       ) : null}
       {dias.length === 0 ? (
         <p className="vazio mt-6">
-          De hoje em diante, todo prazo tem advogado.
+          {emAtraso
+            ? "Não há prazo vencido sem advogado."
+            : "De hoje em diante, todo prazo tem advogado."}
         </p>
       ) : (
         <>
@@ -140,7 +192,7 @@ async function Lista({
               <Link href={endereco(anterior.data)} className="btn">
                 <span aria-hidden="true">←</span>
                 <span className="text-left">
-                  Anterior
+                  {emAtraso ? "Mais recente" : "Anterior"}
                   <span className="block text-sm font-normal text-muted">
                     {dataBr(anterior.data)} · {anterior.total}
                   </span>
@@ -158,7 +210,7 @@ async function Lista({
             {proximo ? (
               <Link href={endereco(proximo.data)} className="btn">
                 <span className="text-right">
-                  Próximo
+                  {emAtraso ? "Mais antigo" : "Próximo"}
                   <span className="block text-sm font-normal text-muted">
                     {dataBr(proximo.data)} · {proximo.total}
                   </span>
@@ -185,6 +237,9 @@ async function Lista({
                 ))}
               </select>
             </div>
+            {emAtraso ? (
+              <input type="hidden" name="fila" value="atraso" />
+            ) : null}
             {equipe.length > 0 ? (
               <input type="hidden" name="advogados" value={equipe.join(",")} />
             ) : null}
@@ -204,10 +259,12 @@ async function Lista({
                 faixa: faixaDaArea(item.area),
                 rotulo: rotuloArea(item.area),
                 marca: marcaDoPrazo(item.situacao, item.data, hoje).texto,
+                processo: item.processo ?? "",
               }))}
               pessoas={pessoas}
               advogadosIniciais={equipe}
               seguir={seguir}
+              fila={emAtraso ? "atraso" : undefined}
             />
           )}
         </>

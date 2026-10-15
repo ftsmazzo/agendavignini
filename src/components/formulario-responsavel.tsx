@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { marcarResponsaveis } from "@/app/(painel)/admin/prazos/sem-advogado/actions";
 import { CaixasAdvogados } from "@/components/caixas-advogados";
@@ -10,6 +11,7 @@ type PrazoAberto = {
   faixa: string;
   rotulo: string;
   marca: string;
+  processo: string;
 };
 
 export function FormularioResponsavel({
@@ -18,12 +20,14 @@ export function FormularioResponsavel({
   pessoas,
   advogadosIniciais,
   seguir,
+  fila,
 }: {
   dia: string;
   itens: PrazoAberto[];
   pessoas: Array<{ id: number; nome: string }>;
   advogadosIniciais: number[];
   seguir: boolean;
+  fila?: "atraso";
 }) {
   const [estado, acao, pendente] = useActionState(marcarResponsaveis, {
     erro: "",
@@ -42,6 +46,7 @@ export function FormularioResponsavel({
   return (
     <form action={acao} className="mt-8">
       <input type="hidden" name="dia" value={dia} />
+      {fila ? <input type="hidden" name="fila" value={fila} /> : null}
       <CaixasAdvogados
         pessoas={pessoas}
         marcados={advogadosIniciais.map(String)}
@@ -104,6 +109,16 @@ export function FormularioResponsavel({
                   </span>
                 </span>
               </label>
+              {item.processo ? (
+                <p className="px-4 pb-3">
+                  <Link
+                    href={`/processo?n=${encodeURIComponent(item.processo)}`}
+                    className="text-base font-semibold tracking-tight text-pen"
+                  >
+                    {item.processo}
+                  </Link>
+                </p>
+              ) : null}
             </li>
           );
         })}

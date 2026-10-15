@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, gte, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { obterDb } from "@/db/client";
@@ -28,8 +28,13 @@ export async function marcarResponsaveis(
   const advogados = idsDe(formData, "advogados");
   const pedidos = idsDe(formData, "prazos");
   const diaBruto = String(formData.get("dia") ?? "").slice(0, 10);
+  const emAtraso = String(formData.get("fila") ?? "") === "atraso";
   const hoje = hojeNoEscritorio();
-  const dia = dataIsoValida(diaBruto) && diaBruto >= hoje ? diaBruto : hoje;
+  const dia =
+    dataIsoValida(diaBruto) && (emAtraso ? diaBruto < hoje : diaBruto >= hoje)
+      ? diaBruto
+      : hoje;
+  const semVinculo = sql`not exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id})`;
 
   if (pedidos.length === 0) {
     return { erro: "Escolha ao menos um prazo." };
@@ -55,11 +60,18 @@ export async function marcarResponsaveis(
       .select({ id: prazos.id })
       .from(prazos)
       .where(
-        and(
-          inArray(prazos.id, pedidos),
-          gte(prazos.data, hoje),
-          sql`not exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id})`,
-        ),
+        emAtraso
+          ? and(
+              inArray(prazos.id, pedidos),
+              eq(prazos.situacao, "aberto"),
+              lt(prazos.data, hoje),
+              semVinculo,
+            )
+          : and(
+              inArray(prazos.id, pedidos),
+              gte(prazos.data, hoje),
+              semVinculo,
+            ),
       );
     if (livres.length === 0) {
       return 0;
@@ -80,37 +92,63 @@ export async function marcarResponsaveis(
         acao: "atualizar",
         entidade: "prazos",
         entidadeId: "sem-advogado",
-        detalhe: `${quantidade} prazos sem advogado`,
+        detalhe: emAtraso
+          ? `${quantidade} prazos vencidos sem advogado`
+          : `${quantidade} prazos sem advogado`,
       });
     }
     return quantidade;
   });
 
   if (gravados === 0) {
-    return { erro: "Esses prazos já têm advogado ou a data já passou." };
+    return {
+      erro: emAtraso
+        ? "Esses prazos já têm advogado ou já foram cumpridos."
+        : "Esses prazos já têm advogado ou a data já passou.",
+    };
   }
 
   revalidatePath("/");
   revalidatePath("/resumo");
   revalidatePath("/prazos");
+  revalidatePath("/prazos/atraso");
   revalidatePath("/admin/prazos");
   revalidatePath("/admin/prazos/sem-advogado");
   revalidatePath("/admin/relatorios");
-  const [seguinte] = await db
-    .select({ data: prazos.data })
-    .from(prazos)
-    .where(
-      and(
-        gte(prazos.data, dia),
-        sql`not exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id})`,
-      ),
-    )
-    .groupBy(prazos.data)
-    .orderBy(asc(prazos.data))
-    .limit(1);
+  revalidatePath("/processo", "layout");
+  const [mesmo] = emAtraso
+    ? await db
+        .select({ total: sql<number>`count(*)::int` })
+        .from(prazos)
+        .where(
+          and(eq(prazos.data, dia), eq(prazos.situacao, "aberto"), semVinculo),
+        )
+    : [];
+  const [seguinte] =
+    emAtraso && (mesmo?.total ?? 0) > 0
+      ? [{ data: dia }]
+      : await db
+          .select({ data: prazos.data })
+          .from(prazos)
+          .where(
+            emAtraso
+              ? and(
+                  lt(prazos.data, dia),
+                  eq(prazos.situacao, "aberto"),
+                  semVinculo,
+                )
+              : and(gte(prazos.data, dia), semVinculo),
+          )
+          .groupBy(prazos.data)
+          .orderBy(emAtraso ? desc(prazos.data) : asc(prazos.data))
+          .limit(1);
   const destino = seguinte?.data ?? dia;
-  const equipe = advogados.join(",");
-  redirect(
-    `/admin/prazos/sem-advogado?dia=${destino}&marcados=${gravados}&advogados=${equipe}`,
-  );
+  const params = new URLSearchParams();
+  if (emAtraso) {
+    params.set("fila", "atraso");
+  }
+  params.set("dia", destino);
+  params.set("marcados", String(gravados));
+  params.set("advogados", advogados.join(","));
+  redirect(`/admin/prazos/sem-advogado?${params}`);
 }

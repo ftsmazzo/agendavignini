@@ -114,7 +114,7 @@ async function Painel({
       valor: painel.semDonoAtraso,
       detalhe: "vencido e sem advogado",
       tom: "text-late",
-      href: "/prazos/atraso",
+      href: "/admin/prazos/sem-advogado?fila=atraso",
     },
     {
       rotulo: "Sem dono à frente",
