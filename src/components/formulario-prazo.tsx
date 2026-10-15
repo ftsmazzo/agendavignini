@@ -75,7 +75,7 @@ export function FormularioPrazo({
   return (
     <div className="mx-auto w-full max-w-3xl">
       <h1 className="titulo-pagina">
-        {prazo ? "Editar prazo" : "Adicionar prazo"}
+        {prazo?.id ? "Editar prazo" : "Adicionar prazo"}
       </h1>
       {prazo ? null : (
         <div className="cartao mt-6 p-5">
