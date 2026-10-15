@@ -14,6 +14,7 @@ import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr } from "@/lib/datas";
+import { listarPessoas } from "@/lib/pessoas";
 import { numeroDoProcesso } from "@/lib/publicacao";
 import { faixaDaArea, rotuloArea, statusDoPrazo } from "@/lib/resumo";
 
@@ -33,6 +34,7 @@ function consultaDaLista(base: {
   area?: string;
   situacao?: string;
   meus?: boolean;
+  advogado?: string;
 }) {
   const params = new URLSearchParams();
   if (base.quando === "hoje" || base.quando === "semana") {
@@ -50,6 +52,9 @@ function consultaDaLista(base: {
   if (base.meus) {
     params.set("meus", "1");
   }
+  if (base.advogado === "0" || /^\d+$/.test(base.advogado ?? "")) {
+    params.set("advogado", base.advogado ?? "");
+  }
   const texto = params.toString();
   return texto ? `/prazos?${texto}` : "/prazos";
 }
@@ -64,6 +69,7 @@ export default function Prazos({
     area?: string;
     situacao?: string;
     meus?: string;
+    advogado?: string;
   }>;
 }) {
   return (
@@ -97,9 +103,11 @@ async function Lista({
     area?: string;
     situacao?: string;
     meus?: string;
+    advogado?: string;
   }>;
 }) {
-  const { data, quando, excluido, area, situacao, meus } = await searchParams;
+  const { data, quando, excluido, area, situacao, meus, advogado } =
+    await searchParams;
   const usuario = await exigirUsuario();
   const hoje = hojeNoEscritorio();
   const dataPedida = data && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : null;
@@ -107,9 +115,18 @@ async function Lista({
   const situacaoOk =
     situacao === "aberto" || situacao === "cumprido" ? situacao : undefined;
   const soMeus = meus === "1";
+  const pessoas = (await listarPessoas()).filter((pessoa) => pessoa.ativo);
+  const advogadoNumero = Number(advogado);
+  const advogadoFiltro =
+    advogado === "0"
+      ? "0"
+      : pessoas.some((pessoa) => pessoa.id === advogadoNumero)
+        ? String(advogadoNumero)
+        : undefined;
   const recorte = {
     quando: quando === "hoje" || quando === "semana" ? quando : undefined,
     data: dataPedida ?? undefined,
+    advogado: advogadoFiltro,
   };
   const db = obterDb();
   const filtroData =
@@ -130,6 +147,15 @@ async function Lista({
   if (soMeus) {
     filtros.push(
       sql`exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id} and usuario_id = ${usuario.id})`,
+    );
+  }
+  if (advogadoFiltro === "0") {
+    filtros.push(
+      sql`not exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id})`,
+    );
+  } else if (advogadoFiltro) {
+    filtros.push(
+      sql`exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id} and usuario_id = ${Number(advogadoFiltro)})`,
     );
   }
 
@@ -280,7 +306,10 @@ async function Lista({
           {diasDaSemana.map((dia) => (
             <Link
               key={dia.data}
-              href={`/prazos?data=${dia.data}`}
+              href={consultaDaLista({
+                data: dia.data,
+                advogado: advogadoFiltro,
+              })}
               aria-current={dia.data === diaAberto ? "page" : undefined}
               className="chip"
             >
@@ -301,6 +330,41 @@ async function Lista({
           </Link>
         ))}
       </nav>
+      <form method="get" className="mt-4 flex flex-wrap items-end gap-3">
+        {recorte.quando ? (
+          <input type="hidden" name="quando" value={recorte.quando} />
+        ) : null}
+        {recorte.data ? (
+          <input type="hidden" name="data" value={recorte.data} />
+        ) : null}
+        {areaOk ? <input type="hidden" name="area" value={areaOk} /> : null}
+        {situacaoOk ? (
+          <input type="hidden" name="situacao" value={situacaoOk} />
+        ) : null}
+        {soMeus ? <input type="hidden" name="meus" value="1" /> : null}
+        <div>
+          <label htmlFor="advogado" className="mb-2 block text-lg text-ink">
+            Advogado
+          </label>
+          <select
+            id="advogado"
+            name="advogado"
+            defaultValue={advogadoFiltro ?? ""}
+            className="campo"
+          >
+            <option value="">Todos</option>
+            <option value="0">Sem advogado marcado</option>
+            {pessoas.map((pessoa) => (
+              <option key={pessoa.id} value={pessoa.id}>
+                {pessoa.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button type="submit" className="btn btn-primario">
+          Filtrar
+        </button>
+      </form>
       {diaImpressao ? (
         <p className="mt-5 flex flex-wrap items-center gap-2">
           <Link

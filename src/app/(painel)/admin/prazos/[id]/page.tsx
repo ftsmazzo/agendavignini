@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { FormularioPrazo } from "@/components/formulario-prazo";
@@ -63,6 +64,14 @@ async function Editor({
           Prazo salvo.
         </output>
       ) : null}
+      <p className="mx-auto mb-4 w-full max-w-3xl">
+        <Link
+          href={`/admin/prazos/novo?copia=${prazo.id}`}
+          className="btn btn-pequeno"
+        >
+          Criar outro igual
+        </Link>
+      </p>
       <FormularioPrazo
         prazo={{
           id: prazo.id,

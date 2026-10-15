@@ -7,7 +7,7 @@ export function ProcessoPrazo({ numero }: { numero: string | null }) {
   return (
     <p className="mt-1">
       <Link
-        href={`/busca?q=${encodeURIComponent(numero)}`}
+        href={`/processo?n=${encodeURIComponent(numero)}`}
         className="text-base font-semibold tracking-tight text-pen"
       >
         {numero}

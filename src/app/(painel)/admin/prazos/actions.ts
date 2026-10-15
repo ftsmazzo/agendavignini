@@ -38,6 +38,7 @@ function atualizarListas() {
   revalidatePath("/admin/prazos/adiar");
   revalidatePath("/admin/relatorios");
   revalidatePath("/busca");
+  revalidatePath("/processo", "layout");
 }
 
 export async function salvarPrazo(

@@ -23,7 +23,7 @@ export function FormularioPrazo({
   hoje,
 }: {
   prazo?: {
-    id: number;
+    id?: number;
     area: string;
     data: string;
     titulo: string;
@@ -104,7 +104,7 @@ export function FormularioPrazo({
         </div>
       )}
       <form action={acao} className="cartao mt-6 space-y-5 p-5">
-        {prazo ? <input type="hidden" name="id" value={prazo.id} /> : null}
+        {prazo?.id ? <input type="hidden" name="id" value={prazo.id} /> : null}
         <div className="grid gap-5 md:grid-cols-2">
           <Campo id="area" rotulo="Tipo">
             <select
@@ -127,7 +127,7 @@ export function FormularioPrazo({
               name="data"
               type="date"
               required
-              min={prazo ? undefined : hoje}
+              min={prazo?.id ? undefined : hoje}
               value={data}
               onChange={(evento) => setData(evento.target.value)}
               className={classeCampo}
@@ -213,7 +213,7 @@ export function FormularioPrazo({
           {pendente ? "Salvando…" : "Salvar prazo"}
         </button>
       </form>
-      {prazo ? (
+      {prazo?.id ? (
         <div className="mt-4">
           <BotaoExcluir
             action={excluirPrazo}
