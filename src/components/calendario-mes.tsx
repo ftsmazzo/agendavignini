@@ -197,7 +197,7 @@ export function CalendarioMes({
           const total = (resumo?.abertos ?? 0) + (resumo?.cumpridos ?? 0);
           const audiencias = resumo?.audiencias ?? 0;
           const classe = [
-            "group relative flex h-16 w-full flex-col items-center justify-center gap-1 rounded-xl text-lg transition-all hover:-translate-y-0.5 hover:shadow-media md:h-24 md:text-2xl",
+            "group relative z-0 flex h-16 w-full flex-col items-center justify-center gap-1 rounded-xl text-lg transition-all hover:z-30 hover:-translate-y-0.5 hover:shadow-media focus-visible:z-30 md:h-24 md:text-2xl",
             marca
               ? APARENCIA[marca]
               : celula.fimDeSemana
