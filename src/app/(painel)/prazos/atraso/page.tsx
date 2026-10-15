@@ -91,6 +91,9 @@ async function Lista({
           data: prazos.data,
           titulo: prazos.titulo,
           situacao: prazos.situacao,
+          processo: sql<
+            string | null
+          >`substring((${prazos.titulo} || ' ' || ${prazos.observacao} || ' ' || ${prazos.conteudo}) from '[0-9]{7}-[0-9]{2}\\.[0-9]{4}\\.[0-9]\\.[0-9]{2}\\.[0-9]{4}')`,
         })
         .from(prazos)
         .where(and(eq(prazos.data, dia), eq(prazos.situacao, "aberto")))
@@ -224,6 +227,7 @@ async function Lista({
                 marca: marca.texto,
                 selo: SELO[marca.tom],
                 advogados: (advogados.get(item.id) ?? []).join(", "),
+                processo: item.processo ?? "",
               };
             })}
           />

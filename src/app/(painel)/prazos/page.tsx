@@ -351,6 +351,12 @@ async function Lista({
           >
             Próxima semana
           </Link>
+          <Link
+            href={`/prazos/impressao?semana=${semana.inicio}${areaOk ? `&area=${areaOk}` : ""}`}
+            className="btn btn-pequeno"
+          >
+            Imprimir a semana
+          </Link>
         </nav>
       ) : null}
       {diasDaSemana.length > 0 ? (

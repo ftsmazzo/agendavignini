@@ -1,11 +1,11 @@
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import Link from "next/link";
 import { Suspense } from "react";
 import { BotaoImprimir } from "@/components/botao-imprimir";
 import { obterDb } from "@/db/client";
 import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
-import { dataBr, dataIsoValida } from "@/lib/datas";
+import { dataBr, dataIsoValida, semanaDe } from "@/lib/datas";
 import { rotuloArea, statusDoPrazo } from "@/lib/resumo";
 
 const AREAS = ["administrativo", "civil", "trabalhista"] as const;
@@ -21,7 +21,12 @@ function idPedido(valor: string | undefined) {
 export default function ImpressaoPrazos({
   searchParams,
 }: {
-  searchParams: Promise<{ data?: string; area?: string; id?: string }>;
+  searchParams: Promise<{
+    data?: string;
+    area?: string;
+    id?: string;
+    semana?: string;
+  }>;
 }) {
   return (
     <Suspense fallback={<p className="text-xl text-muted">Abrindo a folha.</p>}>
@@ -33,20 +38,33 @@ export default function ImpressaoPrazos({
 async function Folha({
   searchParams,
 }: {
-  searchParams: Promise<{ data?: string; area?: string; id?: string }>;
+  searchParams: Promise<{
+    data?: string;
+    area?: string;
+    id?: string;
+    semana?: string;
+  }>;
 }) {
-  const { data, area, id } = await searchParams;
+  const { data, area, id, semana } = await searchParams;
   await exigirUsuario();
   const pedido = idPedido(id);
   const unico = id !== undefined;
   const dia = data && dataIsoValida(data) ? data : "";
+  const recorte =
+    !pedido && semana && dataIsoValida(semana) ? semanaDe(semana) : null;
   const tipo = AREAS.find((item) => item === area) ?? null;
   const db = obterDb();
   const filtro = pedido
     ? eq(prazos.id, pedido)
-    : dia
-      ? and(eq(prazos.data, dia), tipo ? eq(prazos.area, tipo) : undefined)
-      : undefined;
+    : recorte
+      ? and(
+          gte(prazos.data, recorte.inicio),
+          lte(prazos.data, recorte.fim),
+          tipo ? eq(prazos.area, tipo) : undefined,
+        )
+      : dia
+        ? and(eq(prazos.data, dia), tipo ? eq(prazos.area, tipo) : undefined)
+        : undefined;
   const linhas = filtro
     ? await db
         .select({
@@ -54,8 +72,11 @@ async function Folha({
           area: prazos.area,
           data: prazos.data,
           titulo: prazos.titulo,
-          observacao: prazos.observacao,
-          conteudo: prazos.conteudo,
+          observacao: recorte ? sql<string>`''` : prazos.observacao,
+          conteudo: recorte ? sql<string>`''` : prazos.conteudo,
+          processo: sql<
+            string | null
+          >`substring((${prazos.titulo} || ' ' || ${prazos.observacao} || ' ' || ${prazos.conteudo}) from '[0-9]{7}-[0-9]{2}\\.[0-9]{4}\\.[0-9]\\.[0-9]{2}\\.[0-9]{4}')`,
           situacao: prazos.situacao,
           cumpridoNome: usuarios.nome,
           cumpridoSobrenome: usuarios.sobrenome,
@@ -65,9 +86,12 @@ async function Folha({
         .leftJoin(usuarios, eq(usuarios.id, prazos.cumpridoPorId))
         .where(filtro)
         .orderBy(
+          asc(prazos.data),
           sql`case ${prazos.area} when 'administrativo' then 1 when 'civil' then 2 else 3 end`,
+          asc(prazos.titulo),
           asc(prazos.id),
         )
+        .limit(400)
     : [];
 
   const ids = linhas.map((linha) => linha.id);
@@ -92,18 +116,32 @@ async function Folha({
   }
 
   const diaVolta = unico ? (linhas[0]?.data ?? "") : dia;
+  const baseFolha = recorte
+    ? `/prazos/impressao?semana=${recorte.inicio}`
+    : `/prazos/impressao?data=${dia}`;
   const titulo = unico
     ? (linhas[0]?.titulo ?? "Prazo não encontrado")
-    : dia
-      ? `Prazos de ${dataBr(dia)}`
-      : "Informe o dia";
+    : recorte
+      ? `Prazos de ${dataBr(recorte.inicio)} a ${dataBr(recorte.fim)}`
+      : dia
+        ? `Prazos de ${dataBr(dia)}`
+        : "Informe o dia";
+  const diasDaFolha = recorte
+    ? [...new Set(linhas.map((item) => item.data))]
+    : [];
 
   return (
     <section className="mx-auto w-full max-w-4xl">
       <div className="nao-imprimir flex flex-wrap items-center gap-3">
         <BotaoImprimir />
         <Link
-          href={diaVolta ? `/prazos?data=${diaVolta}` : "/prazos"}
+          href={
+            recorte
+              ? `/prazos?quando=semana&data=${recorte.inicio}`
+              : diaVolta
+                ? `/prazos?data=${diaVolta}`
+                : "/prazos"
+          }
           className="text-lg text-pen"
         >
           Voltar
@@ -113,17 +151,14 @@ async function Folha({
           : AREAS.map((item) => (
               <Link
                 key={item}
-                href={`/prazos/impressao?data=${dia}&area=${item}`}
+                href={`${baseFolha}&area=${item}`}
                 className="text-lg text-pen"
               >
                 {rotuloArea(item)}
               </Link>
             ))}
         {!unico && tipo ? (
-          <Link
-            href={`/prazos/impressao?data=${dia}`}
-            className="text-lg text-pen"
-          >
+          <Link href={baseFolha} className="text-lg text-pen">
             Todas as áreas
           </Link>
         ) : null}
@@ -131,8 +166,46 @@ async function Folha({
       <h1 className="mt-6 text-4xl leading-tight font-bold text-ink">
         {titulo}
       </h1>
+      {linhas.length === 400 ? (
+        <p className="mt-2 text-lg text-ink">Mostrando os 400 primeiros.</p>
+      ) : null}
       {linhas.length === 0 ? (
         <p className="mt-8 text-xl text-ink">Nenhum prazo nesta folha.</p>
+      ) : recorte ? (
+        diasDaFolha.map((dataDia) => (
+          <section key={dataDia} className="mt-8">
+            <h2 className="text-2xl font-bold text-ink">
+              {dataBr(dataDia)} ·{" "}
+              {linhas.filter((item) => item.data === dataDia).length}
+            </h2>
+            <ul>
+              {linhas
+                .filter((item) => item.data === dataDia)
+                .map((item) => (
+                  <li key={item.id} className="mt-3 border-b border-line pb-3">
+                    <p className="text-xl font-semibold text-ink">
+                      {item.titulo}
+                    </p>
+                    <p className="mt-1 text-lg text-ink">
+                      {rotuloArea(item.area)}
+                      {item.processo ? ` · ${item.processo}` : ""}
+                      {" · "}
+                      {(advogados.get(item.id) ?? []).join(", ") ||
+                        "Sem advogado marcado"}
+                      {" · "}
+                      {statusDoPrazo({
+                        situacao: item.situacao,
+                        cumpridoPor: item.cumpridoNome
+                          ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
+                          : null,
+                        cumpridoEm: item.cumpridoEm,
+                      })}
+                    </p>
+                  </li>
+                ))}
+            </ul>
+          </section>
+        ))
       ) : (
         linhas.map((item) => (
           <article key={item.id} className="mt-8 border-b border-line pb-6">
@@ -147,6 +220,9 @@ async function Folha({
                 cumpridoEm: item.cumpridoEm,
               })}
             </p>
+            {item.processo ? (
+              <p className="mt-2 text-lg text-ink">{item.processo}</p>
+            ) : null}
             {(advogados.get(item.id) ?? []).length > 0 ? (
               <p className="mt-4 text-xl text-ink">
                 <strong>Advogados:</strong>{" "}

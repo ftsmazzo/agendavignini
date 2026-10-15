@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { cumprirVarios } from "@/app/(painel)/prazos/cumprir/actions";
 
@@ -11,6 +12,7 @@ type PrazoAberto = {
   marca: string;
   selo: string;
   advogados: string;
+  processo: string;
 };
 
 export function FormularioCumprir({
@@ -117,6 +119,16 @@ export function FormularioCumprir({
                   )}
                 </span>
               </label>
+              {item.processo ? (
+                <p className="px-5 pb-4">
+                  <Link
+                    href={`/processo?n=${encodeURIComponent(item.processo)}`}
+                    className="text-base font-semibold tracking-tight text-pen"
+                  >
+                    {item.processo}
+                  </Link>
+                </p>
+              ) : null}
             </li>
           );
         })}
