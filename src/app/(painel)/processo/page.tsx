@@ -3,11 +3,13 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { cumprir } from "@/app/(painel)/admin/prazos/actions";
+import { MarcarAdvogado } from "@/components/marcar-advogado";
 import { obterDb } from "@/db/client";
 import { audiencias, prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr, dataHoraBr } from "@/lib/datas";
+import { listarPessoas } from "@/lib/pessoas";
 import { formatarProcesso, numeroDoProcesso } from "@/lib/publicacao";
 import {
   faixaDaArea,
@@ -120,6 +122,9 @@ async function Ficha({
     .filter((item) => item.situacao === "cumprido")
     .reverse();
   const voltar = `/processo?n=${encodeURIComponent(numero)}`;
+  const pessoas = admin
+    ? (await listarPessoas()).filter((pessoa) => pessoa.ativo)
+    : [];
 
   return (
     <section className="w-full">
@@ -148,6 +153,7 @@ async function Ficha({
           hoje={hoje}
           admin={admin}
           voltar={voltar}
+          pessoas={pessoas}
         />
       ) : null}
       {cumpridos.length > 0 ? (
@@ -158,6 +164,7 @@ async function Ficha({
           hoje={hoje}
           admin={admin}
           voltar={voltar}
+          pessoas={[]}
         />
       ) : null}
       {sessoes.length > 0 ? (
@@ -196,6 +203,7 @@ function Grupo({
   hoje,
   admin,
   voltar,
+  pessoas,
 }: {
   titulo: string;
   itens: Array<{
@@ -212,6 +220,7 @@ function Grupo({
   hoje: string;
   admin: boolean;
   voltar: string;
+  pessoas: Array<{ id: number; nome: string }>;
 }) {
   return (
     <div className="mt-8">
@@ -269,6 +278,13 @@ function Grupo({
                       Cumprir
                     </button>
                   </form>
+                ) : null}
+                {admin && item.situacao === "aberto" && nomes.length === 0 ? (
+                  <MarcarAdvogado
+                    prazoId={item.id}
+                    voltar={voltar}
+                    pessoas={pessoas}
+                  />
                 ) : null}
                 {admin ? (
                   <>

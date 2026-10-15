@@ -8,12 +8,13 @@ import {
 } from "@/app/(painel)/admin/prazos/actions";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { CorpoPrazo } from "@/components/corpo-prazo";
+import { MarcarAdvogado } from "@/components/marcar-advogado";
 import { ProcessoPrazo } from "@/components/processo-prazo";
 import { obterDb } from "@/db/client";
 import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { hojeNoEscritorio } from "@/lib/contagens";
-import { dataBr } from "@/lib/datas";
+import { dataBr, semanaDe, somarDias } from "@/lib/datas";
 import { listarPessoas } from "@/lib/pessoas";
 import { numeroDoProcesso } from "@/lib/publicacao";
 import { faixaDaArea, rotuloArea, statusDoPrazo } from "@/lib/resumo";
@@ -129,11 +130,13 @@ async function Lista({
     advogado: advogadoFiltro,
   };
   const db = obterDb();
+  const ancoraSemana = dataPedida ?? hoje;
+  const semana = quando === "semana" ? semanaDe(ancoraSemana) : null;
   const filtroData =
     quando === "hoje"
       ? eq(prazos.data, hoje)
       : quando === "semana"
-        ? sql`extract(week from ${prazos.data}) = extract(week from ${hoje}::date) and extract(year from ${prazos.data}) = extract(year from ${hoje}::date)`
+        ? sql`extract(week from ${prazos.data}) = extract(week from ${ancoraSemana}::date) and extract(year from ${prazos.data}) = extract(year from ${ancoraSemana}::date)`
         : dataPedida
           ? eq(prazos.data, dataPedida)
           : sql`false`;
@@ -211,7 +214,7 @@ async function Lista({
     }
   }
   const diaImpressao = quando === "hoje" ? hoje : dataPedida;
-  const ancora = dataPedida ?? hoje;
+  const ancora = quando === "semana" ? ancoraSemana : (dataPedida ?? hoje);
   const diasDaSemana =
     quando === "semana" || quando === "hoje" || dataPedida
       ? await db
@@ -297,10 +300,59 @@ async function Lista({
         {tituloDaLista(quando, dataPedida ?? undefined)}
       </h1>
       <p className="subtitulo-pagina">
+        {semana ? `${dataBr(semana.inicio)} a ${dataBr(semana.fim)}. ` : ""}
         {itens.length === 300
           ? "Mostrando os 300 primeiros."
           : `${itens.length} nesta lista.`}
       </p>
+      {semana ? (
+        <nav
+          aria-label="Outras semanas"
+          className="mt-6 flex flex-wrap items-center gap-2"
+        >
+          <Link
+            href={consultaDaLista({
+              quando: "semana",
+              data: somarDias(semana.inicio, -7),
+              area: areaOk,
+              situacao: situacaoOk,
+              meus: soMeus,
+              advogado: advogadoFiltro,
+            })}
+            className="chip"
+          >
+            Semana anterior
+          </Link>
+          <Link
+            href={consultaDaLista({
+              quando: "semana",
+              area: areaOk,
+              situacao: situacaoOk,
+              meus: soMeus,
+              advogado: advogadoFiltro,
+            })}
+            aria-current={
+              semana.inicio === semanaDe(hoje).inicio ? "page" : undefined
+            }
+            className="chip"
+          >
+            Esta semana
+          </Link>
+          <Link
+            href={consultaDaLista({
+              quando: "semana",
+              data: somarDias(semana.inicio, 7),
+              area: areaOk,
+              situacao: situacaoOk,
+              meus: soMeus,
+              advogado: advogadoFiltro,
+            })}
+            className="chip"
+          >
+            Próxima semana
+          </Link>
+        </nav>
+      ) : null}
       {diasDaSemana.length > 0 ? (
         <nav aria-label="Dias da semana" className="mt-6 flex flex-wrap gap-2">
           {diasDaSemana.map((dia) => (
@@ -381,6 +433,18 @@ async function Lista({
               Adiar os em aberto
             </Link>
           ) : null}
+          {quando !== "semana" ? (
+            <Link
+              href={consultaDaLista({
+                quando: "semana",
+                data: diaImpressao,
+                advogado: advogadoFiltro,
+              })}
+              className="btn btn-pequeno"
+            >
+              Ver a semana
+            </Link>
+          ) : null}
           <Link
             href={`/prazos/impressao?data=${diaImpressao}${areaOk ? `&area=${areaOk}` : ""}`}
             className="btn btn-pequeno"
@@ -427,6 +491,7 @@ async function Lista({
                         seu={meusIds.has(item.id)}
                         voltar={voltar}
                         admin={usuario.papel === "admin"}
+                        pessoas={pessoas}
                       />
                     </li>
                   ))}
@@ -444,6 +509,7 @@ async function Lista({
                 seu={meusIds.has(item.id)}
                 voltar={voltar}
                 admin={usuario.papel === "admin"}
+                pessoas={pessoas}
               />
             </li>
           ))}
@@ -459,6 +525,7 @@ function CartaoPrazo({
   seu,
   voltar,
   admin,
+  pessoas,
 }: {
   item: {
     id: number;
@@ -476,6 +543,7 @@ function CartaoPrazo({
   seu: boolean;
   voltar: string;
   admin: boolean;
+  pessoas: Array<{ id: number; nome: string }>;
 }) {
   return (
     <>
@@ -537,6 +605,13 @@ function CartaoPrazo({
             >
               Imprimir
             </Link>
+            {admin && item.situacao === "aberto" && advogados.length === 0 ? (
+              <MarcarAdvogado
+                prazoId={item.id}
+                voltar={voltar}
+                pessoas={pessoas}
+              />
+            ) : null}
             {item.situacao === "aberto" ? (
               <form action={cumprir}>
                 <input type="hidden" name="id" value={item.id} />
