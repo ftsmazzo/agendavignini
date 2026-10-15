@@ -307,6 +307,12 @@ async function Lista({
       {diaImpressao ? (
         <p className="mt-4 flex flex-wrap gap-4">
           <Link
+            href={`/prazos/cumprir?dia=${diaImpressao}`}
+            className="text-lg font-semibold text-pen"
+          >
+            Cumprir os em aberto
+          </Link>
+          <Link
             href={`/prazos/impressao?data=${diaImpressao}${areaOk ? `&area=${areaOk}` : ""}`}
             className="text-lg text-pen"
           >

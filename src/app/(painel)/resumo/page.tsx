@@ -358,18 +358,38 @@ async function Corpo({
       </form>
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        {cartoes.map((cartao) => (
-          <article
-            key={cartao.rotulo}
-            className="border border-line bg-sheet px-5 py-5"
-          >
-            <p className="text-lg text-muted">{cartao.rotulo}</p>
-            <p className={`mt-2 text-5xl leading-none font-bold ${cartao.tom}`}>
-              {cartao.valor}
-            </p>
-            <p className="mt-3 text-lg text-muted">{cartao.detalhe}</p>
-          </article>
-        ))}
+        {cartoes.map((cartao) => {
+          const corpo = (
+            <>
+              <p className="text-lg text-muted">{cartao.rotulo}</p>
+              <p
+                className={`mt-2 text-5xl leading-none font-bold ${cartao.tom}`}
+              >
+                {cartao.valor}
+              </p>
+              <p className="mt-3 text-lg text-muted">{cartao.detalhe}</p>
+            </>
+          );
+          if (cartao.rotulo === "Vencidos") {
+            return (
+              <Link
+                key={cartao.rotulo}
+                href="/prazos/atraso"
+                className="border border-line bg-sheet px-5 py-5"
+              >
+                {corpo}
+              </Link>
+            );
+          }
+          return (
+            <article
+              key={cartao.rotulo}
+              className="border border-line bg-sheet px-5 py-5"
+            >
+              {corpo}
+            </article>
+          );
+        })}
       </div>
 
       <ul className="mt-4 flex flex-wrap gap-3 text-lg text-ink">
@@ -502,12 +522,20 @@ async function Corpo({
 
       {itens ? (
         <div className="mt-8">
-          <h2 className="text-2xl font-semibold text-ink">
-            {dataBr(diaLista)}
-            {itens.prazos.length === 1
-              ? " · 1 prazo"
-              : ` · ${itens.prazos.length} prazos`}
-          </h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="text-2xl font-semibold text-ink">
+              {dataBr(diaLista)}
+              {itens.prazos.length === 1
+                ? " · 1 prazo"
+                : ` · ${itens.prazos.length} prazos`}
+            </h2>
+            <Link
+              href={`/prazos/cumprir?dia=${diaLista}`}
+              className="text-lg font-semibold text-pen"
+            >
+              Cumprir os em aberto deste dia
+            </Link>
+          </div>
           {itens.audiencias.length > 0 ? (
             <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
               {itens.audiencias.map((item) => (

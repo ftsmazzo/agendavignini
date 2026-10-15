@@ -29,7 +29,11 @@ function voltarDe(formData: FormData) {
 
 function atualizarListas() {
   revalidatePath("/");
+  revalidatePath("/resumo");
   revalidatePath("/prazos");
+  revalidatePath("/prazos/atraso");
+  revalidatePath("/prazos/meus");
+  revalidatePath("/prazos/cumprir");
   revalidatePath("/admin/prazos");
   revalidatePath("/admin/relatorios");
   revalidatePath("/busca");

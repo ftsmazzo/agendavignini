@@ -11,6 +11,9 @@ export type GrupoMenu = {
 export const menuPrincipal: Array<ItemMenu | GrupoMenu> = [
   { href: "/", rotulo: "Tela inicial" },
   { href: "/resumo", rotulo: "Resumo do dia" },
+  { href: "/prazos/atraso", rotulo: "Em atraso" },
+  { href: "/prazos/meus", rotulo: "Meus prazos" },
+  { href: "/prazos/cumprir", rotulo: "Cumprir vários" },
   { href: "/perguntar", rotulo: "Perguntar" },
   {
     rotulo: "Agenda",

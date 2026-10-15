@@ -1,6 +1,11 @@
-import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, lt, lte, sql } from "drizzle-orm";
 import { obterDb } from "@/db/client";
-import { audiencias, audienciasUsuarios, prazos } from "@/db/schema";
+import {
+  audiencias,
+  audienciasUsuarios,
+  prazos,
+  prazosUsuarios,
+} from "@/db/schema";
 import { fimDoMes } from "@/lib/calendario";
 
 export function hojeNoEscritorio(agora = new Date()) {
@@ -58,11 +63,33 @@ export async function contarPainel(hoje: string, usuarioId: number) {
       ),
     );
 
+  const [atrasoConta] = await db
+    .select({
+      total: sql<number>`count(*)::int`,
+    })
+    .from(prazos)
+    .where(and(eq(prazos.situacao, "aberto"), lt(prazos.data, hoje)));
+
+  const [meusConta] = await db
+    .select({
+      total: sql<number>`count(*)::int`,
+    })
+    .from(prazos)
+    .innerJoin(prazosUsuarios, eq(prazosUsuarios.prazoId, prazos.id))
+    .where(
+      and(
+        eq(prazos.situacao, "aberto"),
+        eq(prazosUsuarios.usuarioId, usuarioId),
+      ),
+    );
+
   return {
     hoje: hojeConta ?? { total: 0, cumpridos: 0 },
     semana: semanaConta ?? { total: 0, cumpridos: 0 },
     audiencias: audienciasConta?.total ?? 0,
     minhasAudiencias: minhas?.total ?? 0,
+    atraso: atrasoConta?.total ?? 0,
+    meusAbertos: meusConta?.total ?? 0,
   };
 }
 

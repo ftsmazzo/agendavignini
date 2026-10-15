@@ -38,6 +38,8 @@ async function PainelDoDia({
         semana: { total: 0, cumpridos: 0 },
         audiencias: 0,
         minhasAudiencias: 0,
+        atraso: 0,
+        meusAbertos: 0,
       };
   const resumos = await resumosDoMes(recorte.ano, recorte.mes);
   const dataLonga = new Intl.DateTimeFormat("pt-BR", {
@@ -67,30 +69,50 @@ async function PainelDoDia({
       detalhe: `${contas.minhasAudiencias} suas`,
       tom: "hearing" as const,
     },
+    {
+      href: "/prazos/atraso",
+      rotulo: "Em atraso",
+      valor: contas.atraso,
+      detalhe: "em aberto e já passou",
+      tom: "late" as const,
+    },
   ];
 
   return (
     <div className="w-full">
       <p className="text-2xl text-muted">{dataExibida}</p>
-      <p className="mt-2 text-xl">
+      <p className="mt-2 flex flex-wrap gap-x-6 gap-y-2 text-xl">
         <a href="/resumo" className="text-pen">
           Seu resumo de hoje
         </a>
+        <a href="/prazos/meus" className="text-pen">
+          Seus prazos em aberto ({contas.meusAbertos})
+        </a>
       </p>
-      <div className="mt-6 grid border border-line bg-sheet lg:grid-cols-3">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {cartoes.map((item) => (
           <a
             key={item.href}
             href={item.href}
-            className="border-b border-line px-6 py-6 last:border-b-0 lg:border-r lg:border-b-0 lg:last:border-r-0"
+            className="border border-line bg-sheet px-6 py-6"
           >
             <p className="text-xl text-muted">{item.rotulo}</p>
             <p
-              className={`mt-2 text-6xl leading-none font-bold ${item.tom === "hearing" ? "text-hearing" : "text-ink"}`}
+              className={`mt-2 text-6xl leading-none font-bold ${
+                item.tom === "hearing"
+                  ? "text-hearing"
+                  : item.tom === "late"
+                    ? "text-late"
+                    : "text-ink"
+              }`}
             >
               {item.valor}
             </p>
-            <p className="mt-3 text-lg text-done">{item.detalhe}</p>
+            <p
+              className={`mt-3 text-lg ${item.tom === "late" ? "text-late" : "text-done"}`}
+            >
+              {item.detalhe}
+            </p>
           </a>
         ))}
       </div>
