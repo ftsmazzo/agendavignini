@@ -7,6 +7,7 @@ import { obterDb } from "@/db/client";
 import { prazos } from "@/db/schema";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr, dataIsoValida } from "@/lib/datas";
+import { cargasAbertas, notaDaCarga } from "@/lib/monitor";
 import { listarPessoas } from "@/lib/pessoas";
 import { faixaDaArea, marcaDoPrazo, rotuloArea } from "@/lib/resumo";
 
@@ -100,9 +101,25 @@ async function Lista({
               : and(eq(prazos.data, dia), semVinculo),
           )
           .orderBy(asc(prazos.titulo), asc(prazos.id));
+  const cargas = await cargasAbertas(hoje);
   const pessoas = (await listarPessoas())
     .filter((pessoa) => pessoa.ativo)
-    .map((pessoa) => ({ id: pessoa.id, nome: pessoa.nome }));
+    .map((pessoa) => {
+      const carga = cargas.get(pessoa.id) ?? { atraso: 0, abertos: 0 };
+      return {
+        id: pessoa.id,
+        nome: pessoa.nome,
+        nota: notaDaCarga(carga),
+        atraso: carga.atraso,
+        abertos: carga.abertos,
+      };
+    })
+    .sort(
+      (a, b) =>
+        (a.abertos === 0 ? 0 : 1) - (b.abertos === 0 ? 0 : 1) ||
+        a.atraso - b.atraso ||
+        a.nome.localeCompare(b.nome, "pt-BR"),
+    );
   const ativos = new Set(pessoas.map((pessoa) => pessoa.id));
   const equipe = [
     ...new Set(
@@ -246,6 +263,9 @@ async function Lista({
             <button type="submit" className="btn btn-primario">
               Ver dia
             </button>
+            <Link href={`/admin/prazos/adiar?dia=${dia}`} className="btn">
+              Adiar os em aberto deste dia
+            </Link>
           </form>
           {itens.length === 0 ? (
             <p className="vazio mt-6">Nenhum prazo sem advogado neste dia.</p>

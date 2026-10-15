@@ -1,4 +1,4 @@
-type Pessoa = { id: number; nome: string };
+type Pessoa = { id: number; nome: string; nota?: string };
 
 export function CaixasAdvogados({
   pessoas,
@@ -48,7 +48,14 @@ export function CaixasAdvogados({
                 }
                 className="h-5 w-5 accent-pen"
               />
-              {pessoa.nome}
+              <span className="min-w-0">
+                {pessoa.nome}
+                {pessoa.nota ? (
+                  <span className="mt-0.5 block text-sm font-normal text-muted">
+                    {pessoa.nota}
+                  </span>
+                ) : null}
+              </span>
             </label>
           );
         })}

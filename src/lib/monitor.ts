@@ -189,6 +189,37 @@ export async function painelAdvogados(
   } satisfies PainelAdvogados;
 }
 
+export function notaDaCarga(carga: { atraso: number; abertos: number }) {
+  if (carga.abertos === 0) {
+    return "Livre agora";
+  }
+  if (carga.atraso > 0) {
+    return `${carga.atraso} em atraso`;
+  }
+  return "No prazo";
+}
+
+export async function cargasAbertas(hoje: string) {
+  const db = obterDb();
+  const linhas = await db
+    .select({
+      id: usuarios.id,
+      atraso: sql<number>`count(distinct ${prazos.id}) filter (where ${prazos.situacao} = 'aberto' and ${prazos.data} < ${hoje}::date)::int`,
+      abertos: sql<number>`count(distinct ${prazos.id}) filter (where ${prazos.situacao} = 'aberto')::int`,
+    })
+    .from(usuarios)
+    .leftJoin(prazosUsuarios, eq(prazosUsuarios.usuarioId, usuarios.id))
+    .leftJoin(prazos, eq(prazos.id, prazosUsuarios.prazoId))
+    .where(eq(usuarios.ativo, true))
+    .groupBy(usuarios.id);
+  return new Map(
+    linhas.map((linha) => [
+      linha.id,
+      { atraso: linha.atraso, abertos: linha.abertos },
+    ]),
+  );
+}
+
 export async function abertosDoAdvogado(usuarioId: number, limite = 15) {
   const db = obterDb();
   const vinculo = sql`exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id} and usuario_id = ${usuarioId})`;
