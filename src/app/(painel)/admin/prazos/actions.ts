@@ -35,6 +35,7 @@ function atualizarListas() {
   revalidatePath("/prazos/meus");
   revalidatePath("/prazos/cumprir");
   revalidatePath("/admin/prazos");
+  revalidatePath("/admin/prazos/adiar");
   revalidatePath("/admin/relatorios");
   revalidatePath("/busca");
 }

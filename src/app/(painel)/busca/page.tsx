@@ -1,9 +1,11 @@
 import { or, sql } from "drizzle-orm";
 import Link from "next/link";
 import { Suspense } from "react";
+import { ProcessoPrazo } from "@/components/processo-prazo";
 import { obterDb } from "@/db/client";
 import { audiencias, prazos } from "@/db/schema";
 import { dataBr, dataHoraBr } from "@/lib/datas";
+import { formatarProcesso } from "@/lib/publicacao";
 import { rotuloArea } from "@/lib/resumo";
 
 function diaDaAudiencia(valor: Date) {
@@ -39,8 +41,10 @@ async function Resultado({
 }) {
   const { q } = await searchParams;
   const termo = q?.trim().slice(0, 120) ?? "";
+  const formatado = formatarProcesso(termo);
+  const consulta = formatado && formatado !== termo ? formatado : termo;
   const db = obterDb();
-  const filtro = padrao(termo);
+  const filtro = padrao(consulta);
   const itens = termo
     ? await db
         .select({
@@ -49,6 +53,9 @@ async function Resultado({
           data: prazos.data,
           titulo: prazos.titulo,
           situacao: prazos.situacao,
+          processo: sql<
+            string | null
+          >`substring((${prazos.titulo} || ' ' || ${prazos.observacao} || ' ' || ${prazos.conteudo}) from '[0-9]{7}-[0-9]{2}\\.[0-9]{4}\\.[0-9]\\.[0-9]{2}\\.[0-9]{4}')`,
         })
         .from(prazos)
         .where(
@@ -148,6 +155,7 @@ async function Resultado({
                     >
                       {item.titulo}
                     </Link>
+                    <ProcessoPrazo numero={item.processo} />
                   </li>
                 ))}
               </ul>

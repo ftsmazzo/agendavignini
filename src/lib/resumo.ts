@@ -456,6 +456,7 @@ export async function itensDoDia(dia: string, advogadoId: number | null) {
         area: prazos.area,
         data: prazos.data,
         titulo: prazos.titulo,
+        observacao: prazos.observacao,
         conteudo: prazos.conteudo,
         situacao: prazos.situacao,
         cumpridoNome: usuarios.nome,
@@ -512,6 +513,7 @@ export async function itensDoDia(dia: string, advogadoId: number | null) {
         area: item.area,
         data: item.data,
         titulo: item.titulo,
+        observacao: item.observacao,
         conteudo: item.conteudo,
         situacao: item.situacao,
         cumpridoPor: item.cumpridoNome

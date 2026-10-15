@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { cumprir } from "@/app/(painel)/admin/prazos/actions";
+import { ProcessoPrazo } from "@/components/processo-prazo";
 import { exigirUsuario } from "@/lib/acesso";
 import { fimDoMes } from "@/lib/calendario";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr, dataHoraBr, dataIsoValida, semanaDe } from "@/lib/datas";
 import { caixaConfigurada } from "@/lib/email";
 import { listarPessoas } from "@/lib/pessoas";
+import { numeroDoProcesso } from "@/lib/publicacao";
 import {
   faixaDaArea,
   itensDoDia,
@@ -226,6 +229,21 @@ async function Corpo({
     admin && advogado && advogado > 0 && recorte.inicio === recorte.fim
       ? textoDoResumo(nomeAdvogado, await resumoDoDia(advogado, recorte.inicio))
       : "";
+  const volta = new URLSearchParams();
+  for (const chave of [
+    "quando",
+    "inicio",
+    "fim",
+    "dia",
+    "advogado",
+    "pessoa",
+  ] as const) {
+    const valor = params[chave];
+    if (valor) {
+      volta.set(chave, valor);
+    }
+  }
+  const voltar = volta.size > 0 ? `/resumo?${volta}` : "/resumo";
   const maiorArea = Math.max(...painel.areas.map((area) => area.total), 1);
   const maiorPessoa = Math.max(
     painel.semAdvogado,
@@ -579,6 +597,13 @@ async function Corpo({
                         {item.titulo}
                       </Link>
                     </h3>
+                    <ProcessoPrazo
+                      numero={numeroDoProcesso(
+                        item.titulo,
+                        item.observacao,
+                        item.conteudo,
+                      )}
+                    />
                     {item.advogados.length > 0 ? (
                       <p className="mt-2 text-base text-muted">
                         {item.advogados.join(", ")}
@@ -593,6 +618,18 @@ async function Corpo({
                           {item.conteudo}
                         </p>
                       </details>
+                    ) : null}
+                    {item.situacao === "aberto" ? (
+                      <form action={cumprir} className="mt-3">
+                        <input type="hidden" name="id" value={item.id} />
+                        <input type="hidden" name="voltar" value={voltar} />
+                        <button
+                          type="submit"
+                          className="btn btn-sucesso btn-pequeno"
+                        >
+                          Cumprir
+                        </button>
+                      </form>
                     ) : null}
                   </li>
                 );

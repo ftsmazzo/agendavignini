@@ -12,6 +12,8 @@ export type SugestaoPublicacao = {
   avisos: string[];
 };
 
+const PROCESSO = /\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}/;
+
 const ATOS: Array<{ padrao: RegExp; titulo: string }> = [
   { padrao: /carta de preposi[cç][aã]o/i, titulo: "PRAZO CARTA DE PREPOSIÇÃO" },
   { padrao: /quesitos/i, titulo: "PRAZO QUESITOS" },
@@ -112,6 +114,36 @@ function feriados(ano: number) {
 
 function ehUtil(iso: string) {
   return !ehFimDeSemana(iso) && !feriados(Number(iso.slice(0, 4))).has(iso);
+}
+
+export function ehDiaUtil(iso: string) {
+  return dataIsoValida(iso) && ehUtil(iso);
+}
+
+export function diaUtilSeguinte(iso: string) {
+  let cursor = somarDias(iso, 1);
+  while (!ehUtil(cursor)) {
+    cursor = somarDias(cursor, 1);
+  }
+  return cursor;
+}
+
+export function numeroDoProcesso(...trechos: Array<string | null | undefined>) {
+  for (const trecho of trechos) {
+    const achado = trecho?.match(PROCESSO)?.[0];
+    if (achado) {
+      return achado;
+    }
+  }
+  return null;
+}
+
+export function formatarProcesso(termo: string) {
+  const digitos = termo.replace(/\D/g, "");
+  if (!/^\d{20}$/.test(digitos)) {
+    return null;
+  }
+  return `${digitos.slice(0, 7)}-${digitos.slice(7, 9)}.${digitos.slice(9, 13)}.${digitos.slice(13, 14)}.${digitos.slice(14, 16)}.${digitos.slice(16)}`;
 }
 
 function proximoUtil(iso: string) {
@@ -267,8 +299,7 @@ export function sugerirPublicacao(
     "Nada foi gravado. Confira os campos e use Salvar prazo.",
     "Feriado municipal não entra na conta.",
   ];
-  const processo =
-    conteudo.match(/\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}/)?.[0] ?? null;
+  const processo = numeroDoProcesso(conteudo);
   const area = areaDoTexto(conteudo, processo);
   const titulo = ATOS.find((ato) => ato.padrao.test(conteudo))?.titulo ?? null;
   const advogados = advogadosNoTexto(conteudo, pessoas);

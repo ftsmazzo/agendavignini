@@ -8,11 +8,13 @@ import {
 } from "@/app/(painel)/admin/prazos/actions";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { CorpoPrazo } from "@/components/corpo-prazo";
+import { ProcessoPrazo } from "@/components/processo-prazo";
 import { obterDb } from "@/db/client";
 import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr } from "@/lib/datas";
+import { numeroDoProcesso } from "@/lib/publicacao";
 import { faixaDaArea, rotuloArea, statusDoPrazo } from "@/lib/resumo";
 
 const AREAS = ["administrativo", "civil", "trabalhista"] as const;
@@ -307,6 +309,14 @@ async function Lista({
           >
             Cumprir os em aberto
           </Link>
+          {usuario.papel === "admin" ? (
+            <Link
+              href={`/admin/prazos/adiar?dia=${diaImpressao}`}
+              className="btn btn-pequeno"
+            >
+              Adiar os em aberto
+            </Link>
+          ) : null}
           <Link
             href={`/prazos/impressao?data=${diaImpressao}${areaOk ? `&area=${areaOk}` : ""}`}
             className="btn btn-pequeno"
@@ -422,6 +432,9 @@ function CartaoPrazo({
         {seu ? <span className="selo selo-audiencia">Seu prazo</span> : null}
       </p>
       <h3 className="mt-2 text-xl font-semibold text-ink">{item.titulo}</h3>
+      <ProcessoPrazo
+        numero={numeroDoProcesso(item.titulo, item.observacao, item.conteudo)}
+      />
       <CorpoPrazo
         temCorpo={
           advogados.length > 0 ||
