@@ -21,9 +21,7 @@ export default function SemAdvogado({
 }) {
   return (
     <Suspense
-      fallback={
-        <p className="text-xl text-muted">Abrindo os prazos sem advogado.</p>
-      }
+      fallback={<p className="text-muted">Abrindo os prazos sem advogado.</p>}
     >
       <Lista searchParams={searchParams} />
     </Suspense>
@@ -112,76 +110,74 @@ async function Lista({
   }
 
   return (
-    <section className="w-full">
-      <h1 className="text-4xl leading-tight font-bold text-ink">
-        Sem advogado
-      </h1>
-      <p className="mt-3 text-xl text-muted">
+    <section className="entrada mx-auto w-full max-w-5xl">
+      <h1 className="titulo-pagina">Sem advogado</h1>
+      <p className="subtitulo-pagina">
         Prazos de hoje em diante que ainda não têm responsável.
       </p>
-      <p className="mt-2 text-2xl text-ink">
-        {total === 1
-          ? "1 prazo sem advogado."
-          : `${total} prazos sem advogado.`}
+      <p className="mt-3">
+        <span className={total === 0 ? "selo selo-ok" : "selo selo-atraso"}>
+          {total === 1
+            ? "1 prazo sem advogado."
+            : `${total} prazos sem advogado.`}
+        </span>
       </p>
       {quantidadeMarcada > 0 ? (
-        <output className="mt-4 block text-xl text-done">
+        <output className="aviso aviso-ok mt-4 block">
           {quantidadeMarcada === 1
             ? "1 prazo marcado."
             : `${quantidadeMarcada} prazos marcados.`}
         </output>
       ) : null}
       {dias.length === 0 ? (
-        <p className="mt-8 text-xl text-ink">
+        <p className="vazio mt-6">
           De hoje em diante, todo prazo tem advogado.
         </p>
       ) : (
         <>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             {anterior ? (
-              <Link
-                href={endereco(anterior.data)}
-                className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
-              >
-                Anterior
-                <span className="mt-1 block text-base font-normal text-muted">
-                  {dataBr(anterior.data)} · {anterior.total}
+              <Link href={endereco(anterior.data)} className="btn">
+                <span aria-hidden="true">←</span>
+                <span className="text-left">
+                  Anterior
+                  <span className="block text-sm font-normal text-muted">
+                    {dataBr(anterior.data)} · {anterior.total}
+                  </span>
                 </span>
               </Link>
             ) : (
               <span />
             )}
-            <h2 className="text-center text-3xl font-bold text-ink">
+            <h2 className="text-center text-2xl font-bold text-ink">
               {dataBr(dia)}
-              <span className="mt-1 block text-lg font-normal text-muted">
+              <span className="block text-base font-normal text-muted">
                 {itens.length === 1 ? "1 prazo" : `${itens.length} prazos`}
               </span>
             </h2>
             {proximo ? (
-              <Link
-                href={endereco(proximo.data)}
-                className="border border-line bg-sheet px-4 py-3 text-right text-lg font-semibold text-ink"
-              >
-                Próximo
-                <span className="mt-1 block text-base font-normal text-muted">
-                  {dataBr(proximo.data)} · {proximo.total}
+              <Link href={endereco(proximo.data)} className="btn">
+                <span className="text-right">
+                  Próximo
+                  <span className="block text-sm font-normal text-muted">
+                    {dataBr(proximo.data)} · {proximo.total}
+                  </span>
                 </span>
+                <span aria-hidden="true">→</span>
               </Link>
             ) : (
               <span />
             )}
           </div>
-          <form method="get" className="mt-6 flex flex-wrap items-end gap-3">
+          <form
+            method="get"
+            className="cartao mt-6 flex flex-wrap items-end gap-3 p-4"
+          >
             <div>
-              <label htmlFor="dia" className="mb-2 block text-xl text-ink">
+              <label htmlFor="dia" className="rotulo-campo">
                 Dia
               </label>
-              <select
-                id="dia"
-                name="dia"
-                defaultValue={dia}
-                className="border border-line bg-sheet px-4 py-3 text-xl text-ink"
-              >
+              <select id="dia" name="dia" defaultValue={dia} className="campo">
                 {dias.map((item) => (
                   <option key={item.data} value={item.data}>
                     {dataBr(item.data)} · {item.total}
@@ -192,17 +188,12 @@ async function Lista({
             {equipe.length > 0 ? (
               <input type="hidden" name="advogados" value={equipe.join(",")} />
             ) : null}
-            <button
-              type="submit"
-              className="bg-pen px-4 py-3 text-lg font-semibold text-sheet"
-            >
+            <button type="submit" className="btn btn-primario">
               Ver dia
             </button>
           </form>
           {itens.length === 0 ? (
-            <p className="mt-8 text-xl text-ink">
-              Nenhum prazo sem advogado neste dia.
-            </p>
+            <p className="vazio mt-6">Nenhum prazo sem advogado neste dia.</p>
           ) : (
             <FormularioResponsavel
               key={`${dia}-${equipe.join("-")}`}

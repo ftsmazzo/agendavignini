@@ -11,10 +11,11 @@ export function AlternarTema() {
     <button
       type="button"
       onClick={alternar}
-      className="border border-line bg-sheet px-4 py-3 text-lg text-ink"
+      className="btn btn-pequeno"
+      title="Alternar entre modo claro e escuro"
     >
-      <span className="dark:hidden">Usar modo escuro</span>
-      <span className="hidden dark:inline">Usar modo claro</span>
+      <span className="dark:hidden">🌙 Modo escuro</span>
+      <span className="hidden dark:inline">☀️ Modo claro</span>
     </button>
   );
 }

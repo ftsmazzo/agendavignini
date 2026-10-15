@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
-export const classeCampo =
-  "w-full border border-line bg-paper px-4 py-3 text-xl text-ink";
+export const classeCampo = "campo";
 
 export function Campo({
   id,
@@ -14,7 +13,7 @@ export function Campo({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-2 block text-xl text-ink">
+      <label htmlFor={id} className="rotulo-campo">
         {rotulo}
       </label>
       {children}

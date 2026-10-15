@@ -53,9 +53,7 @@ export default function Relatorios({
   }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-xl text-muted">Abrindo o relatório.</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Abrindo o relatório.</p>}>
       <Painel searchParams={searchParams} />
     </Suspense>
   );
@@ -259,14 +257,14 @@ async function Painel({
 
   return (
     <section className="mx-auto w-full max-w-5xl">
-      <h1 className="text-4xl leading-tight font-bold text-ink">Relatórios</h1>
-      <p className="mt-3 text-xl text-muted">
+      <h1 className="titulo-pagina">Relatórios</h1>
+      <p className="subtitulo-pagina">
         Prazos do advogado no período, pelos que ele cumpriu ou pelos que estão
         no nome dele.
       </p>
-      <form method="get" className="mt-8 grid gap-5 md:grid-cols-3">
+      <form method="get" className="cartao mt-6 grid gap-5 p-5 md:grid-cols-3">
         <div>
-          <label htmlFor="advogado" className="mb-2 block text-xl text-ink">
+          <label htmlFor="advogado" className="rotulo-campo">
             Advogado
           </label>
           <select
@@ -283,7 +281,7 @@ async function Painel({
           </select>
         </div>
         <div>
-          <label htmlFor="inicio" className="mb-2 block text-xl text-ink">
+          <label htmlFor="inicio" className="rotulo-campo">
             Data inicial
           </label>
           <input
@@ -296,7 +294,7 @@ async function Painel({
           />
         </div>
         <div>
-          <label htmlFor="fim" className="mb-2 block text-xl text-ink">
+          <label htmlFor="fim" className="rotulo-campo">
             Data final
           </label>
           <input
@@ -308,16 +306,13 @@ async function Painel({
             className={classeCampo}
           />
         </div>
-        <button
-          type="submit"
-          className="bg-pen px-4 py-3 text-xl font-bold text-sheet md:col-span-3"
-        >
+        <button type="submit" className="btn btn-primario md:col-span-3">
           Exibir relatório
         </button>
       </form>
       {pronto && escolhido ? (
         <div className="mt-10">
-          <h2 className="text-2xl font-bold text-ink">
+          <h2 className="titulo-secao">
             {`${escolhido.nome} ${escolhido.sobrenome}`.trim()} entre{" "}
             {dataBr(inicioOk)} e {dataBr(fimOk)}
           </h2>
@@ -335,11 +330,7 @@ async function Painel({
                       ? "page"
                       : undefined
                   }
-                  className={
-                    dia.data === diaOk && !areaOk && !situacaoOk
-                      ? "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
-                      : "border border-line bg-sheet px-3 py-2 text-lg text-ink"
-                  }
+                  className="chip"
                 >
                   {dataBr(dia.data)} · {dia.total}
                 </Link>
@@ -355,11 +346,7 @@ async function Painel({
                 key={filtro.rotulo}
                 href={filtro.href}
                 aria-current={filtro.ativo ? "page" : undefined}
-                className={
-                  filtro.ativo
-                    ? "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
-                    : "border border-line bg-sheet px-3 py-2 text-lg text-ink"
-                }
+                className="chip"
               >
                 {filtro.rotulo}
               </Link>
@@ -368,36 +355,45 @@ async function Painel({
           <p className="mt-4">
             <Link
               href={`/admin/relatorios/impressao?advogado=${id}&inicio=${inicioOk}&fim=${fimOk}`}
-              className="text-lg text-pen"
+              className="btn-texto"
             >
               Imprimir o período
             </Link>
           </p>
-          <p className="mt-3 text-xl text-muted">
+          <p className="mt-3 text-muted">
             {itens.length === 300
               ? "Mostrando os 300 primeiros."
               : `${itens.length} nesta lista.`}
           </p>
           {itens.length === 0 ? (
-            <p className="mt-6 text-xl text-ink">Nenhum prazo neste recorte.</p>
+            <p className="vazio mt-4">Nenhum prazo neste recorte.</p>
           ) : (
-            <ul className="mt-6 divide-y divide-line border border-line bg-sheet">
+            <ul className="lista-cartoes mt-4">
               {itens.map((item) => (
                 <li
                   key={item.id}
-                  className={`px-6 py-5 ${faixaDaArea(item.area)}`}
+                  className={`px-5 py-4 ${faixaDaArea(item.area)}`}
                 >
-                  <p className="text-lg text-muted">
-                    {rotuloArea(item.area)} · {dataBr(item.data)} ·{" "}
-                    {statusDoPrazo({
-                      situacao: item.situacao,
-                      cumpridoPor: item.cumpridoNome
-                        ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-                        : null,
-                      cumpridoEm: item.cumpridoEm,
-                    })}
+                  <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
+                    <span className="selo">{rotuloArea(item.area)}</span>
+                    <span>{dataBr(item.data)}</span>
+                    <span
+                      className={
+                        item.situacao === "cumprido"
+                          ? "selo selo-ok"
+                          : "selo selo-neutro"
+                      }
+                    >
+                      {statusDoPrazo({
+                        situacao: item.situacao,
+                        cumpridoPor: item.cumpridoNome
+                          ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
+                          : null,
+                        cumpridoEm: item.cumpridoEm,
+                      })}
+                    </span>
                   </p>
-                  <h3 className="mt-1 text-2xl font-semibold text-ink">
+                  <h3 className="mt-1 text-lg font-semibold text-ink">
                     {item.titulo}
                   </h3>
                   <CorpoPrazo
@@ -409,21 +405,21 @@ async function Painel({
                     corpo={
                       <>
                         {(advogados.get(item.id) ?? []).length > 0 ? (
-                          <p className="mt-2 text-lg text-muted">
+                          <p className="mt-2 text-sm text-muted">
                             {(advogados.get(item.id) ?? []).join(", ")}
                           </p>
                         ) : null}
                         {item.observacao ? (
-                          <p className="mt-3 text-xl whitespace-pre-wrap text-ink">
+                          <p className="mt-2 whitespace-pre-wrap text-ink">
                             {item.observacao}
                           </p>
                         ) : null}
                         {item.conteudo ? (
                           <details className="mt-3">
-                            <summary className="cursor-pointer text-lg text-pen">
+                            <summary className="cursor-pointer font-semibold text-pen">
                               Ver publicação
                             </summary>
-                            <p className="mt-3 text-lg whitespace-pre-wrap text-ink">
+                            <p className="mt-2 whitespace-pre-wrap text-muted">
                               {item.conteudo}
                             </p>
                           </details>
@@ -434,7 +430,7 @@ async function Painel({
                       <>
                         <Link
                           href={`/prazos/impressao?id=${item.id}`}
-                          className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+                          className="btn btn-pequeno"
                         >
                           Imprimir
                         </Link>
@@ -444,7 +440,7 @@ async function Painel({
                             <input type="hidden" name="voltar" value={voltar} />
                             <button
                               type="submit"
-                              className="bg-pen px-4 py-2 text-lg font-semibold text-sheet"
+                              className="btn btn-pequeno btn-primario"
                             >
                               Cumprir
                             </button>
@@ -453,17 +449,14 @@ async function Painel({
                           <form action={desfazer}>
                             <input type="hidden" name="id" value={item.id} />
                             <input type="hidden" name="voltar" value={voltar} />
-                            <button
-                              type="submit"
-                              className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
-                            >
+                            <button type="submit" className="btn btn-pequeno">
                               Desfazer
                             </button>
                           </form>
                         )}
                         <Link
                           href={`/admin/prazos/${item.id}`}
-                          className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+                          className="btn btn-pequeno"
                         >
                           Editar
                         </Link>

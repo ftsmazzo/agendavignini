@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { classeCampo } from "@/components/campo";
 import { exigirUsuario } from "@/lib/acesso";
 import { fimDoMes } from "@/lib/calendario";
 import { hojeNoEscritorio } from "@/lib/contagens";
@@ -56,9 +55,7 @@ export default function Resumo({
   }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-xl text-muted">Abrindo o resumo.</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Abrindo o resumo.</p>}>
       <Corpo searchParams={searchParams} />
     </Suspense>
   );
@@ -269,14 +266,13 @@ async function Corpo({
   ];
 
   return (
-    <section className="w-full">
+    <section className="entrada mx-auto w-full max-w-6xl">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl leading-tight font-bold text-ink">Resumo</h1>
-          <p className="mt-2 text-2xl text-ink">
-            {rotuloPeriodo(recorte.inicio, recorte.fim)}
+          <h1 className="titulo-pagina">Resumo</h1>
+          <p className="subtitulo-pagina">
+            {rotuloPeriodo(recorte.inicio, recorte.fim)} · {nomeAdvogado}
           </p>
-          <p className="mt-1 text-xl text-muted">{nomeAdvogado}</p>
         </div>
       </div>
 
@@ -292,28 +288,27 @@ async function Corpo({
             key={chave}
             href={liga(chave, advogado)}
             aria-current={recorte.quando === chave ? "page" : undefined}
-            className={
-              recorte.quando === chave
-                ? "bg-pen px-4 py-2 text-lg font-semibold text-sheet"
-                : "border border-line bg-sheet px-4 py-2 text-lg text-ink"
-            }
+            className="chip"
           >
             {rotulo}
           </Link>
         ))}
       </nav>
 
-      <form method="get" className="mt-4 flex flex-wrap items-end gap-3">
+      <form
+        method="get"
+        className="cartao mt-4 flex flex-wrap items-end gap-3 p-5"
+      >
         {admin ? (
           <div>
-            <label htmlFor="advogado" className="mb-2 block text-xl text-ink">
+            <label htmlFor="advogado" className="rotulo-campo">
               Advogado
             </label>
             <select
               id="advogado"
               name="advogado"
               defaultValue={advogado === null ? "" : String(advogado)}
-              className={classeCampo}
+              className="campo"
             >
               <option value="">Escritório</option>
               <option value="0">Sem advogado marcado</option>
@@ -326,7 +321,7 @@ async function Corpo({
           </div>
         ) : null}
         <div>
-          <label htmlFor="inicio" className="mb-2 block text-xl text-ink">
+          <label htmlFor="inicio" className="rotulo-campo">
             De
           </label>
           <input
@@ -334,11 +329,11 @@ async function Corpo({
             name="inicio"
             type="date"
             defaultValue={recorte.inicio}
-            className={classeCampo}
+            className="campo"
           />
         </div>
         <div>
-          <label htmlFor="fim" className="mb-2 block text-xl text-ink">
+          <label htmlFor="fim" className="rotulo-campo">
             Até
           </label>
           <input
@@ -346,28 +341,27 @@ async function Corpo({
             name="fim"
             type="date"
             defaultValue={recorte.fim}
-            className={classeCampo}
+            className="campo"
           />
         </div>
-        <button
-          type="submit"
-          className="bg-pen px-4 py-3 text-lg font-semibold text-sheet"
-        >
+        <button type="submit" className="btn btn-primario">
           Ver período
         </button>
       </form>
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {cartoes.map((cartao) => {
           const corpo = (
             <>
-              <p className="text-lg text-muted">{cartao.rotulo}</p>
+              <p className="text-[0.9688rem] font-medium text-muted">
+                {cartao.rotulo}
+              </p>
               <p
-                className={`mt-2 text-5xl leading-none font-bold ${cartao.tom}`}
+                className={`mt-2 text-4xl leading-none font-bold tracking-tight ${cartao.tom}`}
               >
                 {cartao.valor}
               </p>
-              <p className="mt-3 text-lg text-muted">{cartao.detalhe}</p>
+              <p className="mt-3 text-sm text-muted">{cartao.detalhe}</p>
             </>
           );
           if (cartao.rotulo === "Vencidos") {
@@ -375,24 +369,21 @@ async function Corpo({
               <Link
                 key={cartao.rotulo}
                 href="/prazos/atraso"
-                className="border border-line bg-sheet px-5 py-5"
+                className="cartao-link p-5"
               >
                 {corpo}
               </Link>
             );
           }
           return (
-            <article
-              key={cartao.rotulo}
-              className="border border-line bg-sheet px-5 py-5"
-            >
+            <article key={cartao.rotulo} className="cartao p-5">
               {corpo}
             </article>
           );
         })}
       </div>
 
-      <ul className="mt-4 flex flex-wrap gap-3 text-lg text-ink">
+      <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[0.9375rem] text-muted">
         <li className="inline-flex items-center gap-2">
           <span className="inline-block h-4 w-4 rounded-full bg-late" />
           Vencido
@@ -408,20 +399,22 @@ async function Corpo({
       </ul>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <section className="border border-line bg-sheet p-5">
-          <h2 className="text-2xl font-semibold text-ink">Áreas</h2>
+        <section className="cartao p-5">
+          <h2 className="titulo-secao">Áreas</h2>
           <ul className="mt-4 space-y-4">
             {painel.areas.map((area) => (
               <li key={area.area}>
                 <div className="flex items-baseline justify-between gap-3">
-                  <p className="text-xl text-ink">{rotuloArea(area.area)}</p>
-                  <p className="text-lg text-muted">
+                  <p className="text-base font-semibold text-ink">
+                    {rotuloArea(area.area)}
+                  </p>
+                  <p className="text-[0.9375rem] text-muted">
                     {area.total} · {area.abertos} em aberto
                   </p>
                 </div>
-                <div className="mt-2 h-3 bg-paper">
+                <div className="mt-2 h-3 overflow-hidden rounded-full bg-paper">
                   <div
-                    className={`h-3 ${BARRA[area.area]}`}
+                    className={`h-3 rounded-full ${BARRA[area.area]}`}
                     style={{ width: largura(area.total, maiorArea) }}
                   />
                 </div>
@@ -431,12 +424,12 @@ async function Corpo({
         </section>
 
         {admin && advogado === null ? (
-          <section className="border border-line bg-sheet p-5">
+          <section className="cartao p-5">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h2 className="text-2xl font-semibold text-ink">Advogados</h2>
+              <h2 className="titulo-secao">Advogados</h2>
               <Link
                 href="/admin/prazos/sem-advogado"
-                className="text-lg font-semibold text-pen"
+                className="btn-texto text-[0.9375rem]"
               >
                 Marcar os sem advogado
               </Link>
@@ -444,15 +437,15 @@ async function Corpo({
             <ul className="mt-4 space-y-3">
               <li>
                 <Link href={ligaAdvogado(recorte, 0)} className="block">
-                  <span className="flex items-baseline justify-between gap-3 text-xl text-ink">
+                  <span className="flex items-baseline justify-between gap-3 text-base font-semibold text-ink">
                     Sem advogado marcado
-                    <span className="text-lg text-muted">
+                    <span className="text-[0.9375rem] font-normal text-muted">
                       {painel.semAdvogado}
                     </span>
                   </span>
-                  <span className="mt-2 block h-3 bg-paper">
+                  <span className="mt-2 block h-3 overflow-hidden rounded-full bg-paper">
                     <span
-                      className="block h-3 bg-muted"
+                      className="block h-3 rounded-full bg-muted"
                       style={{
                         width: largura(painel.semAdvogado, maiorPessoa),
                       }}
@@ -466,13 +459,15 @@ async function Corpo({
                     href={ligaAdvogado(recorte, pessoa.id)}
                     className="block"
                   >
-                    <span className="flex items-baseline justify-between gap-3 text-xl text-ink">
+                    <span className="flex items-baseline justify-between gap-3 text-base font-semibold text-ink">
                       {pessoa.nome}
-                      <span className="text-lg text-muted">{pessoa.total}</span>
+                      <span className="text-[0.9375rem] font-normal text-muted">
+                        {pessoa.total}
+                      </span>
                     </span>
-                    <span className="mt-2 block h-3 bg-paper">
+                    <span className="mt-2 block h-3 overflow-hidden rounded-full bg-paper">
                       <span
-                        className="block h-3 bg-pen"
+                        className="block h-3 rounded-full bg-pen"
                         style={{ width: largura(pessoa.total, maiorPessoa) }}
                       />
                     </span>
@@ -482,9 +477,9 @@ async function Corpo({
             </ul>
           </section>
         ) : (
-          <section className="border border-line bg-sheet p-5">
-            <h2 className="text-2xl font-semibold text-ink">Como ler</h2>
-            <p className="mt-4 text-xl text-ink">
+          <section className="cartao p-5">
+            <h2 className="titulo-secao">Como ler</h2>
+            <p className="mt-3 text-base text-ink">
               Vencidos são prazos em aberto com data anterior a hoje. Por
               cumprir são os que ainda estão no prazo.
             </p>
@@ -499,11 +494,7 @@ async function Corpo({
               key={dia.data}
               href={ligaDia({ ...recorte, advogado, dia: dia.data })}
               aria-current={dia.data === diaLista ? "page" : undefined}
-              className={
-                dia.data === diaLista
-                  ? "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
-                  : "border border-line bg-sheet px-3 py-2 text-lg text-ink"
-              }
+              className="chip h-auto flex-col items-start !rounded-2xl py-2"
             >
               <span className="flex items-center gap-2">
                 <span
@@ -511,7 +502,7 @@ async function Corpo({
                 />
                 {dataBr(dia.data)}
               </span>
-              <span className="mt-1 block text-base font-normal">
+              <span className="block text-sm font-normal opacity-90">
                 {dia.total === 1 ? "1 prazo" : `${dia.total} prazos`}
                 {dia.abertos > 0 ? ` · ${dia.abertos} em aberto` : ""}
               </span>
@@ -523,7 +514,7 @@ async function Corpo({
       {itens ? (
         <div className="mt-8">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 className="text-2xl font-semibold text-ink">
+            <h2 className="titulo-secao">
               {dataBr(diaLista)}
               {itens.prazos.length === 1
                 ? " · 1 prazo"
@@ -531,23 +522,25 @@ async function Corpo({
             </h2>
             <Link
               href={`/prazos/cumprir?dia=${diaLista}`}
-              className="text-lg font-semibold text-pen"
+              className="btn btn-pequeno"
             >
               Cumprir os em aberto deste dia
             </Link>
           </div>
           {itens.audiencias.length > 0 ? (
-            <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
+            <ul className="lista-cartoes mt-4">
               {itens.audiencias.map((item) => (
                 <li key={item.id} className="px-5 py-4">
-                  <p className="text-lg text-hearing">
-                    {dataHoraBr(item.dataHora)}
-                    {item.vara ? ` · ${item.vara}` : ""}
+                  <p>
+                    <span className="selo selo-audiencia">
+                      {dataHoraBr(item.dataHora)}
+                      {item.vara ? ` · ${item.vara}` : ""}
+                    </span>
                   </p>
-                  <p className="mt-1 text-xl font-semibold text-ink">
+                  <p className="mt-1 text-lg font-semibold text-ink">
                     {item.numeroProcesso || "Audiência sem número"}
                   </p>
-                  <p className="mt-1 text-lg text-muted">
+                  <p className="mt-1 text-base text-muted">
                     {[item.reclamante, item.reclamado]
                       .filter(Boolean)
                       .join(" · ")}
@@ -557,9 +550,9 @@ async function Corpo({
             </ul>
           ) : null}
           {itens.prazos.length === 0 ? (
-            <p className="mt-4 text-xl text-ink">Nenhum prazo neste dia.</p>
+            <p className="vazio mt-4">Nenhum prazo neste dia.</p>
           ) : (
-            <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
+            <ul className="lista-cartoes mt-4">
               {itens.prazos.map((item) => {
                 const marca = marcaDoPrazo(item.situacao, item.data, hoje);
                 return (
@@ -568,34 +561,35 @@ async function Corpo({
                     className={`px-5 py-4 ${faixaDaArea(item.area)}`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-lg text-muted">
-                        {rotuloArea(item.area)} · {statusDoPrazo(item)}
+                      <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] text-muted">
+                        <span className="selo">{rotuloArea(item.area)}</span>
+                        {statusDoPrazo(item)}
                       </p>
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-base font-semibold ${TOM[marca.tom]}`}
+                        className={`inline-flex rounded-full px-3 py-0.5 text-[0.8125rem] font-semibold ${TOM[marca.tom]}`}
                       >
                         {marca.texto}
                       </span>
                     </div>
-                    <h3 className="mt-1 text-2xl font-semibold text-ink">
+                    <h3 className="mt-2 text-xl font-semibold text-ink">
                       <Link
                         href={`/prazos?data=${item.data}`}
-                        className="text-ink"
+                        className="text-ink hover:text-pen"
                       >
                         {item.titulo}
                       </Link>
                     </h3>
                     {item.advogados.length > 0 ? (
-                      <p className="mt-2 text-lg text-ink">
+                      <p className="mt-2 text-base text-muted">
                         {item.advogados.join(", ")}
                       </p>
                     ) : null}
                     {item.conteudo ? (
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-lg text-pen">
+                        <summary className="btn-texto cursor-pointer">
                           Ver publicação
                         </summary>
-                        <p className="mt-2 text-lg whitespace-pre-wrap text-ink">
+                        <p className="mt-2 rounded-xl bg-paper p-4 text-base whitespace-pre-wrap text-ink">
                           {item.conteudo}
                         </p>
                       </details>
@@ -607,23 +601,23 @@ async function Corpo({
           )}
         </div>
       ) : (
-        <p className="mt-8 text-xl text-ink">
+        <p className="vazio mt-8">
           Escolha um dia para ver os prazos desse recorte.
         </p>
       )}
 
       {textoEmail ? (
         <details className="mt-8">
-          <summary className="cursor-pointer text-lg text-pen">
+          <summary className="btn-texto cursor-pointer">
             Texto do e-mail deste advogado neste dia
           </summary>
-          <pre className="mt-4 text-lg whitespace-pre-wrap text-ink">
+          <pre className="cartao mt-4 p-5 font-sans text-base whitespace-pre-wrap text-ink">
             {textoEmail}
           </pre>
         </details>
       ) : null}
 
-      <p className="mt-8 text-lg text-muted">
+      <p className="aviso mt-8 text-[0.9375rem] text-muted">
         {caixaConfigurada()
           ? "O e-mail da manhã continua saindo por pessoa, com o que está marcado no nome dela."
           : "A caixa de e-mail do escritório ainda não está ligada neste servidor. Enquanto isso, o resumo fica nesta tela."}

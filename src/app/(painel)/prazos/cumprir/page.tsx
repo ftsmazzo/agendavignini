@@ -22,9 +22,7 @@ export default function CumprirVarios({
 }) {
   return (
     <Suspense
-      fallback={
-        <p className="text-xl text-muted">Abrindo o dia para cumprir.</p>
-      }
+      fallback={<p className="text-muted">Abrindo o dia para cumprir.</p>}
     >
       <Lista searchParams={searchParams} />
     </Suspense>
@@ -81,25 +79,28 @@ async function Lista({
   const quantidade = /^\d{1,4}$/.test(cumpridos ?? "") ? Number(cumpridos) : 0;
 
   return (
-    <section className="w-full">
-      <h1 className="text-4xl leading-tight font-bold text-ink">
-        Cumprir vários
-      </h1>
-      <p className="mt-3 text-xl text-muted">
+    <section className="entrada mx-auto w-full max-w-5xl">
+      <h1 className="titulo-pagina">Cumprir vários</h1>
+      <p className="subtitulo-pagina">
         Marca como cumpridos os prazos em aberto deste dia. O registro fica no
         seu nome.
       </p>
-      <p className="mt-2 text-2xl text-ink">{dataBr(dia)}</p>
+      <p className="mt-3">
+        <span className="selo">{dataBr(dia)}</span>
+      </p>
       {quantidade > 0 ? (
-        <output className="mt-4 block text-xl text-done">
+        <output className="aviso aviso-ok mt-4 block">
           {quantidade === 1
             ? "1 prazo cumprido."
             : `${quantidade} prazos cumpridos.`}
         </output>
       ) : null}
-      <form method="get" className="mt-6 flex flex-wrap items-end gap-3">
+      <form
+        method="get"
+        className="cartao mt-6 flex flex-wrap items-end gap-3 p-5"
+      >
         <div>
-          <label htmlFor="dia" className="mb-2 block text-xl text-ink">
+          <label htmlFor="dia" className="rotulo-campo">
             Dia
           </label>
           <input
@@ -107,34 +108,26 @@ async function Lista({
             name="dia"
             type="date"
             defaultValue={dia}
-            className="border border-line bg-sheet px-4 py-3 text-xl text-ink"
+            className="campo"
           />
         </div>
-        <button
-          type="submit"
-          className="bg-pen px-4 py-3 text-lg font-semibold text-sheet"
-        >
+        <button type="submit" className="btn btn-primario">
           Ver dia
         </button>
-        <Link
-          href={`/prazos?data=${dia}`}
-          className="px-2 py-3 text-lg text-pen"
-        >
+        <Link href={`/prazos?data=${dia}`} className="btn-texto px-2 py-3">
           Abrir a lista do dia
         </Link>
         {dia < hoje ? (
           <Link
             href={`/prazos/atraso?dia=${dia}`}
-            className="px-2 py-3 text-lg text-pen"
+            className="btn-texto px-2 py-3"
           >
             Ver na fila de atraso
           </Link>
         ) : null}
       </form>
       {itens.length === 0 ? (
-        <p className="mt-8 text-xl text-ink">
-          Este dia não tem prazo em aberto.
-        </p>
+        <p className="vazio mt-8">Este dia não tem prazo em aberto.</p>
       ) : (
         <FormularioCumprir
           key={dia}

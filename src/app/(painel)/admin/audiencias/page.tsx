@@ -19,9 +19,7 @@ export default function ListarAudienciasAdmin({
   }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-xl text-muted">Abrindo as audiências.</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Abrindo as audiências.</p>}>
       <Lista searchParams={searchParams} />
     </Suspense>
   );
@@ -56,20 +54,17 @@ async function Lista({
       });
 
   return (
-    <section className="mx-auto w-full max-w-5xl">
+    <section className="entrada mx-auto w-full max-w-5xl">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-4xl leading-tight font-bold text-ink">
+        <h1 className="titulo-pagina">
           {dia ? `Audiências de ${dataBr(dia)}` : "Listar audiências"}
         </h1>
-        <Link
-          href="/admin/audiencias/nova"
-          className="bg-pen px-4 py-3 text-lg font-semibold text-sheet"
-        >
-          Adicionar nova
+        <Link href="/admin/audiencias/nova" className="btn btn-primario">
+          + Adicionar nova
         </Link>
       </div>
       {excluido ? (
-        <output className="mt-4 block text-xl text-done">
+        <output className="aviso aviso-ok mt-4 block">
           Audiência excluída.
         </output>
       ) : null}
@@ -82,24 +77,17 @@ async function Lista({
               aria-current={
                 !termo && item.ano === anoPedido ? "page" : undefined
               }
-              className={
-                !termo && item.ano === anoPedido
-                  ? "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
-                  : "border border-line bg-sheet px-3 py-2 text-lg text-ink"
-              }
+              className="chip"
             >
               {item.ano}
             </Link>
           ))}
         </nav>
       )}
-      <search className="mt-6 block">
+      <search className="cartao mt-6 block p-4 md:p-5">
         <form method="get" className="flex flex-wrap items-end gap-3">
           <div className="min-w-64 flex-1">
-            <label
-              htmlFor="buscar-audiencia"
-              className="mb-2 block text-xl text-ink"
-            >
+            <label htmlFor="buscar-audiencia" className="rotulo-campo">
               Processo, parte ou local
             </label>
             <input
@@ -111,10 +99,7 @@ async function Lista({
             />
           </div>
           <div>
-            <label
-              htmlFor="data-audiencia"
-              className="mb-2 block text-xl text-ink"
-            >
+            <label htmlFor="data-audiencia" className="rotulo-campo">
               Ver um dia
             </label>
             <input
@@ -125,10 +110,7 @@ async function Lista({
               className={classeCampo}
             />
           </div>
-          <button
-            type="submit"
-            className="border border-line bg-sheet px-4 py-3 text-xl font-semibold text-ink"
-          >
+          <button type="submit" className="btn btn-primario">
             Ver
           </button>
         </form>
@@ -137,13 +119,13 @@ async function Lista({
         <p className="mt-4">
           <Link
             href={`/admin/audiencias?ano=${dia.slice(0, 4)}`}
-            className="text-lg text-pen"
+            className="btn-texto"
           >
-            Todas as audiências
+            ← Todas as audiências
           </Link>
         </p>
       ) : null}
-      <p className="mt-4 text-xl text-muted">
+      <p className="mt-4 text-muted">
         {dia
           ? `${doDia.length} neste dia.`
           : termo
@@ -153,31 +135,35 @@ async function Lista({
             : `${itens.length} em ${anoPedido ?? "todos os anos"}.`}
       </p>
       {(dia ? doDia : itens).length === 0 ? (
-        <p className="mt-8 text-xl text-ink">
-          Nenhuma audiência neste recorte.
-        </p>
+        <p className="vazio mt-6">Nenhuma audiência neste recorte.</p>
       ) : (
-        <ul className="mt-6 divide-y divide-line border border-line bg-sheet">
+        <ul className="lista-cartoes mt-4">
           {(dia ? doDia : itens).map((item) => (
-            <li key={item.id} className="px-6 py-5">
-              <p className="text-lg text-muted">{dataHoraBr(item.dataHora)}</p>
+            <li key={item.id}>
               <Link
                 href={`/admin/audiencias/${item.id}`}
-                className="mt-1 block text-2xl font-semibold text-pen underline"
+                className="block px-5 py-4"
               >
-                {item.numeroProcesso || "Sem número"}
-              </Link>
-              <p className="mt-2 text-xl text-ink">
-                {[item.local, item.vara].filter(Boolean).join(" · ")}
-              </p>
-              <p className="mt-1 text-xl text-ink">
-                {partes(item.reclamante, item.reclamado)}
-              </p>
-              {item.preposto ? (
-                <p className="mt-1 text-lg text-muted">
-                  Preposto: {item.preposto}
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="selo selo-audiencia">
+                    {dataHoraBr(item.dataHora)}
+                  </span>
+                  {item.preposto ? (
+                    <span className="selo selo-neutro">
+                      Preposto: {item.preposto}
+                    </span>
+                  ) : null}
                 </p>
-              ) : null}
+                <p className="mt-2 text-lg font-bold text-pen">
+                  {item.numeroProcesso || "Sem número"}
+                </p>
+                <p className="mt-1 text-ink">
+                  {[item.local, item.vara].filter(Boolean).join(" · ")}
+                </p>
+                <p className="mt-1 text-muted">
+                  {partes(item.reclamante, item.reclamado)}
+                </p>
+              </Link>
             </li>
           ))}
         </ul>

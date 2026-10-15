@@ -19,9 +19,7 @@ export default function EditarUsuario({
   searchParams: Promise<{ salvo?: string; erro?: string }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-xl text-muted">Abrindo a pessoa.</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Abrindo a pessoa.</p>}>
       <Editor params={params} searchParams={searchParams} />
     </Suspense>
   );
@@ -54,13 +52,13 @@ async function Editor({
   return (
     <div>
       {salvo ? (
-        <output className="mx-auto mb-6 block w-full max-w-3xl text-xl text-done">
+        <output className="aviso aviso-ok mx-auto mb-6 block w-full max-w-3xl">
           Usuário salvo.
         </output>
       ) : null}
       {erro && AVISO[erro] ? (
         <p
-          className="mx-auto mb-6 w-full max-w-3xl text-xl text-hearing"
+          className="aviso aviso-erro mx-auto mb-6 w-full max-w-3xl"
           role="alert"
         >
           {AVISO[erro]}

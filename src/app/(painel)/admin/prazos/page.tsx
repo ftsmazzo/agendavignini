@@ -15,11 +15,28 @@ export default function ListarPrazosAdmin({
   searchParams: Promise<{ data?: string; ano?: string; excluido?: string }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-xl text-muted">Abrindo os prazos.</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Abrindo os prazos.</p>}>
       <Lista searchParams={searchParams} />
     </Suspense>
+  );
+}
+
+function BotaoNovo() {
+  return (
+    <Link href="/admin/prazos/novo" className="btn btn-primario">
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      >
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      Adicionar novo
+    </Link>
   );
 }
 
@@ -60,17 +77,15 @@ async function Lista({
       .orderBy(desc(prazos.data));
 
     return (
-      <section className="mx-auto w-full max-w-5xl">
+      <section className="entrada mx-auto w-full max-w-5xl">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <h1 className="text-4xl leading-tight font-bold text-ink">
-            Prazos por data
-          </h1>
-          <Link
-            href="/admin/prazos/novo"
-            className="bg-pen px-4 py-3 text-lg font-semibold text-sheet"
-          >
-            Adicionar novo
-          </Link>
+          <div>
+            <h1 className="titulo-pagina">Prazos por data</h1>
+            <p className="subtitulo-pagina">
+              Escolha o ano e abra o dia que você quer conferir.
+            </p>
+          </div>
+          <BotaoNovo />
         </div>
         <nav aria-label="Anos" className="mt-6 flex flex-wrap gap-2">
           {anos.map((item) => (
@@ -78,45 +93,45 @@ async function Lista({
               key={item.ano}
               href={`/admin/prazos?ano=${item.ano}`}
               aria-current={item.ano === anoPedido ? "page" : undefined}
-              className={
-                item.ano === anoPedido
-                  ? "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
-                  : "border border-line bg-sheet px-3 py-2 text-lg text-ink"
-              }
+              className="chip"
             >
               {item.ano}
             </Link>
           ))}
         </nav>
-        <form method="get" className="mt-6 flex flex-wrap items-end gap-3">
+        <form
+          method="get"
+          className="cartao mt-6 flex flex-wrap items-end gap-3 p-4"
+        >
           <div>
-            <label htmlFor="data" className="mb-2 block text-xl text-ink">
+            <label htmlFor="data" className="rotulo-campo">
               Ir para uma data
             </label>
             <input id="data" name="data" type="date" className={classeCampo} />
           </div>
-          <button
-            type="submit"
-            className="border border-line bg-sheet px-4 py-3 text-xl font-semibold text-ink"
-          >
+          <button type="submit" className="btn btn-primario">
             Ver
           </button>
         </form>
-        <p className="mt-4 text-xl text-muted">
+        <p className="mt-6 text-muted">
           {datas.length === 1 ? "1 data." : `${datas.length} datas.`}
         </p>
         {datas.length === 0 ? (
-          <p className="mt-8 text-xl text-ink">Nenhum prazo neste ano.</p>
+          <p className="vazio mt-4">Nenhum prazo neste ano.</p>
         ) : (
-          <ul className="mt-6 divide-y divide-line border border-line bg-sheet">
+          <ul className="lista-cartoes mt-4">
             {datas.map((item) => (
               <li key={item.data}>
                 <Link
                   href={`/admin/prazos?data=${item.data}`}
-                  className="flex items-center justify-between gap-4 px-6 py-4 text-xl text-ink"
+                  className="flex items-center justify-between gap-4 px-5 py-4 text-ink"
                 >
-                  <span>{item.data ? dataBr(item.data) : ""}</span>
-                  <span className="font-semibold">{item.total}</span>
+                  <span className="font-medium">
+                    {item.data ? dataBr(item.data) : ""}
+                  </span>
+                  <span className="selo">
+                    {item.total === 1 ? "1 prazo" : `${item.total} prazos`}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -148,26 +163,30 @@ async function Lista({
     .limit(300);
 
   return (
-    <section className="mx-auto w-full max-w-5xl">
+    <section className="entrada mx-auto w-full max-w-5xl">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-4xl leading-tight font-bold text-ink">
-          Prazos de {dataBr(dia)}
-        </h1>
-        <Link
-          href="/admin/prazos/novo"
-          className="bg-pen px-4 py-3 text-lg font-semibold text-sheet"
-        >
-          Adicionar novo
-        </Link>
+        <div>
+          <h1 className="titulo-pagina">Prazos de {dataBr(dia)}</h1>
+          <p className="subtitulo-pagina">
+            <Link
+              href={`/admin/prazos?ano=${dia.slice(0, 4)}`}
+              className="btn-texto"
+            >
+              Todas as datas
+            </Link>
+          </p>
+        </div>
+        <BotaoNovo />
       </div>
       {excluido ? (
-        <output className="mt-4 block text-xl text-done">
-          Prazo excluído.
-        </output>
+        <output className="aviso aviso-ok mt-4 block">Prazo excluído.</output>
       ) : null}
-      <form method="get" className="mt-6 flex flex-wrap items-end gap-3">
+      <form
+        method="get"
+        className="cartao mt-6 flex flex-wrap items-end gap-3 p-4"
+      >
         <div>
-          <label htmlFor="data" className="mb-2 block text-xl text-ink">
+          <label htmlFor="data" className="rotulo-campo">
             Data
           </label>
           <input
@@ -178,59 +197,56 @@ async function Lista({
             className={classeCampo}
           />
         </div>
-        <button
-          type="submit"
-          className="border border-line bg-sheet px-4 py-3 text-xl font-semibold text-ink"
-        >
+        <button type="submit" className="btn btn-primario">
           Ver
         </button>
       </form>
-      <p className="mt-4">
-        <Link
-          href={`/admin/prazos?ano=${dia.slice(0, 4)}`}
-          className="text-lg text-pen"
-        >
-          Todas as datas
-        </Link>
-      </p>
-      <p className="mt-4 text-xl text-muted">
+      <p className="mt-6 text-muted">
         {itens.length === 300
           ? "Mostrando os 300 primeiros."
           : `${itens.length} nesta data.`}
       </p>
       {itens.length === 0 ? (
-        <p className="mt-8 text-xl text-ink">Nenhum prazo nesta data.</p>
+        <p className="vazio mt-4">Nenhum prazo nesta data.</p>
       ) : (
-        <ul className="mt-6 divide-y divide-line border border-line bg-sheet">
+        <ul className="lista-cartoes mt-4">
           {itens.map((item) => (
-            <li key={item.id} className={`px-6 py-5 ${faixaDaArea(item.area)}`}>
-              <p className="text-lg text-muted">
-                {rotuloArea(item.area)} ·{" "}
-                {statusDoPrazo({
-                  situacao: item.situacao,
-                  cumpridoPor: item.cumpridoNome
-                    ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-                    : null,
-                  cumpridoEm: item.cumpridoEm,
-                })}
+            <li key={item.id} className={`px-5 py-4 ${faixaDaArea(item.area)}`}>
+              <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
+                <span className="selo">{rotuloArea(item.area)}</span>
+                <span
+                  className={
+                    item.situacao === "cumprido"
+                      ? "selo selo-ok"
+                      : "selo selo-neutro"
+                  }
+                >
+                  {statusDoPrazo({
+                    situacao: item.situacao,
+                    cumpridoPor: item.cumpridoNome
+                      ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
+                      : null,
+                    cumpridoEm: item.cumpridoEm,
+                  })}
+                </span>
               </p>
               <Link
                 href={`/admin/prazos/${item.id}`}
-                className="mt-1 block text-2xl font-semibold text-pen underline"
+                className="btn-texto mt-2 text-lg"
               >
                 {item.titulo}
               </Link>
               {item.observacao ? (
-                <p className="mt-3 text-xl whitespace-pre-wrap text-ink">
+                <p className="mt-2 whitespace-pre-wrap text-ink">
                   {item.observacao}
                 </p>
               ) : null}
               {item.conteudo ? (
-                <details className="mt-3">
-                  <summary className="cursor-pointer text-lg text-pen">
+                <details className="mt-2">
+                  <summary className="cursor-pointer font-semibold text-pen">
                     Ver publicação
                   </summary>
-                  <p className="mt-3 text-lg whitespace-pre-wrap text-ink">
+                  <p className="mt-2 whitespace-pre-wrap text-muted">
                     {item.conteudo}
                   </p>
                 </details>

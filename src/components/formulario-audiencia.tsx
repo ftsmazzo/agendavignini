@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import {
   excluirAudiencia,
@@ -35,11 +36,14 @@ export function FormularioAudiencia({
   });
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
-      <h1 className="text-4xl leading-tight font-bold text-ink">
+    <div className="entrada mx-auto w-full max-w-3xl">
+      <Link href="/admin/audiencias" className="btn-texto text-[0.9688rem]">
+        ← Voltar às audiências
+      </Link>
+      <h1 className="titulo-pagina mt-2">
         {audiencia ? "Editar audiência" : "Adicionar audiência"}
       </h1>
-      <form action={acao} className="mt-8 space-y-5">
+      <form action={acao} className="cartao mt-6 space-y-5 p-5 md:p-7">
         {audiencia ? (
           <input type="hidden" name="id" value={audiencia.id} />
         ) : null}
@@ -117,14 +121,14 @@ export function FormularioAudiencia({
           marcados={advogados.map(String)}
         />
         {estado.erro ? (
-          <p className="text-lg text-hearing" role="alert">
+          <p className="aviso aviso-erro" role="alert">
             {estado.erro}
           </p>
         ) : null}
         <button
           type="submit"
           disabled={pendente}
-          className="w-full bg-pen px-4 py-3 text-xl font-bold text-sheet disabled:opacity-60"
+          className="btn btn-primario btn-cheio disabled:opacity-60"
         >
           {pendente ? "Salvando…" : "Salvar audiência"}
         </button>

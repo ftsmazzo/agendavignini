@@ -24,9 +24,7 @@ export default function EmAtraso({
 }) {
   return (
     <Suspense
-      fallback={
-        <p className="text-xl text-muted">Abrindo os prazos em atraso.</p>
-      }
+      fallback={<p className="text-muted">Abrindo os prazos em atraso.</p>}
     >
       <Lista searchParams={searchParams} />
     </Suspense>
@@ -129,57 +127,59 @@ async function Lista({
   const diasTotal = conta?.dias ?? 0;
 
   return (
-    <section className="w-full">
-      <h1 className="text-4xl leading-tight font-bold text-ink">Em atraso</h1>
-      <p className="mt-3 text-xl text-muted">
+    <section className="entrada mx-auto w-full max-w-5xl">
+      <h1 className="titulo-pagina">Em atraso</h1>
+      <p className="subtitulo-pagina">
         Prazos em aberto cuja data já passou. O dia mais recente aparece
         primeiro.
       </p>
-      <p className="mt-2 text-2xl text-ink">
-        {total === 1
-          ? "1 prazo em atraso."
-          : `${total} prazos em atraso, em ${diasTotal} dias.`}
+      <p className="mt-3">
+        <span className="selo selo-atraso">
+          {total === 1
+            ? "1 prazo em atraso."
+            : `${total} prazos em atraso, em ${diasTotal} dias.`}
+        </span>
       </p>
       {quantidade > 0 ? (
-        <output className="mt-4 block text-xl text-done">
+        <output className="aviso aviso-ok mt-4 block">
           {quantidade === 1
             ? "1 prazo cumprido."
             : `${quantidade} prazos cumpridos.`}
         </output>
       ) : null}
       {dias.length === 0 ? (
-        <p className="mt-8 text-xl text-ink">
+        <p className="vazio mt-8">
           Não há prazo em aberto com data que já passou.
         </p>
       ) : (
         <>
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="mt-6 grid grid-cols-1 items-center gap-3 sm:grid-cols-3">
             {maisNovo ? (
               <Link
                 href={`/prazos/atraso?dia=${maisNovo.data}`}
-                className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
+                className="cartao-link px-4 py-3 text-base font-semibold text-ink"
               >
-                Mais recente
-                <span className="mt-1 block text-base font-normal text-muted">
+                <span aria-hidden="true">← </span>Mais recente
+                <span className="mt-1 block text-sm font-normal text-muted">
                   {dataBr(maisNovo.data)} · {maisNovo.total}
                 </span>
               </Link>
             ) : (
               <span />
             )}
-            <h2 className="text-center text-3xl font-bold text-ink">
+            <h2 className="text-center text-2xl font-bold text-ink">
               {dataBr(dia)}
-              <span className="mt-1 block text-lg font-normal text-muted">
+              <span className="mt-1 block text-base font-normal text-muted">
                 {itens.length === 1 ? "1 prazo" : `${itens.length} prazos`}
               </span>
             </h2>
             {antigo ? (
               <Link
                 href={`/prazos/atraso?dia=${antigo.data}`}
-                className="border border-line bg-sheet px-4 py-3 text-right text-lg font-semibold text-ink"
+                className="cartao-link px-4 py-3 text-right text-base font-semibold text-ink"
               >
-                Mais antigo
-                <span className="mt-1 block text-base font-normal text-muted">
+                Mais antigo<span aria-hidden="true"> →</span>
+                <span className="mt-1 block text-sm font-normal text-muted">
                   {dataBr(antigo.data)} · {antigo.total}
                 </span>
               </Link>
@@ -187,17 +187,15 @@ async function Lista({
               <span />
             )}
           </div>
-          <form method="get" className="mt-6 flex flex-wrap items-end gap-3">
+          <form
+            method="get"
+            className="cartao mt-6 flex flex-wrap items-end gap-3 p-5"
+          >
             <div>
-              <label htmlFor="dia" className="mb-2 block text-xl text-ink">
+              <label htmlFor="dia" className="rotulo-campo">
                 Dia
               </label>
-              <select
-                id="dia"
-                name="dia"
-                defaultValue={dia}
-                className="border border-line bg-sheet px-4 py-3 text-xl text-ink"
-              >
+              <select id="dia" name="dia" defaultValue={dia} className="campo">
                 {dias.map((item) => (
                   <option key={item.data} value={item.data}>
                     {dataBr(item.data)} · {item.total}
@@ -205,16 +203,10 @@ async function Lista({
                 ))}
               </select>
             </div>
-            <button
-              type="submit"
-              className="bg-pen px-4 py-3 text-lg font-semibold text-sheet"
-            >
+            <button type="submit" className="btn btn-primario">
               Ver dia
             </button>
-            <Link
-              href={`/prazos?data=${dia}`}
-              className="px-2 py-3 text-lg text-pen"
-            >
+            <Link href={`/prazos?data=${dia}`} className="btn-texto px-2 py-3">
               Abrir a lista do dia
             </Link>
           </form>

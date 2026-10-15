@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { excluirContato, salvarContato } from "@/app/(painel)/agenda/actions";
 import { BotaoExcluir } from "@/components/botao-excluir";
@@ -23,11 +24,17 @@ export function FormularioContato({
   const [estado, acao, pendente] = useActionState(salvarContato, { erro: "" });
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
-      <h1 className="text-4xl leading-tight font-bold text-ink">
+    <div className="entrada mx-auto w-full max-w-3xl">
+      <Link href="/agenda" className="btn-texto text-[0.9688rem]">
+        ← Voltar à agenda
+      </Link>
+      <h1 className="titulo-pagina mt-2">
         {contato ? "Editar contato" : "Adicionar contato"}
       </h1>
-      <form action={acao} className="mt-8 space-y-5">
+      <p className="subtitulo-pagina">
+        Nome e telefone de quem o escritório precisa encontrar rápido.
+      </p>
+      <form action={acao} className="cartao mt-6 space-y-5 p-5 md:p-7">
         {contato ? <input type="hidden" name="id" value={contato.id} /> : null}
         <Campo id="nome" rotulo="Nome">
           <input
@@ -85,14 +92,14 @@ export function FormularioContato({
           />
         </Campo>
         {estado.erro ? (
-          <p className="text-lg text-hearing" role="alert">
+          <p className="aviso aviso-erro" role="alert">
             {estado.erro}
           </p>
         ) : null}
         <button
           type="submit"
           disabled={pendente}
-          className="w-full bg-pen px-4 py-3 text-xl font-bold text-sheet disabled:opacity-60"
+          className="btn btn-primario btn-cheio disabled:opacity-60"
         >
           {pendente ? "Salvando…" : "Salvar contato"}
         </button>

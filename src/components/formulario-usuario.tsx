@@ -29,10 +29,10 @@ export function FormularioUsuario({
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <h1 className="text-4xl leading-tight font-bold text-ink">
+      <h1 className="titulo-pagina">
         {usuario ? "Editar usuário" : "Adicionar usuário"}
       </h1>
-      <form action={acao} className="mt-8 space-y-5">
+      <form action={acao} className="cartao mt-6 space-y-5 p-5">
         {usuario ? <input type="hidden" name="id" value={usuario.id} /> : null}
         <div className="grid gap-5 md:grid-cols-2">
           <Campo id="nome" rotulo="Nome">
@@ -134,14 +134,14 @@ export function FormularioUsuario({
           </>
         ) : null}
         {estado.erro ? (
-          <p className="text-lg text-hearing" role="alert">
+          <p className="aviso aviso-erro" role="alert">
             {estado.erro}
           </p>
         ) : null}
         <button
           type="submit"
           disabled={pendente}
-          className="w-full bg-pen px-4 py-3 text-xl font-bold text-sheet disabled:opacity-60"
+          className="btn btn-primario btn-cheio disabled:opacity-60"
         >
           {pendente ? "Salvando…" : "Salvar usuário"}
         </button>

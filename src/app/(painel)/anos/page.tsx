@@ -7,7 +7,7 @@ import { prazos } from "@/db/schema";
 
 export default function OutrosAnos() {
   return (
-    <Suspense fallback={<p className="text-xl text-muted">Abrindo os anos.</p>}>
+    <Suspense fallback={<p className="text-muted">Abrindo os anos.</p>}>
       <Lista />
     </Suspense>
   );
@@ -25,17 +25,17 @@ async function Lista() {
     .orderBy(asc(sql`extract(year from ${prazos.data})`));
 
   return (
-    <section className="mx-auto w-full max-w-5xl">
-      <h1 className="text-4xl leading-tight font-bold text-ink">Outros anos</h1>
-      <p className="mt-4 text-xl text-muted">
+    <section className="entrada mx-auto w-full max-w-5xl">
+      <h1 className="titulo-pagina">Outros anos</h1>
+      <p className="subtitulo-pagina">
         Cada ano abre janeiro. Dali dá para seguir mês a mês.
       </p>
-      <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+      <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {linhas.map((linha) => (
           <li key={linha.ano}>
             <Link
               href={`/anos/${linha.ano}`}
-              className="block border border-line bg-sheet px-4 py-5 text-center text-3xl font-bold text-ink"
+              className="cartao-link px-4 py-6 text-center text-2xl font-bold text-pen"
             >
               {linha.ano}
             </Link>

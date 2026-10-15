@@ -18,7 +18,7 @@ export function CaixasAdvogados({
 
   return (
     <fieldset>
-      <legend className="mb-2 text-xl text-ink">Advogados</legend>
+      <legend className="rotulo-campo">Advogados</legend>
       <div className="grid gap-2 sm:grid-cols-2">
         {pessoas.map((pessoa) => {
           const id = String(pessoa.id);
@@ -28,7 +28,11 @@ export function CaixasAdvogados({
             <label
               key={pessoa.id}
               htmlFor={caixa}
-              className="flex items-center gap-3 border border-line bg-sheet px-3 py-2 text-xl text-ink"
+              className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 py-2 text-base text-ink transition-colors hover:border-pen ${
+                ligado
+                  ? "border-pen bg-pen-soft font-semibold"
+                  : "border-line bg-sheet"
+              }`}
             >
               <input
                 id={caixa}
@@ -42,7 +46,7 @@ export function CaixasAdvogados({
                     ? (evento) => alternar(id, evento.target.checked)
                     : undefined
                 }
-                className="h-5 w-5"
+                className="h-5 w-5 accent-pen"
               />
               {pessoa.nome}
             </label>

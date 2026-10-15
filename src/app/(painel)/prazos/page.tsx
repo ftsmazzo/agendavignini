@@ -65,9 +65,7 @@ export default function Prazos({
   }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-xl text-muted">Abrindo os prazos.</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Abrindo os prazos.</p>}>
       <Lista searchParams={searchParams} />
     </Suspense>
   );
@@ -266,10 +264,15 @@ async function Lista({
   ];
 
   return (
-    <section className="mx-auto w-full max-w-5xl">
-      <h1 className="text-4xl leading-tight font-bold text-ink">
+    <section className="entrada mx-auto w-full max-w-5xl">
+      <h1 className="titulo-pagina">
         {tituloDaLista(quando, dataPedida ?? undefined)}
       </h1>
+      <p className="subtitulo-pagina">
+        {itens.length === 300
+          ? "Mostrando os 300 primeiros."
+          : `${itens.length} nesta lista.`}
+      </p>
       {diasDaSemana.length > 0 ? (
         <nav aria-label="Dias da semana" className="mt-6 flex flex-wrap gap-2">
           {diasDaSemana.map((dia) => (
@@ -277,11 +280,7 @@ async function Lista({
               key={dia.data}
               href={`/prazos?data=${dia.data}`}
               aria-current={dia.data === diaAberto ? "page" : undefined}
-              className={
-                dia.data === diaAberto
-                  ? "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
-                  : "border border-line bg-sheet px-3 py-2 text-lg text-ink"
-              }
+              className="chip"
             >
               {rotuloDia(dia.data)} · {dia.total}
             </Link>
@@ -294,27 +293,23 @@ async function Lista({
             key={filtro.rotulo}
             href={filtro.href}
             aria-current={filtro.ativo ? "page" : undefined}
-            className={
-              filtro.ativo
-                ? "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
-                : "border border-line bg-sheet px-3 py-2 text-lg text-ink"
-            }
+            className="chip"
           >
             {filtro.rotulo}
           </Link>
         ))}
       </nav>
       {diaImpressao ? (
-        <p className="mt-4 flex flex-wrap gap-4">
+        <p className="mt-5 flex flex-wrap items-center gap-2">
           <Link
             href={`/prazos/cumprir?dia=${diaImpressao}`}
-            className="text-lg font-semibold text-pen"
+            className="btn btn-primario btn-pequeno"
           >
             Cumprir os em aberto
           </Link>
           <Link
             href={`/prazos/impressao?data=${diaImpressao}${areaOk ? `&area=${areaOk}` : ""}`}
-            className="text-lg text-pen"
+            className="btn btn-pequeno"
           >
             Imprimir este dia
           </Link>
@@ -322,7 +317,7 @@ async function Lista({
             <Link
               key={item}
               href={`/prazos/impressao?data=${diaImpressao}&area=${item}`}
-              className="text-lg text-pen"
+              className="btn-texto px-2 text-[0.9375rem]"
             >
               {rotuloArea(item)}
             </Link>
@@ -330,34 +325,27 @@ async function Lista({
         </p>
       ) : null}
       {excluido ? (
-        <output className="mt-4 block text-xl text-done">
-          Prazo excluído.
-        </output>
+        <output className="aviso aviso-ok mt-4 block">Prazo excluído.</output>
       ) : null}
-      <p className="mt-3 text-xl text-muted">
-        {itens.length === 300
-          ? "Mostrando os 300 primeiros."
-          : `${itens.length} nesta lista.`}
-      </p>
       {itens.length === 0 ? (
-        <p className="mt-8 text-xl text-ink">Nenhum prazo neste recorte.</p>
+        <p className="vazio mt-8">Nenhum prazo neste recorte.</p>
       ) : quando === "semana" ? (
-        <div className="mt-8 space-y-10">
+        <div className="mt-8 space-y-8">
           {[...new Set(itens.map((item) => item.data))].map((dataDia) => (
             <section key={dataDia}>
-              <h2 className="text-2xl font-bold text-ink">
-                <Link href={`/prazos?data=${dataDia}`} className="text-pen">
+              <h2 className="titulo-secao">
+                <Link href={`/prazos?data=${dataDia}`} className="btn-texto">
                   {rotuloDia(dataDia)} ·{" "}
                   {itens.filter((item) => item.data === dataDia).length}
                 </Link>
               </h2>
-              <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
+              <ul className="lista-cartoes mt-3">
                 {itens
                   .filter((item) => item.data === dataDia)
                   .map((item) => (
                     <li
                       key={item.id}
-                      className={`px-6 py-5 ${faixaDaArea(item.area)}`}
+                      className={`px-5 py-5 ${faixaDaArea(item.area)}`}
                     >
                       <CartaoPrazo
                         item={item}
@@ -373,9 +361,9 @@ async function Lista({
           ))}
         </div>
       ) : (
-        <ul className="mt-8 divide-y divide-line border border-line bg-sheet">
+        <ul className="lista-cartoes mt-8">
           {itens.map((item) => (
-            <li key={item.id} className={`px-6 py-5 ${faixaDaArea(item.area)}`}>
+            <li key={item.id} className={`px-5 py-5 ${faixaDaArea(item.area)}`}>
               <CartaoPrazo
                 item={item}
                 advogados={advogados.get(item.id) ?? []}
@@ -417,18 +405,23 @@ function CartaoPrazo({
 }) {
   return (
     <>
-      <p className="text-lg text-muted">
-        {rotuloArea(item.area)} · {dataBr(item.data)} ·{" "}
-        {statusDoPrazo({
-          situacao: item.situacao,
-          cumpridoPor: item.cumpridoNome
-            ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-            : null,
-          cumpridoEm: item.cumpridoEm,
-        })}
-        {seu ? " · Seu prazo" : ""}
+      <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] text-muted">
+        <span className="selo">{rotuloArea(item.area)}</span>
+        <span>{dataBr(item.data)}</span>
+        <span
+          className={`selo ${item.situacao === "cumprido" ? "selo-ok" : "selo-neutro"}`}
+        >
+          {statusDoPrazo({
+            situacao: item.situacao,
+            cumpridoPor: item.cumpridoNome
+              ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
+              : null,
+            cumpridoEm: item.cumpridoEm,
+          })}
+        </span>
+        {seu ? <span className="selo selo-audiencia">Seu prazo</span> : null}
       </p>
-      <h3 className="mt-1 text-2xl font-semibold text-ink">{item.titulo}</h3>
+      <h3 className="mt-2 text-xl font-semibold text-ink">{item.titulo}</h3>
       <CorpoPrazo
         temCorpo={
           advogados.length > 0 ||
@@ -438,19 +431,21 @@ function CartaoPrazo({
         corpo={
           <>
             {advogados.length > 0 ? (
-              <p className="mt-2 text-lg text-muted">{advogados.join(", ")}</p>
+              <p className="mt-2 text-base text-muted">
+                {advogados.join(", ")}
+              </p>
             ) : null}
             {item.observacao ? (
-              <p className="mt-3 text-xl whitespace-pre-wrap text-ink">
+              <p className="mt-3 text-lg whitespace-pre-wrap text-ink">
                 {item.observacao}
               </p>
             ) : null}
             {item.conteudo ? (
               <details className="mt-3">
-                <summary className="cursor-pointer text-lg text-pen">
+                <summary className="btn-texto cursor-pointer">
                   Ver publicação
                 </summary>
-                <p className="mt-3 text-lg whitespace-pre-wrap text-ink">
+                <p className="mt-3 rounded-xl bg-paper p-4 text-base whitespace-pre-wrap text-ink">
                   {item.conteudo}
                 </p>
               </details>
@@ -461,7 +456,7 @@ function CartaoPrazo({
           <>
             <Link
               href={`/prazos/impressao?id=${item.id}`}
-              className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+              className="btn btn-pequeno"
             >
               Imprimir
             </Link>
@@ -469,10 +464,7 @@ function CartaoPrazo({
               <form action={cumprir}>
                 <input type="hidden" name="id" value={item.id} />
                 <input type="hidden" name="voltar" value={voltar} />
-                <button
-                  type="submit"
-                  className="bg-pen px-4 py-2 text-lg font-semibold text-sheet"
-                >
+                <button type="submit" className="btn btn-sucesso btn-pequeno">
                   Cumprir
                 </button>
               </form>
@@ -481,10 +473,7 @@ function CartaoPrazo({
               <form action={desfazer}>
                 <input type="hidden" name="id" value={item.id} />
                 <input type="hidden" name="voltar" value={voltar} />
-                <button
-                  type="submit"
-                  className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
-                >
+                <button type="submit" className="btn btn-pequeno">
                   Desfazer
                 </button>
               </form>
@@ -493,7 +482,7 @@ function CartaoPrazo({
               <>
                 <Link
                   href={`/admin/prazos/${item.id}`}
-                  className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+                  className="btn btn-pequeno"
                 >
                   Editar
                 </Link>

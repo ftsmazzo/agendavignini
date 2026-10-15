@@ -11,9 +11,7 @@ export default function ListarUsuarios({
   searchParams: Promise<{ excluido?: string }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-xl text-muted">Abrindo as pessoas.</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Abrindo as pessoas.</p>}>
       <Lista searchParams={searchParams} />
     </Suspense>
   );
@@ -40,50 +38,59 @@ async function Lista({
     .orderBy(asc(usuarios.nome), asc(usuarios.sobrenome));
 
   return (
-    <section className="mx-auto w-full max-w-5xl">
+    <section className="entrada mx-auto w-full max-w-5xl">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-4xl leading-tight font-bold text-ink">Usuários</h1>
-        <Link
-          href="/admin/usuarios/novo"
-          className="bg-pen px-4 py-3 text-lg font-semibold text-sheet"
-        >
+        <div>
+          <h1 className="titulo-pagina">Usuários</h1>
+          <p className="subtitulo-pagina">
+            Quem acessa a agenda e quem pode receber prazos.
+          </p>
+        </div>
+        <Link href="/admin/usuarios/novo" className="btn btn-primario">
           Adicionar novo
         </Link>
       </div>
       {excluido ? (
-        <output className="mt-4 block text-xl text-done">
-          Usuário excluído.
-        </output>
+        <output className="aviso aviso-ok mt-4 block">Usuário excluído.</output>
       ) : null}
-      <div className="mt-6 overflow-x-auto border border-line bg-sheet">
-        <table className="w-full border-collapse text-left text-xl">
+      <div className="tabela-caixa mt-6">
+        <table className="tabela">
           <thead>
-            <tr className="border-b border-line text-muted">
-              <th className="px-4 py-3 font-semibold">Nome</th>
-              <th className="px-4 py-3 font-semibold">Usuário</th>
-              <th className="px-4 py-3 font-semibold">Grupo</th>
-              <th className="px-4 py-3 font-semibold">Ativo</th>
+            <tr>
+              <th scope="col">Nome</th>
+              <th scope="col">Usuário</th>
+              <th scope="col">Grupo</th>
+              <th scope="col">Ativo</th>
             </tr>
           </thead>
           <tbody>
             {itens.map((item) => (
-              <tr
-                key={item.id}
-                className="border-b border-line last:border-b-0"
-              >
-                <td className="px-4 py-3">
+              <tr key={item.id}>
+                <td>
                   <Link
                     href={`/admin/usuarios/${item.id}`}
-                    className="text-pen underline"
+                    className="btn-texto"
                   >
                     {`${item.nome} ${item.sobrenome}`.trim()}
                   </Link>
                 </td>
-                <td className="px-4 py-3">{item.login}</td>
-                <td className="px-4 py-3">
-                  {item.papel === "admin" ? "Administrador" : "Usuário"}
+                <td>{item.login}</td>
+                <td>
+                  <span
+                    className={
+                      item.papel === "admin" ? "selo" : "selo selo-neutro"
+                    }
+                  >
+                    {item.papel === "admin" ? "Administrador" : "Usuário"}
+                  </span>
                 </td>
-                <td className="px-4 py-3">{item.ativo ? "Sim" : "Não"}</td>
+                <td>
+                  <span
+                    className={item.ativo ? "selo selo-ok" : "selo selo-neutro"}
+                  >
+                    {item.ativo ? "Sim" : "Não"}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>

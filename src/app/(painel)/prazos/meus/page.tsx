@@ -18,9 +18,7 @@ const SELO = {
 
 export default function MeusPrazos() {
   return (
-    <Suspense
-      fallback={<p className="text-xl text-muted">Abrindo os seus prazos.</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Abrindo os seus prazos.</p>}>
       <Lista />
     </Suspense>
   );
@@ -64,42 +62,44 @@ async function Lista() {
   ].filter((grupo) => grupo.itens.length > 0);
 
   return (
-    <section className="w-full">
-      <h1 className="text-4xl leading-tight font-bold text-ink">Meus prazos</h1>
-      <p className="mt-3 text-xl text-muted">
+    <section className="entrada mx-auto w-full max-w-5xl">
+      <h1 className="titulo-pagina">Meus prazos</h1>
+      <p className="subtitulo-pagina">
         Prazos em aberto que estão no seu nome.
       </p>
-      <p className="mt-2 text-2xl text-ink">
-        {itens.length === 300
-          ? "Mostrando os 300 primeiros."
-          : itens.length === 1
-            ? "1 prazo em aberto."
-            : `${itens.length} prazos em aberto.`}
+      <p className="mt-3">
+        <span className="selo">
+          {itens.length === 300
+            ? "Mostrando os 300 primeiros."
+            : itens.length === 1
+              ? "1 prazo em aberto."
+              : `${itens.length} prazos em aberto.`}
+        </span>
       </p>
       {itens.length === 0 ? (
-        <div className="mt-8">
-          <p className="text-xl text-ink">
-            Nenhum prazo em aberto está no seu nome.
-          </p>
+        <div className="vazio mt-8">
+          <p>Nenhum prazo em aberto está no seu nome.</p>
           {usuario.papel === "admin" ? (
             <p className="mt-4">
-              <Link
-                href="/admin/prazos/sem-advogado"
-                className="text-lg font-semibold text-pen"
-              >
+              <Link href="/admin/prazos/sem-advogado" className="btn">
                 Marcar os sem advogado
               </Link>
             </p>
           ) : null}
         </div>
       ) : (
-        <div className="mt-8 space-y-10">
+        <div className="mt-8 space-y-8">
           {grupos.map((grupo) => (
             <section key={grupo.titulo}>
-              <h2 className="text-2xl font-bold text-ink">
-                {grupo.titulo} · {grupo.itens.length}
+              <h2 className="titulo-secao">
+                {grupo.titulo}{" "}
+                <span
+                  className={`selo ${grupo.titulo === "Em atraso" ? "selo-atraso" : "selo-neutro"}`}
+                >
+                  {grupo.itens.length}
+                </span>
               </h2>
-              <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
+              <ul className="lista-cartoes mt-3">
                 {grupo.itens.map((item) => {
                   const marca = marcaDoPrazo(item.situacao, item.data, hoje);
                   return (
@@ -108,19 +108,20 @@ async function Lista() {
                       className={`px-5 py-4 ${faixaDaArea(item.area)}`}
                     >
                       <div className="flex flex-wrap items-center justify-between gap-3">
-                        <p className="text-lg text-muted">
-                          {rotuloArea(item.area)} · {dataBr(item.data)}
+                        <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] text-muted">
+                          <span className="selo">{rotuloArea(item.area)}</span>
+                          {dataBr(item.data)}
                         </p>
                         <span
-                          className={`inline-flex rounded-full px-3 py-1 text-base font-semibold ${SELO[marca.tom]}`}
+                          className={`inline-flex rounded-full px-3 py-0.5 text-[0.8125rem] font-semibold ${SELO[marca.tom]}`}
                         >
                           {marca.texto}
                         </span>
                       </div>
-                      <h3 className="mt-1 text-2xl font-semibold text-ink">
+                      <h3 className="mt-2 text-xl font-semibold text-ink">
                         <Link
                           href={`/prazos?data=${item.data}`}
-                          className="text-ink"
+                          className="text-ink hover:text-pen"
                         >
                           {item.titulo}
                         </Link>
@@ -134,7 +135,7 @@ async function Lista() {
                         />
                         <button
                           type="submit"
-                          className="bg-pen px-4 py-2 text-lg font-semibold text-sheet"
+                          className="btn btn-sucesso btn-pequeno"
                         >
                           Cumprir
                         </button>

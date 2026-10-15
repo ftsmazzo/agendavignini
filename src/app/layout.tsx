@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Source_Sans_3 } from "next/font/google";
+import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 
-const fonte = Source_Sans_3({
-  weight: ["400", "600", "700"],
+const fonte = Inter({
   subsets: ["latin"],
-  variable: "--font-source",
+  variable: "--font-inter",
+  display: "swap",
 });
 
 const temaInicial = `(function(){try{var t=localStorage.getItem("tema");var escuro=t==="escuro"||(t!=="claro"&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(escuro)document.documentElement.classList.add("dark");}catch(e){}})();`;

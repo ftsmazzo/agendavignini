@@ -23,10 +23,7 @@ export function BotaoExcluir({
       }}
     >
       {children}
-      <button
-        type="submit"
-        className="border border-hearing px-4 py-3 text-xl font-semibold text-hearing"
-      >
+      <button type="submit" className="btn btn-perigo">
         {rotulo}
       </button>
     </form>

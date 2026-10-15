@@ -74,11 +74,11 @@ export function FormularioPrazo({
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <h1 className="text-4xl leading-tight font-bold text-ink">
+      <h1 className="titulo-pagina">
         {prazo ? "Editar prazo" : "Adicionar prazo"}
       </h1>
       {prazo ? null : (
-        <div className="mt-8">
+        <div className="cartao mt-6 p-5">
           <Campo id="publicacao" rotulo="Colar publicação">
             <textarea
               id="publicacao"
@@ -88,18 +88,14 @@ export function FormularioPrazo({
               className={classeCampo}
             />
           </Campo>
-          <button
-            type="button"
-            onClick={aplicarSugestao}
-            className="mt-3 border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
-          >
+          <button type="button" onClick={aplicarSugestao} className="btn mt-3">
             Sugerir campos
           </button>
-          <p className="mt-3 text-lg text-muted">
+          <p className="ajuda-campo">
             A sugestão só preenche. O prazo só entra quando você salva.
           </p>
           {avisos.length > 0 ? (
-            <ul className="mt-3 list-disc pl-6 text-lg text-ink">
+            <ul className="aviso mt-3 list-disc pl-8">
               {avisos.map((aviso) => (
                 <li key={aviso}>{aviso}</li>
               ))}
@@ -107,7 +103,7 @@ export function FormularioPrazo({
           ) : null}
         </div>
       )}
-      <form action={acao} className="mt-8 space-y-5">
+      <form action={acao} className="cartao mt-6 space-y-5 p-5">
         {prazo ? <input type="hidden" name="id" value={prazo.id} /> : null}
         <div className="grid gap-5 md:grid-cols-2">
           <Campo id="area" rotulo="Tipo">
@@ -194,7 +190,7 @@ export function FormularioPrazo({
             className={classeCampo}
           />
         </Campo>
-        <p className="text-lg text-muted">
+        <p className="ajuda-campo">
           Vale quando o status é cumprido. Em branco, grava o horário deste
           salvamento.
         </p>
@@ -203,16 +199,16 @@ export function FormularioPrazo({
           marcados={advogadosMarcados}
           onChange={setAdvogadosMarcados}
         />
-        <p className="text-lg text-muted">Pelo menos um advogado.</p>
+        <p className="ajuda-campo">Pelo menos um advogado.</p>
         {estado.erro ? (
-          <p className="text-lg text-hearing" role="alert">
+          <p className="aviso aviso-erro" role="alert">
             {estado.erro}
           </p>
         ) : null}
         <button
           type="submit"
           disabled={pendente}
-          className="w-full bg-pen px-4 py-3 text-xl font-bold text-sheet disabled:opacity-60"
+          className="btn btn-primario btn-cheio disabled:opacity-60"
         >
           {pendente ? "Salvando…" : "Salvar prazo"}
         </button>

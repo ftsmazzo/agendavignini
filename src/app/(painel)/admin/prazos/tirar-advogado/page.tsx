@@ -15,9 +15,7 @@ export default function TirarAdvogado({
   searchParams: Promise<{ dia?: string; retirados?: string }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-xl text-muted">Abrindo os vínculos.</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Abrindo os vínculos.</p>}>
       <Lista searchParams={searchParams} />
     </Suspense>
   );
@@ -100,33 +98,28 @@ async function Lista({
   const quantidade = /^\d{1,4}$/.test(retirados ?? "") ? Number(retirados) : 0;
 
   return (
-    <section className="w-full">
+    <section className="entrada mx-auto w-full max-w-5xl">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl leading-tight font-bold text-ink">
-            Tirar advogado
-          </h1>
-          <p className="mt-3 text-xl text-muted">
+          <h1 className="titulo-pagina">Tirar advogado</h1>
+          <p className="subtitulo-pagina">
             Tira o responsável dos prazos de hoje em diante. O prazo volta para
             a lista sem advogado.
           </p>
         </div>
-        <Link
-          href="/admin/prazos/sem-advogado"
-          className="text-lg font-semibold text-pen"
-        >
+        <Link href="/admin/prazos/sem-advogado" className="btn">
           Sem advogado
         </Link>
       </div>
       {quantidade > 0 ? (
-        <output className="mt-4 block text-xl text-done">
+        <output className="aviso aviso-ok mt-4 block">
           {quantidade === 1
             ? "1 prazo voltou a ficar sem advogado."
             : `${quantidade} prazos voltaram a ficar sem advogado.`}
         </output>
       ) : null}
       {dias.length === 0 ? (
-        <p className="mt-8 text-xl text-ink">
+        <p className="vazio mt-6">
           De hoje em diante, nenhum prazo tem advogado marcado.
         </p>
       ) : (
@@ -135,31 +128,37 @@ async function Lista({
             {anterior ? (
               <Link
                 href={`/admin/prazos/tirar-advogado?dia=${anterior.data}`}
-                className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
+                className="btn"
               >
-                Anterior
-                <span className="mt-1 block text-base font-normal text-muted">
-                  {dataBr(anterior.data)} · {anterior.total}
+                <span aria-hidden="true">←</span>
+                <span className="text-left">
+                  Anterior
+                  <span className="block text-sm font-normal text-muted">
+                    {dataBr(anterior.data)} · {anterior.total}
+                  </span>
                 </span>
               </Link>
             ) : (
               <span />
             )}
-            <h2 className="text-center text-3xl font-bold text-ink">
+            <h2 className="text-center text-2xl font-bold text-ink">
               {dataBr(dia)}
-              <span className="mt-1 block text-lg font-normal text-muted">
+              <span className="block text-base font-normal text-muted">
                 {itens.length === 1 ? "1 prazo" : `${itens.length} prazos`}
               </span>
             </h2>
             {proximo ? (
               <Link
                 href={`/admin/prazos/tirar-advogado?dia=${proximo.data}`}
-                className="border border-line bg-sheet px-4 py-3 text-right text-lg font-semibold text-ink"
+                className="btn"
               >
-                Próximo
-                <span className="mt-1 block text-base font-normal text-muted">
-                  {dataBr(proximo.data)} · {proximo.total}
+                <span className="text-right">
+                  Próximo
+                  <span className="block text-sm font-normal text-muted">
+                    {dataBr(proximo.data)} · {proximo.total}
+                  </span>
                 </span>
+                <span aria-hidden="true">→</span>
               </Link>
             ) : (
               <span />

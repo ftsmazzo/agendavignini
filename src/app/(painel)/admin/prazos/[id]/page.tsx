@@ -16,7 +16,7 @@ export default function EditarPrazo({
   searchParams: Promise<{ salvo?: string }>;
 }) {
   return (
-    <Suspense fallback={<p className="text-xl text-muted">Abrindo o prazo.</p>}>
+    <Suspense fallback={<p className="text-muted">Abrindo o prazo.</p>}>
       <Editor params={params} searchParams={searchParams} />
     </Suspense>
   );
@@ -59,7 +59,7 @@ async function Editor({
   return (
     <div>
       {salvo ? (
-        <output className="mx-auto mb-6 block w-full max-w-3xl text-xl text-done">
+        <output className="aviso aviso-ok mx-auto mb-6 block w-full max-w-3xl">
           Prazo salvo.
         </output>
       ) : null}

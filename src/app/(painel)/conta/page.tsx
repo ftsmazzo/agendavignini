@@ -8,7 +8,7 @@ import { exigirUsuario } from "@/lib/acesso";
 
 export default function Conta() {
   return (
-    <Suspense fallback={<p className="text-xl text-muted">Abrindo a conta.</p>}>
+    <Suspense fallback={<p className="text-muted">Abrindo a conta.</p>}>
       <Conteudo />
     </Suspense>
   );

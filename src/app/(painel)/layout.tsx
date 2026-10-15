@@ -10,9 +10,7 @@ import { lerSessao } from "@/lib/sessao";
 export default function PainelLayout({ children }: { children: ReactNode }) {
   return (
     <Suspense
-      fallback={
-        <p className="px-8 py-10 text-xl text-muted">Abrindo a agenda.</p>
-      }
+      fallback={<p className="px-8 py-10 text-muted">Abrindo a agenda.</p>}
     >
       <PainelAutenticado>{children}</PainelAutenticado>
     </Suspense>

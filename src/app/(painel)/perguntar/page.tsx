@@ -27,9 +27,7 @@ export default function Perguntar({
   searchParams: Promise<{ q?: string }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-xl text-muted">Abrindo a pergunta.</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Abrindo a pergunta.</p>}>
       <Resposta searchParams={searchParams} />
     </Suspense>
   );
@@ -57,15 +55,15 @@ async function Resposta({
     resposta.audiencias.length === 0;
 
   return (
-    <section className="mx-auto w-full max-w-5xl">
-      <h1 className="text-4xl leading-tight font-bold text-ink">Perguntar</h1>
-      <p className="mt-3 text-xl text-muted">
+    <section className="entrada mx-auto w-full max-w-5xl">
+      <h1 className="titulo-pagina">Perguntar</h1>
+      <p className="subtitulo-pagina">
         A resposta cita prazo e audiência já gravados. Ela não cria prazo e não
         escreve para cliente.
       </p>
-      <search className="mt-6 block">
+      <search className="cartao mt-6 block p-5">
         <form method="get">
-          <label htmlFor="pergunta" className="mb-2 block text-xl text-ink">
+          <label htmlFor="pergunta" className="rotulo-campo">
             Pergunta
           </label>
           <input
@@ -74,56 +72,63 @@ async function Resposta({
             type="search"
             defaultValue={pergunta}
             placeholder="Prazos da Sylvamo nesta semana"
-            className="w-full border border-line bg-sheet px-4 py-3 text-xl text-ink"
+            className="campo"
           />
         </form>
       </search>
       {!pergunta ? (
-        <p className="mt-6 text-xl text-ink">
+        <p className="vazio mt-6">
           Pergunte por um processo, um cliente, um ato ou um período.
         </p>
       ) : null}
       {vazia ? (
-        <p className="mt-6 text-xl text-ink">
+        <p className="aviso mt-6">
           Diga o processo, o cliente ou o ato. Um período sozinho também serve,
           como hoje ou outubro.
         </p>
       ) : null}
       {resposta && !vazia ? (
-        <p className="mt-6 text-xl text-muted">
-          {resposta.recorte
-            ? `Recorte ${resposta.recorte}.`
-            : "Sem recorte de data."}{" "}
-          {resposta.prazos.length + resposta.audiencias.length === 0
-            ? ""
-            : `${resposta.prazos.length + resposta.audiencias.length} citações.`}
+        <p className="mt-6 flex flex-wrap items-center gap-2 text-muted">
+          <span className="selo">
+            {resposta.recorte
+              ? `Recorte ${resposta.recorte}.`
+              : "Sem recorte de data."}
+          </span>
+          {resposta.prazos.length + resposta.audiencias.length === 0 ? null : (
+            <span className="selo selo-neutro">
+              {resposta.prazos.length + resposta.audiencias.length} citações.
+            </span>
+          )}
         </p>
       ) : null}
       {semCitacao ? (
-        <p className="mt-6 text-xl text-ink">
+        <p className="vazio mt-6">
           Nenhum prazo ou audiência gravados com esse texto.
         </p>
       ) : null}
       {resposta && resposta.prazos.length > 0 ? (
         <div className="mt-8">
-          <h2 className="text-2xl font-semibold text-ink">
-            Prazos ({resposta.prazos.length})
-          </h2>
-          <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
+          <h2 className="titulo-secao">Prazos ({resposta.prazos.length})</h2>
+          <ul className="lista-cartoes mt-3">
             {resposta.prazos.map((item) => (
-              <li key={item.id} className="px-6 py-5">
-                <p className="text-lg text-muted">
-                  {AREAS[item.area]} · {dataBr(item.data)} ·{" "}
-                  {item.situacao === "cumprido" ? "Cumprido" : "Em aberto"}
+              <li key={item.id} className="px-5 py-4">
+                <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] text-muted">
+                  <span className="selo">{AREAS[item.area]}</span>
+                  {dataBr(item.data)}
+                  <span
+                    className={`selo ${item.situacao === "cumprido" ? "selo-ok" : "selo-neutro"}`}
+                  >
+                    {item.situacao === "cumprido" ? "Cumprido" : "Em aberto"}
+                  </span>
                 </p>
                 <Link
                   href={`/prazos?data=${item.data}`}
-                  className="mt-1 block text-2xl font-semibold text-ink"
+                  className="mt-1 block text-lg font-semibold text-ink hover:text-pen"
                 >
                   {item.titulo}
                 </Link>
                 {item.trecho ? (
-                  <blockquote className="mt-3 text-xl text-ink">
+                  <blockquote className="mt-3 rounded-r-xl border-l-4 border-pen bg-paper px-4 py-3 text-base text-ink">
                     “{item.trecho}”
                   </blockquote>
                 ) : null}
@@ -134,29 +139,31 @@ async function Resposta({
       ) : null}
       {resposta && resposta.audiencias.length > 0 ? (
         <div className="mt-8">
-          <h2 className="text-2xl font-semibold text-ink">
+          <h2 className="titulo-secao">
             Audiências ({resposta.audiencias.length})
           </h2>
-          <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
+          <ul className="lista-cartoes mt-3">
             {resposta.audiencias.map((item) => (
-              <li key={item.id} className="px-6 py-5">
-                <p className="text-lg text-muted">
-                  {dataHoraBr(item.dataHora)}
-                  {item.vara ? ` · ${item.vara}` : ""}
+              <li key={item.id} className="px-5 py-4">
+                <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] text-muted">
+                  <span className="selo selo-audiencia">
+                    {dataHoraBr(item.dataHora)}
+                  </span>
+                  {item.vara ? item.vara : null}
                 </p>
                 <Link
                   href={`/audiencias?data=${diaNoEscritorio(item.dataHora)}`}
-                  className="mt-1 block text-2xl font-semibold text-ink"
+                  className="mt-1 block text-lg font-semibold text-ink hover:text-pen"
                 >
                   {item.numeroProcesso || "Sem número"}
                 </Link>
-                <p className="mt-3 text-xl text-ink">
+                <p className="mt-2 text-base text-ink">
                   {[item.reclamante, item.reclamado]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
                 {item.trecho ? (
-                  <blockquote className="mt-3 text-xl text-ink">
+                  <blockquote className="mt-3 rounded-r-xl border-l-4 border-pen bg-paper px-4 py-3 text-base text-ink">
                     “{item.trecho}”
                   </blockquote>
                 ) : null}

@@ -21,7 +21,7 @@ export default function Busca({
   searchParams: Promise<{ q?: string }>;
 }) {
   return (
-    <Suspense fallback={<p className="text-xl text-muted">Abrindo a busca.</p>}>
+    <Suspense fallback={<p className="text-muted">Abrindo a busca.</p>}>
       <Resultado searchParams={searchParams} />
     </Suspense>
   );
@@ -88,10 +88,11 @@ async function Resultado({
     : [];
 
   return (
-    <section className="mx-auto w-full max-w-5xl">
-      <h1 className="text-4xl leading-tight font-bold text-ink">
-        {termo ? `“${termo}”` : "Pesquisar"}
-      </h1>
+    <section className="entrada mx-auto w-full max-w-5xl">
+      <h1 className="titulo-pagina">{termo ? `“${termo}”` : "Pesquisar"}</h1>
+      <p className="subtitulo-pagina">
+        Procure em prazos e audiências por processo, cliente, parte ou ato.
+      </p>
       <search className="mt-6 block">
         <form method="get">
           <label htmlFor="busca-prazo" className="sr-only">
@@ -103,44 +104,47 @@ async function Resultado({
             type="search"
             defaultValue={termo}
             placeholder="Processo, cliente, parte ou ato"
-            className="w-full border border-line bg-sheet px-4 py-3 text-xl text-ink"
+            className="campo"
           />
         </form>
       </search>
       {!termo ? (
-        <p className="mt-6 text-xl text-ink">
+        <p className="vazio mt-6">
           Digite um processo, um cliente ou uma parte na caixa do menu.
         </p>
       ) : itens.length === 0 && sessoes.length === 0 ? (
-        <p className="mt-6 text-xl text-ink">
-          Nenhum prazo ou audiência com esse texto.
-        </p>
+        <p className="vazio mt-6">Nenhum prazo ou audiência com esse texto.</p>
       ) : (
         <>
-          <h2 className="mt-8 text-3xl font-bold text-ink">Prazos</h2>
+          <h2 className="titulo-secao mt-8">Prazos</h2>
           {itens.length === 0 ? (
-            <p className="mt-3 text-xl text-ink">
-              Nenhum prazo com esse texto.
-            </p>
+            <p className="vazio mt-3">Nenhum prazo com esse texto.</p>
           ) : (
             <>
-              <p className="mt-3 text-xl text-muted">
+              <p className="mt-1 text-muted">
                 {itens.length === 80
                   ? "80 prazos mais recentes."
                   : itens.length === 1
                     ? "1 prazo."
                     : `${itens.length} prazos.`}
               </p>
-              <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
+              <ul className="lista-cartoes mt-3">
                 {itens.map((item) => (
-                  <li key={item.id} className="px-6 py-5">
-                    <p className="text-lg text-muted">
-                      {rotuloArea(item.area)} · {dataBr(item.data)} ·{" "}
-                      {item.situacao === "cumprido" ? "Cumprido" : "Em aberto"}
+                  <li key={item.id} className="px-5 py-4">
+                    <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] text-muted">
+                      <span className="selo">{rotuloArea(item.area)}</span>
+                      {dataBr(item.data)}
+                      <span
+                        className={`selo ${item.situacao === "cumprido" ? "selo-ok" : "selo-neutro"}`}
+                      >
+                        {item.situacao === "cumprido"
+                          ? "Cumprido"
+                          : "Em aberto"}
+                      </span>
                     </p>
                     <Link
                       href={`/prazos?data=${item.data}`}
-                      className="mt-1 block text-2xl font-semibold text-ink"
+                      className="mt-1 block text-lg font-semibold text-ink hover:text-pen"
                     >
                       {item.titulo}
                     </Link>
@@ -149,40 +153,40 @@ async function Resultado({
               </ul>
             </>
           )}
-          <h2 className="mt-10 text-3xl font-bold text-ink">Audiências</h2>
+          <h2 className="titulo-secao mt-10">Audiências</h2>
           {sessoes.length === 0 ? (
-            <p className="mt-3 text-xl text-ink">
-              Nenhuma audiência com esse texto.
-            </p>
+            <p className="vazio mt-3">Nenhuma audiência com esse texto.</p>
           ) : (
             <>
-              <p className="mt-3 text-xl text-muted">
+              <p className="mt-1 text-muted">
                 {sessoes.length === 40
                   ? "40 audiências mais recentes."
                   : sessoes.length === 1
                     ? "1 audiência."
                     : `${sessoes.length} audiências.`}
               </p>
-              <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
+              <ul className="lista-cartoes mt-3">
                 {sessoes.map((item) => {
                   const dia = diaDaAudiencia(item.dataHora);
                   return (
-                    <li key={item.id} className="px-6 py-5">
-                      <p className="text-lg text-hearing">
-                        {dataHoraBr(item.dataHora)}
+                    <li key={item.id} className="px-5 py-4">
+                      <p>
+                        <span className="selo selo-audiencia">
+                          {dataHoraBr(item.dataHora)}
+                        </span>
                       </p>
                       <Link
                         href={`/audiencias?data=${dia}`}
-                        className="mt-1 block text-2xl font-semibold text-ink"
+                        className="mt-1 block text-lg font-semibold text-ink hover:text-pen"
                       >
                         {item.numeroProcesso || "Sem número"}
                       </Link>
-                      <p className="mt-2 text-xl text-ink">
+                      <p className="mt-1 text-base text-ink">
                         {[item.reclamante, item.reclamado]
                           .filter(Boolean)
                           .join(" × ")}
                       </p>
-                      <p className="mt-1 text-lg text-muted">
+                      <p className="mt-1 text-[0.9375rem] text-muted">
                         {[item.vara, item.local].filter(Boolean).join(" · ")}
                       </p>
                     </li>

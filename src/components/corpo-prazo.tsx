@@ -16,12 +16,13 @@ export function CorpoPrazo({
   return (
     <>
       {aberto ? corpo : null}
-      <div className="mt-4 flex flex-wrap gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         {temCorpo ? (
           <button
             type="button"
             onClick={() => setAberto((valor) => !valor)}
-            className="border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+            aria-expanded={aberto}
+            className="btn btn-pequeno"
           >
             {aberto ? "Minimizar" : "Mostrar"}
           </button>

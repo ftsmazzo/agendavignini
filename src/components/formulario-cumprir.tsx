@@ -29,42 +29,57 @@ export function FormularioCumprir({
   const todos = itens.length > 0 && ids.length === itens.length;
 
   return (
-    <form action={acao} className="mt-8">
+    <form action={acao} className="mt-6">
       <input type="hidden" name="dia" value={dia} />
       <input type="hidden" name="origem" value={origem} />
       {estado.erro ? (
-        <p role="alert" className="mt-4 text-xl text-late">
+        <p role="alert" className="aviso aviso-erro mb-4">
           {estado.erro}
         </p>
       ) : null}
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <label className="flex items-center gap-3 text-xl text-ink">
+      <div className="cartao flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 text-base font-semibold text-ink">
           <input
             type="checkbox"
             checked={todos}
             onChange={(evento) =>
               setIds(evento.target.checked ? itens.map((item) => item.id) : [])
             }
-            className="h-5 w-5"
+            className="h-5 w-5 accent-pen"
           />
           Selecionar todos deste dia
         </label>
         <button
           type="submit"
           disabled={pendente || ids.length === 0}
-          className="bg-pen px-4 py-3 text-lg font-semibold text-sheet disabled:opacity-60"
+          className="btn btn-sucesso disabled:cursor-not-allowed disabled:opacity-50"
         >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 20 20"
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m4 10.5 4 4 8-9" />
+          </svg>
           {pendente
             ? "Cumprindo."
             : `Cumprir ${ids.length === 1 ? "1 prazo" : `${ids.length} prazos`}`}
         </button>
       </div>
-      <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
+      <ul className="lista-cartoes mt-4">
         {itens.map((item) => {
           const ligado = ids.includes(item.id);
           return (
-            <li key={item.id} className={`px-4 py-3 ${item.faixa}`}>
-              <label className="flex items-start gap-3">
+            <li
+              key={item.id}
+              className={`${item.faixa} ${ligado ? "bg-pen-soft" : ""}`}
+            >
+              <label className="flex cursor-pointer items-start gap-4 px-5 py-4">
                 <input
                   type="checkbox"
                   name="prazos"
@@ -77,26 +92,26 @@ export function FormularioCumprir({
                         : atual.filter((id) => id !== item.id),
                     )
                   }
-                  className="mt-1 h-5 w-5"
+                  className="mt-1 h-5 w-5 shrink-0 accent-pen"
                 />
-                <span>
-                  <span className="flex flex-wrap items-center gap-2 text-lg text-muted">
-                    {item.rotulo}
+                <span className="min-w-0">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="selo">{item.rotulo}</span>
                     <span
-                      className={`inline-flex rounded-full px-3 py-1 text-base font-semibold ${item.selo}`}
+                      className={`inline-flex rounded-full px-3 py-0.5 text-[0.8125rem] font-semibold ${item.selo}`}
                     >
                       {item.marca}
                     </span>
                   </span>
-                  <span className="mt-1 block text-xl text-ink">
+                  <span className="mt-1 block text-lg font-semibold text-ink">
                     {item.titulo}
                   </span>
                   {item.advogados ? (
-                    <span className="mt-1 block text-lg text-ink">
+                    <span className="mt-1 block text-base text-ink">
                       {item.advogados}
                     </span>
                   ) : (
-                    <span className="mt-1 block text-lg text-muted">
+                    <span className="mt-1 block text-base text-muted">
                       Sem advogado marcado
                     </span>
                   )}

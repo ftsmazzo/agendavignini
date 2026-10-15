@@ -28,38 +28,38 @@ export function FormularioRetirar({
     <form action={acao} className="mt-8">
       <input type="hidden" name="dia" value={dia} />
       {estado.erro ? (
-        <p role="alert" className="mt-4 text-xl text-late">
+        <p role="alert" className="aviso aviso-erro mt-4">
           {estado.erro}
         </p>
       ) : null}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <label className="flex items-center gap-3 text-xl text-ink">
+        <label className="flex items-center gap-3 font-medium text-ink">
           <input
             type="checkbox"
             checked={todos}
             onChange={(evento) =>
               setIds(evento.target.checked ? itens.map((item) => item.id) : [])
             }
-            className="h-5 w-5"
+            className="h-5 w-5 accent-[var(--pen)]"
           />
           Selecionar todos deste dia
         </label>
         <button
           type="submit"
           disabled={pendente || ids.length === 0}
-          className="bg-late px-4 py-3 text-lg font-semibold text-late-ink disabled:opacity-60"
+          className="btn btn-perigo disabled:opacity-60"
         >
           {pendente
             ? "Tirando."
             : `Tirar ${ids.length === 1 ? "1 prazo" : `${ids.length} prazos`}`}
         </button>
       </div>
-      <ul className="mt-4 divide-y divide-line border border-line bg-sheet">
+      <ul className="lista-cartoes mt-4">
         {itens.map((item) => {
           const ligado = ids.includes(item.id);
           return (
-            <li key={item.id} className={`px-4 py-3 ${item.faixa}`}>
-              <label className="flex items-start gap-3">
+            <li key={item.id} className={item.faixa}>
+              <label className="flex cursor-pointer items-start gap-3 px-4 py-3">
                 <input
                   type="checkbox"
                   name="prazos"
@@ -72,16 +72,14 @@ export function FormularioRetirar({
                         : atual.filter((id) => id !== item.id),
                     )
                   }
-                  className="mt-1 h-5 w-5"
+                  className="mt-1 h-5 w-5 accent-[var(--pen)]"
                 />
                 <span>
-                  <span className="block text-lg text-muted">
-                    {item.rotulo}
-                  </span>
-                  <span className="mt-1 block text-xl text-ink">
+                  <span className="selo">{item.rotulo}</span>
+                  <span className="mt-1 block font-semibold text-ink">
                     {item.titulo}
                   </span>
-                  <span className="mt-1 block text-lg text-ink">
+                  <span className="mt-1 block text-sm text-muted">
                     {item.advogados}
                   </span>
                 </span>

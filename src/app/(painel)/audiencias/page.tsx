@@ -13,14 +13,17 @@ import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr, dataHoraBr, dataIsoValida, semanaDe } from "@/lib/datas";
 
 const DIAS = [
-  { id: "domingo", letra: "D" },
-  { id: "segunda", letra: "S" },
-  { id: "terca", letra: "T" },
-  { id: "quarta", letra: "Q" },
-  { id: "quinta", letra: "Q" },
-  { id: "sexta", letra: "S" },
-  { id: "sabado", letra: "S" },
+  { id: "domingo", letra: "Dom" },
+  { id: "segunda", letra: "Seg" },
+  { id: "terca", letra: "Ter" },
+  { id: "quarta", letra: "Qua" },
+  { id: "quinta", letra: "Qui" },
+  { id: "sexta", letra: "Sex" },
+  { id: "sabado", letra: "Sáb" },
 ];
+
+const SETA =
+  "inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-sheet text-ink shadow-suave transition-colors hover:border-pen hover:bg-pen-soft";
 
 function comSuas(href: string, suas: boolean) {
   if (!suas) {
@@ -64,11 +67,7 @@ function Vistas({
           key={item.id}
           href={item.href}
           aria-current={item.id === ativo ? "page" : undefined}
-          className={
-            item.id === ativo
-              ? "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
-              : "border border-line bg-sheet px-3 py-2 text-lg text-ink"
-          }
+          className="chip"
         >
           {item.rotulo}
         </Link>
@@ -83,22 +82,14 @@ function Recorte({ base, suas }: { base: string; suas: boolean }) {
       <Link
         href={base}
         aria-current={suas ? undefined : "page"}
-        className={
-          suas
-            ? "border border-line bg-sheet px-3 py-2 text-lg text-ink"
-            : "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
-        }
+        className="chip"
       >
         Todas
       </Link>
       <Link
         href={comSuas(base, true)}
         aria-current={suas ? "page" : undefined}
-        className={
-          suas
-            ? "bg-pen px-3 py-2 text-lg font-semibold text-sheet"
-            : "border border-line bg-sheet px-3 py-2 text-lg text-ink"
-        }
+        className="chip"
       >
         Suas
       </Link>
@@ -114,6 +105,40 @@ function rotuloDia(iso: string) {
   return `${semana} ${dataBr(iso).slice(0, 5)}`;
 }
 
+function SetaEsquerda() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M15 6l-6 6 6 6" />
+    </svg>
+  );
+}
+
+function SetaDireita() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M9 6l6 6-6 6" />
+    </svg>
+  );
+}
+
 export default function Audiencias({
   searchParams,
 }: {
@@ -126,9 +151,7 @@ export default function Audiencias({
   }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-xl text-muted">Abrindo as audiências.</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Abrindo as audiências.</p>}>
       <Lista searchParams={searchParams} />
     </Suspense>
   );
@@ -171,32 +194,41 @@ async function Lista({
         semanasGrade.push(grade.dias.slice(inicio, inicio + 7));
       }
       const diasComAudiencia = [...porDia.keys()].sort();
+      const nomeAnterior = montarMes(anterior.ano, anterior.mes).nome;
+      const nomeProximo = montarMes(proximo.ano, proximo.mes).nome;
       return (
-        <section className="mx-auto w-full max-w-5xl">
+        <section className="entrada mx-auto w-full max-w-5xl">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <Link
-              href={comSuas(
-                `/audiencias?mes=${chaveMes(anterior.ano, anterior.mes)}`,
-                suas,
-              )}
-              className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
-            >
-              {montarMes(anterior.ano, anterior.mes).nome}
-            </Link>
-            <h1 className="text-center text-4xl leading-tight font-bold text-ink">
-              {grade.nome} {grade.ano}
+            <h1 className="titulo-pagina capitalize">
+              {grade.nome}{" "}
+              <span className="font-medium text-muted">{grade.ano}</span>
             </h1>
-            <Link
-              href={comSuas(
-                `/audiencias?mes=${chaveMes(proximo.ano, proximo.mes)}`,
-                suas,
-              )}
-              className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
-            >
-              {montarMes(proximo.ano, proximo.mes).nome}
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href={comSuas(
+                  `/audiencias?mes=${chaveMes(anterior.ano, anterior.mes)}`,
+                  suas,
+                )}
+                className={SETA}
+                aria-label={`Mês anterior: ${nomeAnterior}`}
+                title={nomeAnterior}
+              >
+                <SetaEsquerda />
+              </Link>
+              <Link
+                href={comSuas(
+                  `/audiencias?mes=${chaveMes(proximo.ano, proximo.mes)}`,
+                  suas,
+                )}
+                className={SETA}
+                aria-label={`Próximo mês: ${nomeProximo}`}
+                title={nomeProximo}
+              >
+                <SetaDireita />
+              </Link>
+            </div>
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-4">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <Vistas
               ativo="mes"
               mes={chaveMes(ano, numero)}
@@ -209,107 +241,109 @@ async function Lista({
             />
             <Link
               href={`/audiencias/impressao?data=${chaveMes(ano, numero)}-01`}
-              className="text-lg text-pen underline"
+              className="btn-texto"
             >
               Imprimir a semana
             </Link>
           </div>
-          <table className="mt-6 w-full border-collapse">
-            <thead>
-              <tr>
-                {DIAS.map((coluna) => (
-                  <th
-                    key={coluna.id}
-                    className="pb-3 text-center text-lg font-semibold text-muted"
-                  >
-                    {coluna.letra}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {semanasGrade.map((linha) => (
-                <tr key={linha.map((celula) => celula.chave).join("|")}>
-                  {linha.map((celula) => {
-                    const total = celula.iso
-                      ? (porDia.get(celula.iso)?.length ?? 0)
-                      : 0;
-                    const hojeMarcado = celula.iso === hoje;
-                    const classe = [
-                      "flex h-16 w-full flex-col items-center justify-center text-2xl",
-                      total > 0
-                        ? "bg-hearing font-bold text-sheet"
-                        : celula.fimDeSemana
-                          ? "bg-weekend text-muted"
-                          : "text-ink hover:bg-pen-soft",
-                      hojeMarcado ? "ring-4 ring-pen ring-inset" : "",
-                    ].join(" ");
-                    return (
-                      <td key={celula.chave} className="p-1">
-                        {celula.iso && celula.dia ? (
-                          <Link
-                            href={comSuas(
-                              `/audiencias?data=${celula.iso}`,
-                              suas,
-                            )}
-                            aria-current={hojeMarcado ? "date" : undefined}
-                            aria-label={
-                              total > 1
-                                ? `${celula.dia} de ${grade.nome}, ${total} audiências`
-                                : total === 1
-                                  ? `${celula.dia} de ${grade.nome}, 1 audiência`
-                                  : `${celula.dia} de ${grade.nome}`
-                            }
-                            className={classe}
-                          >
-                            {celula.dia}
-                            {total > 0 ? (
-                              <span className="text-lg leading-none">
-                                {total}
-                              </span>
-                            ) : null}
-                          </Link>
-                        ) : (
-                          <span className="block h-16" />
-                        )}
-                      </td>
-                    );
-                  })}
+          <div className="cartao mt-6 p-3 md:p-5">
+            <table className="w-full border-separate border-spacing-1">
+              <thead>
+                <tr>
+                  {DIAS.map((coluna) => (
+                    <th
+                      key={coluna.id}
+                      className="pb-2 text-center text-sm font-semibold text-muted"
+                    >
+                      {coluna.letra}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="mt-6 text-xl text-muted">
+              </thead>
+              <tbody>
+                {semanasGrade.map((linha) => (
+                  <tr key={linha.map((celula) => celula.chave).join("|")}>
+                    {linha.map((celula) => {
+                      const total = celula.iso
+                        ? (porDia.get(celula.iso)?.length ?? 0)
+                        : 0;
+                      const hojeMarcado = celula.iso === hoje;
+                      const classe = [
+                        "flex h-14 w-full flex-col items-center justify-center rounded-xl text-lg transition-colors md:h-16",
+                        total > 0
+                          ? "bg-hearing-soft font-bold text-hearing ring-1 ring-hearing/40"
+                          : celula.fimDeSemana
+                            ? "bg-weekend text-muted"
+                            : "text-ink hover:bg-pen-soft",
+                        hojeMarcado ? "ring-2 ring-pen ring-inset" : "",
+                      ].join(" ");
+                      return (
+                        <td key={celula.chave} className="p-0">
+                          {celula.iso && celula.dia ? (
+                            <Link
+                              href={comSuas(
+                                `/audiencias?data=${celula.iso}`,
+                                suas,
+                              )}
+                              aria-current={hojeMarcado ? "date" : undefined}
+                              aria-label={
+                                total > 1
+                                  ? `${celula.dia} de ${grade.nome}, ${total} audiências`
+                                  : total === 1
+                                    ? `${celula.dia} de ${grade.nome}, 1 audiência`
+                                    : `${celula.dia} de ${grade.nome}`
+                              }
+                              className={classe}
+                            >
+                              {celula.dia}
+                              {total > 0 ? (
+                                <span className="text-sm leading-none">
+                                  {total}
+                                </span>
+                              ) : null}
+                            </Link>
+                          ) : (
+                            <span className="block h-14 md:h-16" />
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-6 text-muted">
             {itens.length === 1
               ? "1 audiência neste mês."
               : `${itens.length} audiências neste mês.`}
           </p>
           {diasComAudiencia.map((coluna) => (
-            <section key={coluna} className="mt-8">
-              <h2 className="text-2xl font-bold text-ink">
+            <section key={coluna} className="mt-6">
+              <h2 className="titulo-secao capitalize">
                 <Link
                   href={comSuas(`/audiencias?data=${coluna}`, suas)}
-                  className="text-pen"
+                  className="text-pen hover:underline"
                 >
                   {rotuloDia(coluna)}
                 </Link>
               </h2>
-              <ul className="mt-3 divide-y divide-line border border-line bg-sheet">
+              <ul className="lista-cartoes mt-3">
                 {(porDia.get(coluna) ?? []).map((item) => (
-                  <li key={item.id} className="px-6 py-4">
-                    <p className="text-lg font-bold text-hearing">
-                      {item.hora}
-                      {item.minha ? " · Sua" : ""}
+                  <li key={item.id} className="px-5 py-4">
+                    <p className="flex flex-wrap items-center gap-2">
+                      <span className="selo selo-audiencia">{item.hora}</span>
+                      {item.minha ? <span className="selo">Sua</span> : null}
                     </p>
-                    <p className="mt-1 text-xl font-semibold text-ink">
+                    <p className="mt-2 text-lg font-bold text-ink">
                       {item.numeroProcesso || "Sem número"}
                     </p>
-                    <p className="mt-1 text-lg text-ink">
+                    <p className="mt-1 text-ink">
                       {[item.reclamante, item.reclamado]
                         .filter(Boolean)
                         .join(" × ")}
                     </p>
-                    <p className="mt-1 text-lg text-muted">
+                    <p className="mt-1 text-muted">
                       {[item.vara, item.local].filter(Boolean).join(" · ")}
                     </p>
                   </li>
@@ -332,25 +366,29 @@ async function Lista({
       : quadroCheio;
     const estaSemana = semanaDe(hoje).inicio === quadro.inicio;
     return (
-      <section className="mx-auto w-full max-w-7xl">
+      <section className="entrada mx-auto w-full max-w-7xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <Link
-            href={comSuas(`/audiencias?semana=${quadro.anterior}`, suas)}
-            className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
-          >
-            Semana anterior
-          </Link>
-          <h1 className="text-center text-4xl leading-tight font-bold text-ink">
-            Semana de {dataBr(quadro.inicio)} a {dataBr(quadro.sexta)}
-          </h1>
-          <Link
-            href={comSuas(`/audiencias?semana=${quadro.proxima}`, suas)}
-            className="border border-line bg-sheet px-4 py-3 text-lg font-semibold text-ink"
-          >
-            Próxima semana
-          </Link>
+          <div>
+            <h1 className="titulo-pagina">
+              Semana de {dataBr(quadro.inicio)} a {dataBr(quadro.sexta)}
+            </h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href={comSuas(`/audiencias?semana=${quadro.anterior}`, suas)}
+              className="btn"
+            >
+              ← Semana anterior
+            </Link>
+            <Link
+              href={comSuas(`/audiencias?semana=${quadro.proxima}`, suas)}
+              className="btn"
+            >
+              Próxima semana →
+            </Link>
+          </div>
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-4">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
           <Vistas
             ativo="semana"
             semana={quadro.inicio}
@@ -364,21 +402,18 @@ async function Lista({
             suas={suas}
           />
           {estaSemana ? null : (
-            <Link
-              href={comSuas("/audiencias", suas)}
-              className="text-lg text-pen underline"
-            >
+            <Link href={comSuas("/audiencias", suas)} className="btn-texto">
               Esta semana
             </Link>
           )}
           <Link
             href={`/audiencias/impressao?data=${quadro.inicio}`}
-            className="text-pen underline"
+            className="btn-texto"
           >
             Imprimir a semana
           </Link>
           {usuario.papel === "admin" ? (
-            <Link href="/admin/audiencias/nova" className="text-pen underline">
+            <Link href="/admin/audiencias/nova" className="btn-texto">
               Adicionar nova
             </Link>
           ) : null}
@@ -389,67 +424,68 @@ async function Lista({
             return (
               <section
                 key={coluna}
-                className={
-                  coluna === hoje
-                    ? "border-2 border-pen bg-sheet p-3"
-                    : "border border-line bg-sheet p-3"
-                }
+                className={`cartao p-3 ${coluna === hoje ? "ring-2 ring-pen" : ""}`}
               >
-                <h2 className="text-xl font-bold text-ink">
+                <h2 className="flex items-center justify-between gap-2 text-base font-bold capitalize">
                   <Link
                     href={comSuas(`/audiencias?data=${coluna}`, suas)}
-                    className="text-pen"
+                    className="text-pen hover:underline"
                   >
-                    {rotuloDia(coluna)} · {doDia.length}
+                    {rotuloDia(coluna)}
                   </Link>
+                  <span className="selo selo-neutro">{doDia.length}</span>
                 </h2>
                 {doDia.length === 0 ? (
-                  <p className="mt-4 text-lg text-muted">Nenhuma</p>
+                  <p className="mt-4 text-muted">Nenhuma</p>
                 ) : (
-                  <ul className="mt-4 space-y-3">
+                  <ul className="mt-3 space-y-3">
                     {doDia.map((item) => (
                       <li
                         key={item.id}
-                        className={
+                        className={`rounded-xl border p-3 ${
                           item.minha
-                            ? "border border-hearing p-3"
-                            : "border border-line p-3"
-                        }
+                            ? "border-hearing bg-hearing-soft"
+                            : "border-line bg-paper"
+                        }`}
                       >
-                        <p className="text-xl font-bold text-hearing">
-                          {item.hora}
-                          {item.minha ? " · Sua" : ""}
+                        <p className="flex flex-wrap items-center gap-2">
+                          <span className="selo selo-audiencia">
+                            {item.hora}
+                          </span>
+                          {item.minha ? (
+                            <span className="selo">Sua</span>
+                          ) : null}
                         </p>
-                        <p className="mt-1 text-lg font-semibold text-ink">
+                        <p className="mt-2 font-bold text-ink">
                           {item.numeroProcesso || "Sem número"}
                         </p>
-                        <p className="mt-1 text-lg text-ink">
+                        <p className="mt-1 text-[0.9688rem] text-ink">
                           {[item.reclamante, item.reclamado]
                             .filter(Boolean)
                             .join(" × ")}
                         </p>
-                        <p className="mt-1 text-lg text-muted">
+                        <p className="mt-1 text-[0.9688rem] text-muted">
                           {[item.vara, item.local].filter(Boolean).join(" · ")}
                         </p>
                         {item.preposto ? (
-                          <p className="mt-1 text-lg text-muted">
+                          <p className="mt-1 text-[0.9688rem] text-muted">
                             Preposto: {item.preposto}
                           </p>
                         ) : null}
                         {item.advogados.length > 0 ? (
-                          <p className="mt-1 text-lg text-muted">
+                          <p className="mt-1 text-[0.9688rem] text-muted">
                             {item.advogados.join(", ")}
                           </p>
                         ) : null}
                         {item.observacao ? (
-                          <p className="mt-2 text-lg whitespace-pre-wrap text-ink">
+                          <p className="mt-2 text-[0.9688rem] whitespace-pre-wrap text-ink">
                             {item.observacao}
                           </p>
                         ) : null}
                         {usuario.papel === "admin" ? (
                           <Link
                             href={`/admin/audiencias/${item.id}`}
-                            className="mt-2 inline-block text-lg text-pen underline"
+                            className="btn btn-pequeno mt-3"
                           >
                             Editar
                           </Link>
@@ -469,37 +505,33 @@ async function Lista({
   const itens = suas ? carregadas.filter((item) => item.minha) : carregadas;
 
   return (
-    <section className="mx-auto w-full max-w-5xl">
+    <section className="entrada mx-auto w-full max-w-5xl">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-4xl leading-tight font-bold text-ink">
-          Audiências
-        </h1>
+        <h1 className="titulo-pagina">Audiências</h1>
         {usuario.papel === "admin" ? (
-          <Link
-            href="/admin/audiencias/nova"
-            className="bg-pen px-4 py-3 text-lg font-semibold text-sheet"
-          >
-            Adicionar nova
+          <Link href="/admin/audiencias/nova" className="btn btn-primario">
+            + Adicionar nova
           </Link>
         ) : null}
       </div>
-      <div className="mt-6">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
         <Vistas
           ativo={dia ? "dia" : "lista"}
           semana={dia ?? hoje}
           mes={(dia ?? hoje).slice(0, 7)}
           suas={suas}
         />
-        <div className="mt-4">
-          <Recorte
-            base={dia ? `/audiencias?data=${dia}` : "/audiencias?lista=1"}
-            suas={suas}
-          />
-        </div>
+        <Recorte
+          base={dia ? `/audiencias?data=${dia}` : "/audiencias?lista=1"}
+          suas={suas}
+        />
       </div>
-      <form method="get" className="mt-6 flex flex-wrap items-end gap-3">
+      <form
+        method="get"
+        className="cartao mt-6 flex flex-wrap items-end gap-3 p-4 md:p-5"
+      >
         <div>
-          <label htmlFor="data" className="mb-2 block text-xl text-ink">
+          <label htmlFor="data" className="rotulo-campo">
             Ver um dia
           </label>
           <input
@@ -511,10 +543,7 @@ async function Lista({
           />
           {suas ? <input type="hidden" name="minhas" value="1" /> : null}
         </div>
-        <button
-          type="submit"
-          className="border border-line bg-sheet px-4 py-3 text-xl font-semibold text-ink"
-        >
+        <button type="submit" className="btn btn-primario">
           Ver
         </button>
         <Link
@@ -522,26 +551,26 @@ async function Lista({
             dia ? `/audiencias?semana=${dia}` : "/audiencias",
             suas,
           )}
-          className="px-2 py-3 text-lg text-pen underline"
+          className="btn-texto px-2 py-3"
         >
           Ver a semana
         </Link>
         {dia ? (
           <Link
             href={comSuas("/audiencias?lista=1", suas)}
-            className="px-2 py-3 text-lg text-pen underline"
+            className="btn-texto px-2 py-3"
           >
             Próximas
           </Link>
         ) : null}
         <Link
           href={`/audiencias/impressao?data=${dia ?? hojeNoEscritorio()}`}
-          className="px-2 py-3 text-lg text-pen underline"
+          className="btn-texto px-2 py-3"
         >
           Imprimir a semana
         </Link>
       </form>
-      <p className="mt-4 text-xl text-muted">
+      <p className="mt-4 text-muted">
         {dia
           ? `${itens.length} neste dia.`
           : itens.length === 150
@@ -549,44 +578,41 @@ async function Lista({
             : `${itens.length} a partir de hoje.`}
       </p>
       {itens.length === 0 ? (
-        <p className="mt-8 text-xl text-ink">
-          Nenhuma audiência neste recorte.
-        </p>
+        <p className="vazio mt-6">Nenhuma audiência neste recorte.</p>
       ) : (
-        <ul className="mt-6 divide-y divide-line border border-line bg-sheet">
+        <ul className="lista-cartoes mt-4">
           {itens.map((item) => (
-            <li key={item.id} className="px-6 py-5">
-              <p className="text-lg text-hearing">
-                {dataHoraBr(item.dataHora)}
+            <li key={item.id} className="px-5 py-4">
+              <p className="flex flex-wrap items-center gap-2">
+                <span className="selo selo-audiencia">
+                  {dataHoraBr(item.dataHora)}
+                </span>
+                {item.minha ? <span className="selo">Sua</span> : null}
               </p>
-              <h2 className="mt-1 text-2xl font-semibold text-ink">
+              <h2 className="mt-2 text-lg font-bold text-ink">
                 {item.numeroProcesso || "Sem número"}
               </h2>
-              <p className="mt-2 text-xl text-ink">
+              <p className="mt-1 text-ink">
                 {[item.vara, item.local].filter(Boolean).join(" · ")}
               </p>
-              <p className="mt-2 text-xl text-ink">
+              <p className="mt-1 text-ink">
                 {[item.reclamante, item.reclamado].filter(Boolean).join(" × ")}
               </p>
               {item.preposto ? (
-                <p className="mt-2 text-lg text-muted">
-                  Preposto: {item.preposto}
-                </p>
+                <p className="mt-1 text-muted">Preposto: {item.preposto}</p>
               ) : null}
               {item.advogados.length > 0 ? (
-                <p className="mt-2 text-lg text-muted">
-                  {item.advogados.join(", ")}
-                </p>
+                <p className="mt-1 text-muted">{item.advogados.join(", ")}</p>
               ) : null}
               {item.observacao ? (
-                <p className="mt-3 text-xl whitespace-pre-wrap text-ink">
+                <p className="mt-3 whitespace-pre-wrap text-ink">
                   {item.observacao}
                 </p>
               ) : null}
               {usuario.papel === "admin" ? (
                 <Link
                   href={`/admin/audiencias/${item.id}`}
-                  className="mt-4 inline-block border border-line bg-sheet px-4 py-2 text-lg font-semibold text-ink"
+                  className="btn btn-pequeno mt-3"
                 >
                   Editar
                 </Link>

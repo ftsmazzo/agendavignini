@@ -79,26 +79,28 @@ async function PainelDoDia({
   ];
 
   return (
-    <div className="w-full">
-      <p className="text-2xl text-muted">{dataExibida}</p>
-      <p className="mt-2 flex flex-wrap gap-x-6 gap-y-2 text-xl">
-        <a href="/resumo" className="text-pen">
+    <div className="mx-auto w-full max-w-6xl">
+      <p className="text-sm font-semibold tracking-[0.08em] text-muted uppercase">
+        {dataExibida}
+      </p>
+      <h1 className="titulo-pagina mt-1">Seu dia no escritório</h1>
+      <p className="mt-4 flex flex-wrap gap-3">
+        <a href="/resumo" className="btn btn-primario">
           Seu resumo de hoje
         </a>
-        <a href="/prazos/meus" className="text-pen">
-          Seus prazos em aberto ({contas.meusAbertos})
+        <a href="/prazos/meus" className="btn">
+          Seus prazos em aberto
+          <span className="selo">{contas.meusAbertos}</span>
         </a>
       </p>
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cartoes.map((item) => (
-          <a
-            key={item.href}
-            href={item.href}
-            className="border border-line bg-sheet px-6 py-6"
-          >
-            <p className="text-xl text-muted">{item.rotulo}</p>
+          <a key={item.href} href={item.href} className="cartao-link p-6">
+            <p className="text-[0.9688rem] font-medium text-muted">
+              {item.rotulo}
+            </p>
             <p
-              className={`mt-2 text-6xl leading-none font-bold ${
+              className={`mt-2 text-5xl leading-none font-bold tracking-tight ${
                 item.tom === "hearing"
                   ? "text-hearing"
                   : item.tom === "late"
@@ -108,10 +110,12 @@ async function PainelDoDia({
             >
               {item.valor}
             </p>
-            <p
-              className={`mt-3 text-lg ${item.tom === "late" ? "text-late" : "text-done"}`}
-            >
-              {item.detalhe}
+            <p className="mt-4">
+              <span
+                className={`selo ${item.tom === "late" ? "selo-atraso" : item.tom === "hearing" ? "selo-audiencia" : "selo-ok"}`}
+              >
+                {item.detalhe}
+              </span>
             </p>
           </a>
         ))}

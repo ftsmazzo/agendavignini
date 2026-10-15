@@ -6,9 +6,7 @@ import { listarPessoas } from "@/lib/pessoas";
 
 export default function NovoPrazo() {
   return (
-    <Suspense
-      fallback={<p className="text-xl text-muted">Abrindo o formulário.</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Abrindo o formulário.</p>}>
       <Conteudo />
     </Suspense>
   );

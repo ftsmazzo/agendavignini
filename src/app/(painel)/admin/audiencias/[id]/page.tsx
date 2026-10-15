@@ -15,9 +15,7 @@ export default function EditarAudiencia({
   searchParams: Promise<{ salvo?: string }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-xl text-muted">Abrindo a audiência.</p>}
-    >
+    <Suspense fallback={<p className="text-muted">Abrindo a audiência.</p>}>
       <Editor params={params} searchParams={searchParams} />
     </Suspense>
   );
@@ -56,7 +54,7 @@ async function Editor({
   return (
     <div>
       {salvo ? (
-        <output className="mx-auto mb-6 block w-full max-w-3xl text-xl text-done">
+        <output className="aviso aviso-ok mx-auto mb-6 block w-full max-w-3xl">
           Audiência salva.
         </output>
       ) : null}

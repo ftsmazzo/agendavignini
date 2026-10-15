@@ -13,12 +13,39 @@ export default function Entrar({
   searchParams: Promise<{ erro?: string }>;
 }) {
   return (
-    <main className="flex min-h-full items-center justify-center bg-paper px-4 py-16">
-      <Suspense
-        fallback={<p className="text-xl text-muted">Abrindo o acesso.</p>}
+    <main className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
+      <section
+        aria-hidden
+        className="relative hidden overflow-hidden bg-rail p-12 text-rail-ink lg:flex lg:flex-col lg:justify-between"
       >
-        <Formulario searchParams={searchParams} />
-      </Suspense>
+        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-pen/30 blur-3xl" />
+        <div className="absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-gold/20 blur-3xl" />
+        <div className="relative flex items-center gap-3">
+          <span className="grid h-12 w-12 place-items-center rounded-xl bg-gold text-xl font-bold text-[#1d1604]">
+            CV
+          </span>
+          <p className="text-xl font-bold tracking-tight">Coelho Vignini</p>
+        </div>
+        <div className="relative max-w-md">
+          <h2 className="text-4xl leading-tight font-bold tracking-tight">
+            Cada prazo no seu tempo. Cada audiência no seu lugar.
+          </h2>
+          <p className="mt-4 text-lg text-rail-muted">
+            A agenda do escritório reúne prazos, audiências e contatos em um só
+            lugar, simples de consultar todos os dias.
+          </p>
+        </div>
+        <p className="relative text-sm text-rail-muted">
+          Sistema interno · acesso restrito à equipe
+        </p>
+      </section>
+      <div className="flex items-center justify-center bg-paper px-5 py-12">
+        <Suspense
+          fallback={<p className="text-lg text-muted">Abrindo o acesso.</p>}
+        >
+          <Formulario searchParams={searchParams} />
+        </Suspense>
+      </div>
     </main>
   );
 }
@@ -31,12 +58,22 @@ async function Formulario({
   const { erro } = await searchParams;
 
   return (
-    <div className="w-full max-w-md border border-line bg-sheet px-8 py-10">
-      <h1 className="text-4xl font-bold text-ink">Coelho Vignini</h1>
-      <p className="mt-2 text-xl text-muted">Agenda do escritório</p>
+    <div className="entrada cartao w-full max-w-md p-8 shadow-media md:p-10">
+      <div className="flex items-center gap-3 lg:hidden">
+        <span className="grid h-11 w-11 place-items-center rounded-xl bg-gold text-lg font-bold text-[#1d1604]">
+          CV
+        </span>
+        <p className="text-lg font-bold tracking-tight">Coelho Vignini</p>
+      </div>
+      <h1 className="mt-6 text-3xl font-bold tracking-tight text-ink lg:mt-0">
+        Bem-vindo de volta
+      </h1>
+      <p className="mt-2 text-muted">
+        Entre para ver os prazos e audiências do escritório.
+      </p>
       <form className="mt-8 space-y-5" action={entrar}>
         <div>
-          <label htmlFor="login" className="mb-2 block text-xl text-ink">
+          <label htmlFor="login" className="rotulo-campo">
             Usuário
           </label>
           <input
@@ -44,11 +81,11 @@ async function Formulario({
             name="login"
             autoComplete="username"
             required
-            className="w-full border border-line bg-paper px-4 py-3 text-xl text-ink"
+            className="campo"
           />
         </div>
         <div>
-          <label htmlFor="senha" className="mb-2 block text-xl text-ink">
+          <label htmlFor="senha" className="rotulo-campo">
             Senha
           </label>
           <input
@@ -57,25 +94,22 @@ async function Formulario({
             type="password"
             autoComplete="current-password"
             required
-            className="w-full border border-line bg-paper px-4 py-3 text-xl text-ink"
+            className="campo"
           />
         </div>
         {erro ? (
-          <p className="text-lg text-hearing" role="alert">
+          <p className="aviso aviso-erro" role="alert">
             Usuário ou senha não conferem.
           </p>
         ) : null}
-        <button
-          type="submit"
-          className="w-full bg-pen px-4 py-3 text-xl font-bold text-sheet"
-        >
+        <button type="submit" className="btn btn-primario btn-cheio">
           Entrar
         </button>
       </form>
-      <p className="mt-6 text-lg leading-7 text-muted">
+      <p className="mt-6 text-[0.9375rem] leading-6 text-muted">
         Use o mesmo usuário de sempre. No primeiro acesso a senha antiga é
         trocada por uma proteção nova.{" "}
-        <Link href="/" className="text-pen underline">
+        <Link href="/" className="btn-texto">
           Voltar
         </Link>
       </p>
