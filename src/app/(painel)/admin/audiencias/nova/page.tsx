@@ -3,6 +3,8 @@ import { Suspense } from "react";
 import { FormularioAudiencia } from "@/components/formulario-audiencia";
 import { listarPessoas } from "@/lib/pessoas";
 
+export const maxDuration = 120;
+
 export default function NovaAudiencia() {
   return (
     <Suspense fallback={<p className="text-muted">Abrindo o formulário.</p>}>

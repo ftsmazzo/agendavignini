@@ -10,14 +10,82 @@ import {
   auditoria,
   usuarios,
 } from "@/db/schema";
-import { exigirAdmin } from "@/lib/acesso";
+import { exigirAdmin, exigirUsuario } from "@/lib/acesso";
 import { dataIsoValida, ehFimDeSemana, instanteEscritorio } from "@/lib/datas";
+import { consultarTribunal } from "@/lib/infosimples";
+import {
+  listarProcessosCadastrados,
+  type ProcessoCadastrado,
+} from "@/lib/processos-cadastrados";
+import { numeroDoProcesso } from "@/lib/publicacao";
 
 function texto(formData: FormData, nome: string, limite: number) {
   return String(formData.get(nome) ?? "")
     .replaceAll("\u0000", "")
     .trim()
     .slice(0, limite);
+}
+
+export async function sugerirProcessos(
+  termo: string,
+): Promise<ProcessoCadastrado[]> {
+  await exigirAdmin();
+  return listarProcessosCadastrados(String(termo ?? ""));
+}
+
+export async function puxarCamposDoTribunal(numero: string): Promise<{
+  erro: string;
+  campos: {
+    numero: string;
+    vara: string;
+    local: string;
+    reclamante: string;
+    reclamado: string;
+  } | null;
+}> {
+  const usuario = await exigirUsuario();
+  if (usuario.papel !== "admin") {
+    return {
+      erro: "Só o administrador consulta o tribunal.",
+      campos: null,
+    };
+  }
+  const pedido = String(numero ?? "").trim();
+  if (numeroDoProcesso(pedido) !== pedido) {
+    return {
+      erro: "Cole o número completo do processo para consultar o tribunal.",
+      campos: null,
+    };
+  }
+  const resultado = await consultarTribunal(pedido);
+  if (resultado.erro || !resultado.consulta) {
+    return {
+      erro: resultado.erro || "A consulta não foi concluída.",
+      campos: null,
+    };
+  }
+  const consulta = resultado.consulta;
+  if (
+    !consulta.vara &&
+    !consulta.local &&
+    !consulta.reclamante &&
+    !consulta.reclamado
+  ) {
+    return {
+      erro: "A consulta terminou sem vara nem partes para preencher.",
+      campos: null,
+    };
+  }
+  return {
+    erro: "",
+    campos: {
+      numero: pedido,
+      vara: consulta.vara,
+      local: consulta.local,
+      reclamante: consulta.reclamante,
+      reclamado: consulta.reclamado,
+    },
+  };
 }
 
 function atualizar() {

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { cumprir } from "@/app/(painel)/admin/prazos/actions";
-import { BuscarTribunal } from "@/components/buscar-tribunal";
 import { MarcarAdvogado } from "@/components/marcar-advogado";
 import { obterDb } from "@/db/client";
 import { audiencias, prazos, prazosUsuarios, usuarios } from "@/db/schema";
@@ -18,8 +17,6 @@ import {
   rotuloArea,
   statusDoPrazo,
 } from "@/lib/resumo";
-
-export const maxDuration = 120;
 
 const TOM = {
   vermelho: "bg-late text-late-ink",
@@ -142,7 +139,6 @@ async function Ficha({
           : ""}
         .
       </p>
-      {admin ? <BuscarTribunal numero={numero} /> : null}
       {itens.length === 200 ? (
         <p className="mt-2 text-muted">Mostrando os 200 primeiros prazos.</p>
       ) : null}

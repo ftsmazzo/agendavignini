@@ -7,6 +7,8 @@ import { audiencias, audienciasUsuarios } from "@/db/schema";
 import { paraCampoDataHora } from "@/lib/datas";
 import { listarPessoas } from "@/lib/pessoas";
 
+export const maxDuration = 120;
+
 export default function EditarAudiencia({
   params,
   searchParams,

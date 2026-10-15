@@ -6,7 +6,10 @@ export type VistaTribunal = {
   fonte: string;
   preco: string;
   partes: string[];
+  reclamante: string;
+  reclamado: string;
   vara: string;
+  local: string;
   classe: string;
   assunto: string;
   valor: string;
@@ -163,18 +166,22 @@ function vistaDe(
     ...linhas(ficha.audiencias, ["data", "audiencia", "tipo", "situacao"], 8),
     ...audienciasNosAndamentos,
   ].slice(0, 8);
+  const semTipo = (valor: string) => valor.replace(/^[^:]{0,40}:\s*/, "");
+  const reclamante = processo
+    ? texto(ficha.reqte) || texto(ficha.autor)
+    : nomes(ficha.polo_ativo).map(semTipo).filter(Boolean).join(", ");
+  const reclamado = processo
+    ? texto(ficha.reqdo)
+    : nomes(ficha.polo_passivo).map(semTipo).filter(Boolean).join(", ");
 
   return {
     fonte: destino.fonte,
     preco,
-    partes: processo
-      ? [texto(ficha.reqte), texto(ficha.reqdo), texto(ficha.autor)].filter(
-          Boolean,
-        )
-      : [...nomes(ficha.polo_ativo), ...nomes(ficha.polo_passivo)],
-    vara: [texto(ficha.vara), texto(ficha.foro), texto(ficha.orgao_julgador)]
-      .filter(Boolean)
-      .join(" · "),
+    partes: [reclamante, reclamado].filter(Boolean),
+    reclamante,
+    reclamado,
+    vara: texto(ficha.vara) || texto(ficha.orgao_julgador),
+    local: texto(ficha.foro),
     classe: texto(ficha.classe),
     assunto: assuntos,
     valor: texto(ficha.valor_acao) || texto(ficha.valor_causa),
@@ -264,7 +271,8 @@ export async function consultarTribunal(
     Array.isArray(json.data) ? json.data[0] : null,
   );
   if (
-    consulta.partes.length === 0 &&
+    !consulta.reclamante &&
+    !consulta.reclamado &&
     !consulta.vara &&
     consulta.audiencias.length === 0 &&
     consulta.andamentos.length === 0
@@ -288,5 +296,8 @@ function mensagemDoCodigo(codigo: number, json: Record<string, unknown>) {
     return "O tribunal não encontrou esse processo na consulta pública.";
   }
   const mensagem = texto(json.code_message, 180);
+  if (/n[aã]o mudar[aá] em breve/i.test(mensagem)) {
+    return "O tribunal recusou essa consulta. Escolha um processo da lista ou preencha os campos.";
+  }
   return mensagem || "A consulta não foi concluída.";
 }
