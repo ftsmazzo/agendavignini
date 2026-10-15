@@ -1,55 +1,66 @@
-import { and, asc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
+import { ProcessoPrazo } from "@/components/processo-prazo";
+import { hojeNoEscritorio } from "@/lib/contagens";
+import { dataBr } from "@/lib/datas";
 import {
-  cumprir,
-  desfazer,
-  excluirPrazo,
-} from "@/app/(painel)/admin/prazos/actions";
-import { BotaoExcluir } from "@/components/botao-excluir";
-import { classeCampo } from "@/components/campo";
-import { CorpoPrazo } from "@/components/corpo-prazo";
-import { obterDb } from "@/db/client";
-import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
-import { dataBr, dataIsoValida } from "@/lib/datas";
-import { faixaDaArea, rotuloArea, statusDoPrazo } from "@/lib/resumo";
+  abertosDoAdvogado,
+  leituraDaCarga,
+  painelAdvogados,
+  periodoDoMonitor,
+} from "@/lib/monitor";
+import { marcaDoPrazo, rotuloArea } from "@/lib/resumo";
 
-const AREAS = ["administrativo", "civil", "trabalhista"] as const;
+const TOM = {
+  vermelho: "bg-late text-late-ink",
+  amarelo: "bg-today-mark text-today-ink",
+  verde: "bg-done-mark text-done-ink",
+} as const;
 
-function consultaRelatorio(base: {
-  advogado: number;
+const LEITURA = {
+  Prioridade: "selo selo-atraso",
+  "Vence agora": "selo",
+  "Livre agora": "selo selo-ok",
+  "No prazo": "selo selo-neutro",
+} as const;
+
+function consulta(base: {
+  quando: "semana" | "mes" | "intervalo";
   inicio: string;
   fim: string;
-  area?: string;
-  situacao?: string;
-  data?: string;
+  pessoa?: number;
 }) {
   const params = new URLSearchParams();
-  params.set("advogado", String(base.advogado));
-  params.set("inicio", base.inicio);
-  params.set("fim", base.fim);
-  if (base.area) {
-    params.set("area", base.area);
+  if (base.quando === "intervalo") {
+    params.set("inicio", base.inicio);
+    params.set("fim", base.fim);
+  } else {
+    params.set("quando", base.quando);
   }
-  if (base.situacao) {
-    params.set("situacao", base.situacao);
-  }
-  if (base.data) {
-    params.set("data", base.data);
+  if (base.pessoa) {
+    params.set("pessoa", String(base.pessoa));
   }
   return `/admin/relatorios?${params}`;
+}
+
+function abertosDe(pessoa: {
+  atraso: number;
+  hoje: number;
+  perto: number;
+  frente: number;
+}) {
+  return pessoa.atraso + pessoa.hoje + pessoa.perto + pessoa.frente;
 }
 
 export default function Relatorios({
   searchParams,
 }: {
   searchParams: Promise<{
-    advogado?: string;
+    quando?: string;
     inicio?: string;
     fim?: string;
-    area?: string;
-    situacao?: string;
-    data?: string;
+    pessoa?: string;
   }>;
 }) {
   return (
@@ -63,420 +74,293 @@ async function Painel({
   searchParams,
 }: {
   searchParams: Promise<{
-    advogado?: string;
+    quando?: string;
     inicio?: string;
     fim?: string;
-    area?: string;
-    situacao?: string;
-    data?: string;
+    pessoa?: string;
   }>;
 }) {
-  const { advogado, inicio, fim, area, situacao, data } = await searchParams;
-  const db = obterDb();
-  const pessoas = await db
-    .select({
-      id: usuarios.id,
-      nome: usuarios.nome,
-      sobrenome: usuarios.sobrenome,
-    })
-    .from(usuarios)
-    .where(
-      and(
-        eq(usuarios.ativo, true),
-        or(
-          eq(usuarios.entraNoRelatorio, true),
-          sql`exists (select 1 from prazos_usuarios where usuario_id = ${usuarios.id})`,
-          sql`exists (select 1 from prazos where cumprido_por_id = ${usuarios.id})`,
-        ),
-      ),
-    )
-    .orderBy(asc(usuarios.nome), asc(usuarios.sobrenome));
-  const lista =
-    pessoas.length > 0
-      ? pessoas
-      : await db
-          .select({
-            id: usuarios.id,
-            nome: usuarios.nome,
-            sobrenome: usuarios.sobrenome,
-          })
-          .from(usuarios)
-          .where(eq(usuarios.ativo, true))
-          .orderBy(asc(usuarios.nome), asc(usuarios.sobrenome));
-
-  const id = Number(advogado);
-  const inicioOk = inicio && dataIsoValida(inicio) ? inicio : "";
-  const fimOk = fim && dataIsoValida(fim) ? fim : "";
-  const periodoValido =
-    Number.isInteger(id) &&
-    id > 0 &&
-    inicioOk !== "" &&
-    fimOk !== "" &&
-    inicioOk <= fimOk;
-  const escolhido = lista.find((pessoa) => pessoa.id === id);
-  const areaOk = AREAS.find((item) => item === area);
-  const situacaoOk =
-    situacao === "aberto" || situacao === "cumprido" ? situacao : undefined;
-  const diaOk =
-    data &&
-    dataIsoValida(data) &&
-    inicioOk &&
-    fimOk &&
-    data >= inicioOk &&
-    data <= fimOk
-      ? data
-      : "";
-  const doAdvogado = and(
-    gte(prazos.data, inicioOk),
-    lte(prazos.data, fimOk),
-    or(
-      eq(prazos.cumpridoPorId, id),
-      sql`exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id} and usuario_id = ${id})`,
-    ),
+  await connection();
+  const { quando, inicio, fim, pessoa } = await searchParams;
+  const hoje = hojeNoEscritorio();
+  const periodo = periodoDoMonitor(quando, inicio, fim, hoje);
+  const painel = await painelAdvogados(
+    hoje,
+    periodo.inicio,
+    periodo.fim,
+    periodo.quando,
   );
-  const pronto = Boolean(periodoValido && escolhido);
-  const filtros = [doAdvogado];
-  if (areaOk) {
-    filtros.push(eq(prazos.area, areaOk));
-  }
-  if (situacaoOk) {
-    filtros.push(eq(prazos.situacao, situacaoOk));
-  }
-  if (diaOk) {
-    filtros.push(eq(prazos.data, diaOk));
-  }
-  const itens = pronto
-    ? await db
-        .select({
-          id: prazos.id,
-          area: prazos.area,
-          data: prazos.data,
-          titulo: prazos.titulo,
-          observacao: prazos.observacao,
-          conteudo: prazos.conteudo,
-          situacao: prazos.situacao,
-          cumpridoNome: usuarios.nome,
-          cumpridoSobrenome: usuarios.sobrenome,
-          cumpridoEm: prazos.cumpridoEm,
-        })
-        .from(prazos)
-        .leftJoin(usuarios, eq(usuarios.id, prazos.cumpridoPorId))
-        .where(and(...filtros))
-        .orderBy(
-          asc(prazos.data),
-          sql`case ${prazos.area} when 'administrativo' then 1 when 'civil' then 2 else 3 end`,
-          asc(prazos.titulo),
-          asc(prazos.id),
-        )
-        .limit(300)
-    : [];
-  const grupos = pronto
-    ? await db
-        .select({
-          area: prazos.area,
-          situacao: prazos.situacao,
-          total: sql<number>`count(*)::int`,
-        })
-        .from(prazos)
-        .where(doAdvogado)
-        .groupBy(prazos.area, prazos.situacao)
-    : [];
-  const dias = pronto
-    ? await db
-        .select({
-          data: prazos.data,
-          total: sql<number>`count(*)::int`,
-        })
-        .from(prazos)
-        .where(doAdvogado)
-        .groupBy(prazos.data)
-        .orderBy(asc(prazos.data))
-    : [];
-  const ids = itens.map((item) => item.id);
-  const vinculos =
-    ids.length === 0
-      ? []
-      : await db
-          .select({
-            prazoId: prazosUsuarios.prazoId,
-            nome: usuarios.nome,
-            sobrenome: usuarios.sobrenome,
-          })
-          .from(prazosUsuarios)
-          .innerJoin(usuarios, eq(usuarios.id, prazosUsuarios.usuarioId))
-          .where(inArray(prazosUsuarios.prazoId, ids))
-          .orderBy(asc(usuarios.nome));
-  const advogados = new Map<number, string[]>();
-  for (const vinculo of vinculos) {
-    const lista = advogados.get(vinculo.prazoId) ?? [];
-    lista.push(`${vinculo.nome} ${vinculo.sobrenome}`.trim());
-    advogados.set(vinculo.prazoId, lista);
-  }
-  const porArea = { administrativo: 0, civil: 0, trabalhista: 0 };
-  let cumpridos = 0;
-  let abertos = 0;
-  let total = 0;
-  for (const grupo of grupos) {
-    porArea[grupo.area] += grupo.total;
-    total += grupo.total;
-    if (grupo.situacao === "cumprido") {
-      cumpridos += grupo.total;
-    } else {
-      abertos += grupo.total;
-    }
-  }
-  const recorte = { advogado: id, inicio: inicioOk, fim: fimOk };
-  const filtrosVisiveis = [
+  const pessoaId = Number(pessoa);
+  const escolhido = painel.pessoas.find((item) => item.id === pessoaId);
+  const fila = escolhido ? await abertosDoAdvogado(escolhido.id) : null;
+  const maior = Math.max(1, ...painel.pessoas.map(abertosDe));
+  const cartoes = [
     {
-      rotulo: `Mostrar todos (${total})`,
-      href: consultaRelatorio(recorte),
-      ativo: !areaOk && !situacaoOk && !diaOk,
-    },
-    ...AREAS.map((item) => ({
-      rotulo: `${rotuloArea(item)} (${porArea[item]})`,
-      href: consultaRelatorio({ ...recorte, area: item }),
-      ativo: areaOk === item && !situacaoOk && !diaOk,
-    })),
-    {
-      rotulo: `Cumprido (${cumpridos})`,
-      href: consultaRelatorio({ ...recorte, situacao: "cumprido" }),
-      ativo: situacaoOk === "cumprido" && !areaOk && !diaOk,
+      rotulo: "Em atraso",
+      valor: painel.atraso,
+      detalhe: "em aberto e a data já passou",
+      tom: "text-late",
+      href: "/prazos/atraso",
     },
     {
-      rotulo: `Não cumprido (${abertos})`,
-      href: consultaRelatorio({ ...recorte, situacao: "aberto" }),
-      ativo: situacaoOk === "aberto" && !areaOk && !diaOk,
+      rotulo: "Vence hoje",
+      valor: painel.venceHoje,
+      detalhe: "ainda em aberto",
+      tom: "text-ink",
+      href: "/prazos?quando=hoje",
+    },
+    {
+      rotulo: "Sem dono em atraso",
+      valor: painel.semDonoAtraso,
+      detalhe: "vencido e sem advogado",
+      tom: "text-late",
+      href: "/prazos/atraso",
+    },
+    {
+      rotulo: "Sem dono à frente",
+      valor: painel.semDonoFrente,
+      detalhe: "de hoje em diante, para distribuir",
+      tom: "text-ink",
+      href: "/admin/prazos/sem-advogado",
+    },
+    {
+      rotulo: "Cumpridos no período",
+      valor: painel.cumpridos,
+      detalhe: `${dataBr(painel.inicio)} a ${dataBr(painel.fim)}`,
+      tom: "text-ink",
+      href: "",
     },
   ];
-  const voltar = consultaRelatorio({
-    ...recorte,
-    area: areaOk,
-    situacao: situacaoOk,
-    data: diaOk || undefined,
-  });
 
   return (
-    <section className="mx-auto w-full max-w-5xl">
+    <section className="entrada mx-auto w-full max-w-6xl">
       <h1 className="titulo-pagina">Relatórios</h1>
       <p className="subtitulo-pagina">
-        Prazos do advogado no período, pelos que ele cumpriu ou pelos que estão
-        no nome dele.
+        Quem está com prazo vencido, quem vence agora e quem cumpriu no período.
+        A carga é de hoje. Os cumpridos seguem o período escolhido.
       </p>
-      <form method="get" className="cartao mt-6 grid gap-5 p-5 md:grid-cols-3">
+      <nav
+        aria-label="Período dos cumpridos"
+        className="mt-6 flex flex-wrap gap-2"
+      >
+        <Link
+          href={consulta({ ...periodo, quando: "semana" })}
+          aria-current={painel.quando === "semana" ? "page" : undefined}
+          className="chip"
+        >
+          Esta semana
+        </Link>
+        <Link
+          href={consulta({ ...periodo, quando: "mes" })}
+          aria-current={painel.quando === "mes" ? "page" : undefined}
+          className="chip"
+        >
+          Este mês
+        </Link>
+      </nav>
+      <form method="get" className="mt-4 flex flex-wrap items-end gap-3">
+        {escolhido ? (
+          <input type="hidden" name="pessoa" value={escolhido.id} />
+        ) : null}
         <div>
-          <label htmlFor="advogado" className="rotulo-campo">
-            Advogado
-          </label>
-          <select
-            id="advogado"
-            name="advogado"
-            defaultValue={escolhido ? String(escolhido.id) : ""}
-            className={classeCampo}
-          >
-            {lista.map((pessoa) => (
-              <option key={pessoa.id} value={pessoa.id}>
-                {`${pessoa.nome} ${pessoa.sobrenome}`.trim()}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="inicio" className="rotulo-campo">
-            Data inicial
+          <label htmlFor="inicio" className="mb-2 block text-lg text-ink">
+            Cumpridos de
           </label>
           <input
             id="inicio"
             name="inicio"
             type="date"
-            required
-            defaultValue={inicioOk}
-            className={classeCampo}
+            defaultValue={painel.inicio}
+            className="campo"
           />
         </div>
         <div>
-          <label htmlFor="fim" className="rotulo-campo">
-            Data final
+          <label htmlFor="fim" className="mb-2 block text-lg text-ink">
+            até
           </label>
           <input
             id="fim"
             name="fim"
             type="date"
-            required
-            defaultValue={fimOk}
-            className={classeCampo}
+            defaultValue={painel.fim}
+            className="campo"
           />
         </div>
-        <button type="submit" className="btn btn-primario md:col-span-3">
-          Exibir relatório
+        <button type="submit" className="btn btn-primario">
+          Ver período
         </button>
+        <Link
+          href={`/admin/relatorios/impressao?inicio=${painel.inicio}&fim=${painel.fim}${escolhido ? `&pessoa=${escolhido.id}` : ""}`}
+          className="btn btn-pequeno"
+        >
+          Imprimir
+        </Link>
       </form>
-      {pronto && escolhido ? (
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        {cartoes.map((cartao) => {
+          const corpo = (
+            <>
+              <p className="text-[0.9688rem] font-medium text-muted">
+                {cartao.rotulo}
+              </p>
+              <p
+                className={`mt-2 text-4xl leading-none font-bold tracking-tight ${cartao.tom}`}
+              >
+                {cartao.valor}
+              </p>
+              <p className="mt-3 text-sm text-muted">{cartao.detalhe}</p>
+            </>
+          );
+          if (!cartao.href) {
+            return (
+              <article key={cartao.rotulo} className="cartao p-5">
+                {corpo}
+              </article>
+            );
+          }
+          return (
+            <Link
+              key={cartao.rotulo}
+              href={cartao.href}
+              className="cartao-link p-5"
+            >
+              {corpo}
+            </Link>
+          );
+        })}
+      </div>
+
+      <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[0.9375rem] text-muted">
+        <li className="inline-flex items-center gap-2">
+          <span className="inline-block h-4 w-4 rounded-full bg-late" />
+          Em atraso
+        </li>
+        <li className="inline-flex items-center gap-2">
+          <span className="inline-block h-4 w-4 rounded-full bg-today-mark" />
+          Hoje ou nos dois dias seguintes
+        </li>
+        <li className="inline-flex items-center gap-2">
+          <span className="inline-block h-4 w-4 rounded-full bg-pen" />
+          Mais à frente
+        </li>
+      </ul>
+
+      <h2 className="titulo-secao mt-8">Advogados</h2>
+      <p className="mt-2 text-base text-muted">
+        Quem aparece primeiro tem mais prazo vencido. Livre agora pode receber
+        os prazos sem dono.
+      </p>
+      {painel.pessoas.length === 0 ? (
+        <p className="vazio mt-6">Nenhum advogado ativo neste relatório.</p>
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {painel.pessoas.map((item) => {
+            const abertos = abertosDe(item);
+            const leitura = leituraDaCarga(item);
+            const ativo = escolhido?.id === item.id;
+            return (
+              <li key={item.id}>
+                <Link
+                  href={consulta({ ...periodo, pessoa: item.id })}
+                  aria-current={ativo ? "page" : undefined}
+                  className={`cartao-link block p-4 ${ativo ? "ring-2 ring-pen" : ""}`}
+                >
+                  <span className="flex flex-wrap items-baseline justify-between gap-3">
+                    <span className="text-xl font-semibold text-ink">
+                      {item.nome}
+                    </span>
+                    <span className={LEITURA[leitura]}>{leitura}</span>
+                  </span>
+                  {abertos > 0 ? (
+                    <span
+                      className="mt-3 block h-3 overflow-hidden rounded-full bg-paper"
+                      style={{
+                        width: `${Math.max(8, Math.round((abertos / maior) * 100))}%`,
+                      }}
+                    >
+                      <span className="flex h-3">
+                        <span
+                          className="h-3 bg-late"
+                          style={{ flex: item.atraso }}
+                        />
+                        <span
+                          className="h-3 bg-today-mark"
+                          style={{ flex: item.hoje + item.perto }}
+                        />
+                        <span
+                          className="h-3 bg-pen"
+                          style={{ flex: item.frente }}
+                        />
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="mt-3 block text-base text-muted">
+                      Sem carga agora
+                    </span>
+                  )}
+                  <span className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-base text-ink">
+                    <span>{item.atraso} em atraso</span>
+                    <span>{item.hoje} hoje</span>
+                    <span>{item.perto} perto</span>
+                    <span>{item.frente} à frente</span>
+                    <span>{item.cumpridos} cumpridos no período</span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {escolhido && fila ? (
         <div className="mt-10">
           <h2 className="titulo-secao">
-            {`${escolhido.nome} ${escolhido.sobrenome}`.trim()} entre{" "}
-            {dataBr(inicioOk)} e {dataBr(fimOk)}
+            {escolhido.nome}
+            {fila.total === 1 ? " · 1 em aberto" : ` · ${fila.total} em aberto`}
           </h2>
-          {dias.length > 0 ? (
-            <nav
-              aria-label="Dias do período"
-              className="mt-6 flex flex-wrap gap-2"
-            >
-              {dias.map((dia) => (
-                <Link
-                  key={dia.data}
-                  href={consultaRelatorio({ ...recorte, data: dia.data })}
-                  aria-current={
-                    dia.data === diaOk && !areaOk && !situacaoOk
-                      ? "page"
-                      : undefined
-                  }
-                  className="chip"
-                >
-                  {dataBr(dia.data)} · {dia.total}
-                </Link>
-              ))}
-            </nav>
-          ) : null}
-          <nav
-            aria-label="Filtrar a lista"
-            className="mt-6 flex flex-wrap gap-2"
-          >
-            {filtrosVisiveis.map((filtro) => (
-              <Link
-                key={filtro.rotulo}
-                href={filtro.href}
-                aria-current={filtro.ativo ? "page" : undefined}
-                className="chip"
-              >
-                {filtro.rotulo}
-              </Link>
-            ))}
-          </nav>
-          <p className="mt-4">
-            <Link
-              href={`/admin/relatorios/impressao?advogado=${id}&inicio=${inicioOk}&fim=${fimOk}`}
-              className="btn-texto"
-            >
-              Imprimir o período
-            </Link>
+          <p className="mt-2 text-base text-muted">
+            Os mais antigos aparecem primeiro.
+            {escolhido.cumpridos === 1
+              ? " Cumpriu 1 prazo neste período."
+              : ` Cumpriu ${escolhido.cumpridos} prazos neste período.`}
           </p>
-          <p className="mt-3 text-muted">
-            {itens.length === 300
-              ? "Mostrando os 300 primeiros."
-              : `${itens.length} nesta lista.`}
-          </p>
-          {itens.length === 0 ? (
-            <p className="vazio mt-4">Nenhum prazo neste recorte.</p>
+          {fila.itens.length === 0 ? (
+            <p className="vazio mt-4">Nada em aberto no nome deste advogado.</p>
           ) : (
             <ul className="lista-cartoes mt-4">
-              {itens.map((item) => (
-                <li
-                  key={item.id}
-                  className={`px-5 py-4 ${faixaDaArea(item.area)}`}
-                >
-                  <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
-                    <span className="selo">{rotuloArea(item.area)}</span>
-                    <span>{dataBr(item.data)}</span>
-                    <span
-                      className={
-                        item.situacao === "cumprido"
-                          ? "selo selo-ok"
-                          : "selo selo-neutro"
-                      }
-                    >
-                      {statusDoPrazo({
-                        situacao: item.situacao,
-                        cumpridoPor: item.cumpridoNome
-                          ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-                          : null,
-                        cumpridoEm: item.cumpridoEm,
-                      })}
-                    </span>
-                  </p>
-                  <h3 className="mt-1 text-lg font-semibold text-ink">
-                    {item.titulo}
-                  </h3>
-                  <CorpoPrazo
-                    temCorpo={
-                      (advogados.get(item.id) ?? []).length > 0 ||
-                      Boolean(item.observacao) ||
-                      Boolean(item.conteudo)
-                    }
-                    corpo={
-                      <>
-                        {(advogados.get(item.id) ?? []).length > 0 ? (
-                          <p className="mt-2 text-sm text-muted">
-                            {(advogados.get(item.id) ?? []).join(", ")}
-                          </p>
-                        ) : null}
-                        {item.observacao ? (
-                          <p className="mt-2 whitespace-pre-wrap text-ink">
-                            {item.observacao}
-                          </p>
-                        ) : null}
-                        {item.conteudo ? (
-                          <details className="mt-3">
-                            <summary className="cursor-pointer font-semibold text-pen">
-                              Ver publicação
-                            </summary>
-                            <p className="mt-2 whitespace-pre-wrap text-muted">
-                              {item.conteudo}
-                            </p>
-                          </details>
-                        ) : null}
-                      </>
-                    }
-                    acoes={
-                      <>
-                        <Link
-                          href={`/prazos/impressao?id=${item.id}`}
-                          className="btn btn-pequeno"
-                        >
-                          Imprimir
-                        </Link>
-                        {item.situacao === "aberto" ? (
-                          <form action={cumprir}>
-                            <input type="hidden" name="id" value={item.id} />
-                            <input type="hidden" name="voltar" value={voltar} />
-                            <button
-                              type="submit"
-                              className="btn btn-pequeno btn-primario"
-                            >
-                              Cumprir
-                            </button>
-                          </form>
-                        ) : (
-                          <form action={desfazer}>
-                            <input type="hidden" name="id" value={item.id} />
-                            <input type="hidden" name="voltar" value={voltar} />
-                            <button type="submit" className="btn btn-pequeno">
-                              Desfazer
-                            </button>
-                          </form>
-                        )}
-                        <Link
-                          href={`/admin/prazos/${item.id}`}
-                          className="btn btn-pequeno"
-                        >
-                          Editar
-                        </Link>
-                        {item.situacao === "aberto" ? (
-                          <BotaoExcluir
-                            action={excluirPrazo}
-                            pergunta="Excluir este prazo?"
-                            rotulo="Excluir"
-                          >
-                            <input type="hidden" name="id" value={item.id} />
-                            <input type="hidden" name="voltar" value={voltar} />
-                          </BotaoExcluir>
-                        ) : null}
-                      </>
-                    }
-                  />
-                </li>
-              ))}
+              {fila.itens.map((item) => {
+                const marca = marcaDoPrazo("aberto", item.data, hoje);
+                return (
+                  <li key={item.id} className="px-5 py-4">
+                    <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] text-muted">
+                      <span className="selo">{rotuloArea(item.area)}</span>
+                      <Link
+                        href={`/prazos?data=${item.data}`}
+                        className="btn-texto"
+                      >
+                        {dataBr(item.data)}
+                      </Link>
+                      <span
+                        className={`inline-flex rounded-full px-3 py-0.5 text-[0.8125rem] font-semibold ${TOM[marca.tom]}`}
+                      >
+                        {marca.texto}
+                      </span>
+                    </p>
+                    <h3 className="mt-2 text-xl font-semibold text-ink">
+                      {item.titulo}
+                    </h3>
+                    <ProcessoPrazo numero={item.processo} />
+                  </li>
+                );
+              })}
             </ul>
           )}
+          {fila.total > fila.itens.length ? (
+            <p className="mt-3 text-base text-muted">
+              E mais {fila.total - fila.itens.length} em aberto.
+            </p>
+          ) : null}
         </div>
       ) : null}
     </section>
