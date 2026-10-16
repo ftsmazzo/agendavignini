@@ -145,16 +145,36 @@ export function FormularioPrazo({
             className={classeCampo}
           />
         </Campo>
-        <label className="flex items-center gap-3 text-lg text-ink">
-          <input
-            type="checkbox"
-            name="defesa"
-            value="1"
-            defaultChecked={prazo?.defesa ?? false}
-            className="h-5 w-5"
-          />
-          Este prazo é uma defesa
-        </label>
+        <fieldset className="rounded-xl border border-line p-4">
+          <legend className="px-2 text-lg font-semibold text-ink">
+            Classificação
+          </legend>
+          <div className="mt-2 flex flex-wrap gap-3">
+            <label className="flex items-center gap-2 text-lg text-ink">
+              <input
+                type="radio"
+                name="defesa"
+                value=""
+                defaultChecked={!prazo?.defesa}
+                className="h-5 w-5"
+              />
+              Prazo comum
+            </label>
+            <label className="flex items-center gap-2 rounded-xl bg-[#f3e9fb] px-3 py-2 text-lg text-ink">
+              <input
+                type="radio"
+                name="defesa"
+                value="1"
+                defaultChecked={Boolean(prazo?.defesa)}
+                className="h-5 w-5"
+              />
+              Defesa
+            </label>
+          </div>
+          <p className="mt-3 text-base text-muted">
+            Defesa entra na aba Defesas do dia e fica em lilás.
+          </p>
+        </fieldset>
         <Campo id="observacao" rotulo="Observação">
           <textarea
             id="observacao"

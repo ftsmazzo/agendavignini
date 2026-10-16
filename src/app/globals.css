@@ -225,10 +225,6 @@ p {
   .prazo-civil {
     background: #e7e9ee;
   }
-  .prazo-trab,
-  .prazo-cumprido {
-    color: #f7f9ff;
-  }
   .prazo-trab {
     background: #0c2f5b;
   }
@@ -237,14 +233,6 @@ p {
   }
   .prazo-defesa {
     background: #f3e9fb;
-  }
-  .prazo-trab .text-ink,
-  .prazo-trab .text-muted,
-  .prazo-trab .btn-texto,
-  .prazo-cumprido .text-ink,
-  .prazo-cumprido .text-muted,
-  .prazo-cumprido .btn-texto {
-    color: inherit;
   }
   .lista-cartoes > li.prazo-admin:hover {
     background: #e5f6ec;
@@ -527,6 +515,23 @@ p {
   .faixa-trab {
     border-left: 4px solid var(--area-trab);
   }
+}
+
+.prazo-trab,
+.prazo-cumprido {
+  color: #f7f9ff;
+}
+.prazo-trab p,
+.prazo-trab h3,
+.prazo-trab a,
+.prazo-cumprido p,
+.prazo-cumprido h3,
+.prazo-cumprido a {
+  color: #f7f9ff;
+}
+.prazo-trab .btn,
+.prazo-cumprido .btn {
+  color: var(--ink);
 }
 
 @keyframes aparecer {

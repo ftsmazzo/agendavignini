@@ -293,11 +293,6 @@ async function Lista({
       ativo: areaOk === item && !situacaoOk && !soMeus && !soDefesas,
     })),
     {
-      rotulo: `Defesas (${defesasTotal})`,
-      href: consultaDaLista({ ...recorte, defesa: true }),
-      ativo: soDefesas,
-    },
-    {
       rotulo: `Cumprido (${cumpridos})`,
       href: consultaDaLista({ ...recorte, situacao: "cumprido" }),
       ativo: situacaoOk === "cumprido" && !areaOk && !soMeus,
@@ -325,6 +320,25 @@ async function Lista({
           ? "Mostrando os 300 primeiros."
           : `${itens.length} nesta lista.`}
       </p>
+      {quando !== "semana" ? (
+        <nav aria-label="Aba do dia" className="mt-6 flex flex-wrap gap-2">
+          <Link
+            href={consultaDaLista(recorte)}
+            aria-current={soDefesas ? undefined : "page"}
+            className="chip"
+          >
+            Prazos do dia
+          </Link>
+          <Link
+            href={consultaDaLista({ ...recorte, defesa: true })}
+            aria-current={soDefesas ? "page" : undefined}
+            className="chip"
+          >
+            Defesas
+            <span className="selo">{defesasTotal}</span>
+          </Link>
+        </nav>
+      ) : null}
       {semana ? (
         <nav
           aria-label="Outras semanas"
@@ -492,7 +506,11 @@ async function Lista({
         <output className="aviso aviso-ok mt-4 block">Prazo excluído.</output>
       ) : null}
       {itens.length === 0 ? (
-        <p className="vazio mt-8">Nenhum prazo neste recorte.</p>
+        <p className="vazio mt-8">
+          {soDefesas
+            ? "Nenhuma defesa marcada neste dia. No cadastro do prazo, escolha Classificação: Defesa."
+            : "Nenhum prazo neste recorte."}
+        </p>
       ) : quando === "semana" ? (
         <div className="mt-8 space-y-8">
           {[...new Set(itens.map((item) => item.data))].map((dataDia) => (
