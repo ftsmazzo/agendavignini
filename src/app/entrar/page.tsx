@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { entrar } from "@/app/entrar/actions";
@@ -20,14 +21,16 @@ export default function Entrar({
       >
         <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-pen/30 blur-3xl" />
         <div className="absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-gold/20 blur-3xl" />
-        <div className="relative flex items-center gap-3">
-          <span className="grid h-12 w-12 place-items-center rounded-xl bg-gold text-xl font-bold text-[#1d1604]">
-            CV
-          </span>
-          <p className="text-xl font-bold tracking-tight">Coelho Vignini</p>
-        </div>
+        <Image
+          src="/marca-coelho-vignini.png"
+          alt="Coelho Vignini Advogados Associados"
+          width={1024}
+          height={576}
+          priority
+          className="relative h-auto w-full max-w-lg"
+        />
         <div className="relative max-w-md">
-          <h2 className="text-4xl leading-tight font-bold tracking-tight">
+          <h2 className="text-3xl leading-tight font-bold tracking-tight">
             Cada prazo no seu tempo. Cada audiência no seu lugar.
           </h2>
           <p className="mt-4 text-lg text-rail-muted">
@@ -59,13 +62,15 @@ async function Formulario({
 
   return (
     <div className="entrada cartao w-full max-w-md p-8 shadow-media md:p-10">
-      <div className="flex items-center gap-3 lg:hidden">
-        <span className="grid h-11 w-11 place-items-center rounded-xl bg-gold text-lg font-bold text-[#1d1604]">
-          CV
-        </span>
-        <p className="text-lg font-bold tracking-tight">Coelho Vignini</p>
-      </div>
-      <h1 className="mt-6 text-3xl font-bold tracking-tight text-ink lg:mt-0">
+      <Image
+        src="/marca-coelho-vignini.png"
+        alt="Coelho Vignini Advogados Associados"
+        width={1024}
+        height={576}
+        priority
+        className="mb-6 h-auto w-full rounded-xl lg:hidden"
+      />
+      <h1 className="text-3xl font-bold tracking-tight text-ink">
         Bem-vindo de volta
       </h1>
       <p className="mt-2 text-muted">

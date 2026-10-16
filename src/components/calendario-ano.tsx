@@ -63,7 +63,7 @@ export function CalendarioAno({
           >
             <h2 className="flex items-center justify-between gap-2 text-lg font-bold capitalize">
               <Link
-                href={`/?mes=${chaveMes(grade.ano, grade.mes)}`}
+                href={`/?vista=mes&mes=${chaveMes(grade.ano, grade.mes)}`}
                 className="text-pen hover:underline"
               >
                 {grade.nome}

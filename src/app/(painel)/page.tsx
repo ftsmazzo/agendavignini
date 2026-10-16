@@ -30,7 +30,7 @@ async function PainelDoDia({
 }) {
   await connection();
   const { mes, vista } = await searchParams;
-  const anual = vista === "ano";
+  const anual = vista !== "mes";
   const sessao = await lerSessao();
   const agora = new Date();
   const hoje = hojeNoEscritorio(agora);
@@ -50,10 +50,8 @@ async function PainelDoDia({
       };
   const resumos = anual ? {} : await resumosDoMes(recorte.ano, recorte.mes);
   const marcas = anual ? await marcasDoAno(recorte.ano, hoje) : {};
-  const hrefMes = mesAtual
-    ? "/"
-    : `/?mes=${chaveMes(recorte.ano, recorte.mes)}`;
-  const hrefAno = `/?vista=ano&mes=${chaveMes(recorte.ano, 1)}`;
+  const hrefMes = `/?vista=mes&mes=${chaveMes(recorte.ano, recorte.mes)}`;
+  const hrefAno = `/?mes=${chaveMes(recorte.ano, 1)}`;
   const dataLonga = new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",
     weekday: "long",
@@ -149,10 +147,10 @@ async function PainelDoDia({
         </a>
         {anual ? (
           <>
-            <a href={`/?vista=ano&mes=${recorte.ano - 1}-01`} className="btn">
+            <a href={`/?mes=${recorte.ano - 1}-01`} className="btn">
               ← {recorte.ano - 1}
             </a>
-            <a href={`/?vista=ano&mes=${recorte.ano + 1}-01`} className="btn">
+            <a href={`/?mes=${recorte.ano + 1}-01`} className="btn">
               {recorte.ano + 1} →
             </a>
           </>

@@ -223,7 +223,7 @@ p {
     background: #e5f6ec;
   }
   .prazo-civil {
-    background: #e7e9ee;
+    background: #1c1f24;
   }
   .prazo-trab {
     background: #0c2f5b;
@@ -238,7 +238,7 @@ p {
     background: #e5f6ec;
   }
   .lista-cartoes > li.prazo-civil:hover {
-    background: #e7e9ee;
+    background: #1c1f24;
   }
   .lista-cartoes > li.prazo-trab:hover {
     background: #0c2f5b;
@@ -518,18 +518,23 @@ p {
 }
 
 .prazo-trab,
+.prazo-civil,
 .prazo-cumprido {
   color: #f7f9ff;
 }
 .prazo-trab p,
 .prazo-trab h3,
 .prazo-trab a,
+.prazo-civil p,
+.prazo-civil h3,
+.prazo-civil a,
 .prazo-cumprido p,
 .prazo-cumprido h3,
 .prazo-cumprido a {
   color: #f7f9ff;
 }
 .prazo-trab .btn,
+.prazo-civil .btn,
 .prazo-cumprido .btn {
   color: var(--ink);
 }

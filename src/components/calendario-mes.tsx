@@ -132,7 +132,7 @@ export function CalendarioMes({
         </div>
         <div className="flex items-center gap-2">
           <Link
-            href={`/?mes=${chaveMes(anterior.ano, anterior.mes)}`}
+            href={`/?vista=mes&mes=${chaveMes(anterior.ano, anterior.mes)}`}
             className={SETA}
             aria-label={`Mês anterior: ${nomeAnterior}`}
             title={nomeAnterior}
@@ -151,7 +151,7 @@ export function CalendarioMes({
             </svg>
           </Link>
           <Link
-            href={`/?mes=${chaveMes(proximo.ano, proximo.mes)}`}
+            href={`/?vista=mes&mes=${chaveMes(proximo.ano, proximo.mes)}`}
             className={SETA}
             aria-label={`Próximo mês: ${nomeProximo}`}
             title={nomeProximo}

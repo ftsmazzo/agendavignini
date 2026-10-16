@@ -14,6 +14,7 @@ const temaInicial = `(function(){try{var t=localStorage.getItem("tema");var escu
 export const metadata: Metadata = {
   title: "Agenda Coelho Vignini",
   description: "Prazos, audiências e contatos do escritório.",
+  icons: { icon: "/marca-coelho-vignini.png" },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

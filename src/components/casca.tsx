@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -48,7 +49,7 @@ function Icone({ chave }: { chave: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="h-5 w-5 shrink-0"
+      className="h-4 w-4 shrink-0"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
@@ -73,7 +74,7 @@ function Ligacao({
     <Link
       href={href}
       aria-current={ativo ? "page" : undefined}
-      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.9688rem] transition-colors ${
+      className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm transition-colors ${
         ativo
           ? "bg-rail-active font-semibold text-rail-ink shadow-[inset_3px_0_0_var(--gold)]"
           : "text-rail-muted hover:bg-rail-active/60 hover:text-rail-ink"
@@ -104,7 +105,7 @@ function Grupo({ grupo }: { grupo: GrupoMenu }) {
       }}
       className="group"
     >
-      <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-[0.9688rem] font-semibold text-rail-ink marker:content-none hover:bg-rail-active/60">
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-rail-ink marker:content-none hover:bg-rail-active/60">
         <Icone chave={grupo.rotulo} />
         <span className="flex-1">{grupo.rotulo}</span>
         <svg
@@ -161,21 +162,17 @@ export function Casca({
     <div className="min-h-full bg-paper text-ink">
       <div className="flex min-h-full">
         <aside
-          className={`${menuAberto ? "flex" : "hidden"} fixed inset-y-0 left-0 z-30 w-72 flex-col bg-rail text-rail-ink shadow-alta md:sticky md:top-0 md:flex md:h-screen md:shadow-none`}
+          className={`${menuAberto ? "flex" : "hidden"} fixed inset-y-0 left-0 z-30 w-60 flex-col bg-rail text-rail-ink shadow-alta md:sticky md:top-0 md:flex md:h-screen md:shadow-none`}
         >
-          <div className="flex items-center gap-3 px-5 py-6">
-            <span
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gold text-lg font-bold text-[#1d1604]"
-              aria-hidden="true"
-            >
-              CV
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-lg leading-tight font-bold tracking-tight">
-                Coelho Vignini
-              </p>
-              <p className="text-sm text-rail-muted">Agenda do escritório</p>
-            </div>
+          <div className="px-3 pt-4 pb-3">
+            <Image
+              src="/marca-coelho-vignini.png"
+              alt="Coelho Vignini Advogados Associados"
+              width={1024}
+              height={576}
+              priority
+              className="h-16 w-full object-contain object-left"
+            />
           </div>
           <form action="/busca" className="px-4 pb-4">
             <label htmlFor="busca" className="sr-only">
@@ -184,7 +181,7 @@ export function Casca({
             <div className="relative">
               <svg
                 viewBox="0 0 24 24"
-                className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-rail-muted"
+                className="pointer-events-none absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-rail-muted"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.8"
@@ -199,7 +196,7 @@ export function Casca({
                 name="q"
                 type="search"
                 placeholder="Buscar prazo ou audiência"
-                className="w-full rounded-xl border border-rail-line bg-rail-active/50 py-2.5 pr-3 pl-10 text-[0.9688rem] text-rail-ink placeholder:text-rail-muted focus:border-gold focus:outline-none"
+                className="w-full rounded-lg border border-rail-line bg-rail-active/50 py-2 pr-3 pl-9 text-sm text-rail-ink placeholder:text-rail-muted focus:border-gold focus:outline-none"
               />
             </div>
           </form>
@@ -230,7 +227,7 @@ export function Casca({
               </>
             ) : null}
           </nav>
-          <div className="border-t border-rail-line px-5 py-4 text-sm text-rail-muted">
+          <div className="border-t border-rail-line px-4 py-3 text-xs text-rail-muted">
             Sistema interno · Coelho Vignini
           </div>
         </aside>
@@ -245,7 +242,7 @@ export function Casca({
         ) : null}
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-line bg-sheet/85 px-5 py-3 backdrop-blur md:px-10">
+          <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-sheet/85 px-4 py-2 backdrop-blur md:px-8">
             <button
               type="button"
               className="btn btn-pequeno md:hidden"
@@ -254,7 +251,7 @@ export function Casca({
             >
               ☰ Menu
             </button>
-            <p className="hidden text-[0.9688rem] text-muted md:block">
+            <p className="hidden text-sm text-muted md:block">
               Prazos, audiências e contatos
             </p>
             <div className="ml-auto flex items-center gap-3">
@@ -266,7 +263,7 @@ export function Casca({
                 >
                   {iniciais(usuario.nome)}
                 </span>
-                <p className="text-[0.9688rem] leading-tight font-semibold text-ink">
+                <p className="text-sm leading-tight font-semibold text-ink">
                   {usuario.nome}
                   <span className="block text-xs font-medium text-muted">
                     {usuario.admin ? "Administrador" : "Advogado"}
