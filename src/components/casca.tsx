@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { sair } from "@/app/sair/actions";
 import { AlternarTema } from "@/components/alternar-tema";
+import { Marca } from "@/components/marca";
 import {
   type GrupoMenu,
   type ItemMenu,
@@ -76,7 +76,7 @@ function Ligacao({
       aria-current={ativo ? "page" : undefined}
       className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm transition-colors ${
         ativo
-          ? "bg-rail-active font-semibold text-rail-ink shadow-[inset_3px_0_0_var(--gold)]"
+          ? "bg-rail-active font-semibold text-rail-ink shadow-[inset_3px_0_0_var(--sage)]"
           : "text-rail-muted hover:bg-rail-active/60 hover:text-rail-ink"
       }`}
     >
@@ -164,16 +164,13 @@ export function Casca({
         <aside
           className={`${menuAberto ? "flex" : "hidden"} fixed inset-y-0 left-0 z-30 w-60 flex-col bg-rail text-rail-ink shadow-alta md:sticky md:top-0 md:flex md:h-screen md:shadow-none`}
         >
-          <div className="px-3 pt-4 pb-3">
-            <Image
-              src="/marca-coelho-vignini.png"
-              alt="Coelho Vignini Advogados Associados"
-              width={1024}
-              height={576}
-              priority
-              className="h-16 w-full object-contain object-left"
-            />
-          </div>
+          <Link
+            href="/"
+            aria-label="Coelho Vignini Advogados Associados, tela inicial"
+            className="block border-b border-rail-line px-4 py-5"
+          >
+            <Marca />
+          </Link>
           <form action="/busca" className="px-4 pb-4">
             <label htmlFor="busca" className="sr-only">
               Pesquisar prazo ou audiência
@@ -196,7 +193,7 @@ export function Casca({
                 name="q"
                 type="search"
                 placeholder="Buscar prazo ou audiência"
-                className="w-full rounded-lg border border-rail-line bg-rail-active/50 py-2 pr-3 pl-9 text-sm text-rail-ink placeholder:text-rail-muted focus:border-gold focus:outline-none"
+                className="w-full rounded-lg border border-rail-line bg-rail-active/50 py-2 pr-3 pl-9 text-sm text-rail-ink placeholder:text-rail-muted focus:border-sage focus:outline-none"
               />
             </div>
           </form>
@@ -217,7 +214,7 @@ export function Casca({
             )}
             {usuario.admin ? (
               <>
-                <p className="mt-6 mb-1 px-3 text-xs font-bold tracking-[0.12em] text-gold uppercase">
+                <p className="mt-6 mb-1 px-3 text-xs font-bold tracking-[0.12em] text-sage uppercase">
                   Painel do administrador
                 </p>
                 {menuAdmin.map((grupo) => (

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { entrar } from "@/app/entrar/actions";
+import { Marca, Simbolo } from "@/components/marca";
 
 export const metadata: Metadata = {
   title: "Entrar · Agenda Coelho Vignini",
@@ -15,32 +15,24 @@ export default function Entrar({
 }) {
   return (
     <main className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
-      <section
-        aria-hidden
-        className="relative hidden overflow-hidden bg-rail p-12 text-rail-ink lg:flex lg:flex-col lg:justify-between"
-      >
-        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-pen/30 blur-3xl" />
-        <div className="absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-gold/20 blur-3xl" />
-        <Image
-          src="/marca-coelho-vignini.png"
-          alt="Coelho Vignini Advogados Associados"
-          width={1024}
-          height={576}
-          priority
-          className="relative h-auto w-full max-w-lg"
+      <section className="relative hidden overflow-hidden bg-rail p-14 text-rail-ink lg:flex lg:flex-col lg:justify-between">
+        <div className="absolute -top-40 -right-40 h-[28rem] w-[28rem] rounded-full bg-sage/10 blur-3xl" />
+        <Simbolo
+          className="pointer-events-none absolute -right-28 -bottom-24 h-[36rem] w-auto opacity-[0.05]"
+          cor="branco"
         />
-        <div className="relative max-w-md">
-          <h2 className="text-3xl leading-tight font-bold tracking-tight">
-            Cada prazo no seu tempo. Cada audiência no seu lugar.
-          </h2>
-          <p className="mt-4 text-lg text-rail-muted">
+        <div className="relative flex flex-1 flex-col justify-center">
+          <Marca variante="login" />
+        </div>
+        <div className="relative max-w-md border-t border-rail-line pt-6">
+          <p className="text-lg text-rail-muted">
             A agenda do escritório reúne prazos, audiências e contatos em um só
             lugar, simples de consultar todos os dias.
           </p>
+          <p className="mt-6 text-sm text-rail-muted">
+            Sistema interno · acesso restrito à equipe
+          </p>
         </div>
-        <p className="relative text-sm text-rail-muted">
-          Sistema interno · acesso restrito à equipe
-        </p>
       </section>
       <div className="flex items-center justify-center bg-paper px-5 py-12">
         <Suspense
@@ -62,14 +54,9 @@ async function Formulario({
 
   return (
     <div className="entrada cartao w-full max-w-md p-8 shadow-media md:p-10">
-      <Image
-        src="/marca-coelho-vignini.png"
-        alt="Coelho Vignini Advogados Associados"
-        width={1024}
-        height={576}
-        priority
-        className="mb-6 h-auto w-full rounded-xl lg:hidden"
-      />
+      <div className="-mx-2 -mt-2 mb-7 rounded-xl bg-rail p-5 text-rail-ink lg:hidden">
+        <Marca />
+      </div>
       <h1 className="text-3xl font-bold tracking-tight text-ink">
         Bem-vindo de volta
       </h1>

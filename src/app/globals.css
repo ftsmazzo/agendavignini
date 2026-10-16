@@ -12,7 +12,7 @@
   --pen-strong: #1b378a;
   --pen-soft: #e9efff;
   --pen-ink: #ffffff;
-  --gold: #c8962e;
+  --sage: #d6e2d0;
   --done: #167a4a;
   --done-soft: #e3f5ec;
   --hearing: #a8442f;
@@ -30,11 +30,11 @@
   --area-admin: #167a4a;
   --area-civil: #2447b3;
   --area-trab: #0e7490;
-  --rail: #0f1b33;
-  --rail-ink: #f5f7fc;
-  --rail-muted: #aab6cf;
-  --rail-line: #24345a;
-  --rail-active: #1f3163;
+  --rail: #323931;
+  --rail-ink: #f4f7f3;
+  --rail-muted: #b9c4b6;
+  --rail-line: #474f45;
+  --rail-active: #434c41;
   --sombra-1: 0 1px 2px rgb(15 27 51 / 0.06), 0 1px 3px rgb(15 27 51 / 0.05);
   --sombra-2: 0 4px 12px rgb(15 27 51 / 0.08), 0 2px 4px rgb(15 27 51 / 0.05);
   --sombra-3: 0 16px 40px rgb(15 27 51 / 0.14);
@@ -50,7 +50,7 @@
   --pen-strong: #b5ccff;
   --pen-soft: #1c2a4d;
   --pen-ink: #0b1120;
-  --gold: #e0b255;
+  --sage: #d6e2d0;
   --done: #7fdcaa;
   --done-soft: #12301f;
   --hearing: #f2b7a8;
@@ -68,11 +68,11 @@
   --area-admin: #7fdcaa;
   --area-civil: #8fb0ff;
   --area-trab: #7fd6e8;
-  --rail: #080d1a;
-  --rail-ink: #f5f7fc;
-  --rail-muted: #aab6cf;
-  --rail-line: #1b2640;
-  --rail-active: #1a2748;
+  --rail: #1f251e;
+  --rail-ink: #f4f7f3;
+  --rail-muted: #b9c4b6;
+  --rail-line: #323a30;
+  --rail-active: #2c352a;
   --sombra-1: 0 1px 2px rgb(0 0 0 / 0.4);
   --sombra-2: 0 4px 12px rgb(0 0 0 / 0.4);
   --sombra-3: 0 16px 40px rgb(0 0 0 / 0.55);
@@ -88,7 +88,7 @@
   --color-pen-strong: var(--pen-strong);
   --color-pen-soft: var(--pen-soft);
   --color-pen-ink: var(--pen-ink);
-  --color-gold: var(--gold);
+  --color-sage: var(--sage);
   --color-done: var(--done);
   --color-done-soft: var(--done-soft);
   --color-hearing: var(--hearing);
@@ -157,6 +157,16 @@ p {
 
 /* ---------- Componentes reutilizáveis ---------- */
 @layer components {
+  /* Nome do escritório: serifa itálica em caixa-alta, como na logomarca */
+  .marca-nome {
+    font-family: "Times New Roman", Times, "Liberation Serif", serif;
+    font-style: italic;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    line-height: 1.05;
+  }
+
   /* Títulos de página */
   .titulo-pagina {
     font-size: 1.875rem;
