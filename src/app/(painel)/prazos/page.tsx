@@ -527,7 +527,7 @@ async function Lista({
                   .map((item) => (
                     <li
                       key={item.id}
-                      className={`px-5 py-5 ${faixaDaArea(item.area, item.situacao, item.defesa)}`}
+                      className={`px-4 py-3 ${faixaDaArea(item.area, item.situacao, item.defesa)}`}
                     >
                       <CartaoPrazo
                         item={item}
@@ -549,7 +549,7 @@ async function Lista({
           {itens.map((item) => (
             <li
               key={item.id}
-              className={`px-5 py-5 ${faixaDaArea(item.area, item.situacao, item.defesa)}`}
+              className={`px-4 py-3 ${faixaDaArea(item.area, item.situacao, item.defesa)}`}
             >
               <CartaoPrazo
                 item={item}
@@ -566,6 +566,13 @@ async function Lista({
       )}
     </section>
   );
+}
+
+function textoEncaixado(texto: string) {
+  return texto
+    .replace(/[^\S\n]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function CartaoPrazo({
@@ -599,7 +606,7 @@ function CartaoPrazo({
 }) {
   return (
     <>
-      <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] text-muted">
+      <p className="flex flex-wrap items-center gap-1.5 text-sm text-muted">
         <span className="selo">{rotuloArea(item.area)}</span>
         <span>{dataBr(item.data)}</span>
         <span
@@ -616,7 +623,9 @@ function CartaoPrazo({
         {seu ? <span className="selo selo-audiencia">Seu prazo</span> : null}
         {item.defesa ? <span className="selo">Defesa</span> : null}
       </p>
-      <h3 className="mt-2 text-xl font-semibold text-ink">{item.titulo}</h3>
+      <h3 className="mt-1 text-base leading-tight font-semibold text-ink">
+        {item.titulo}
+      </h3>
       <ProcessoPrazo
         numero={numeroDoProcesso(item.titulo, item.observacao, item.conteudo)}
       />
@@ -629,26 +638,26 @@ function CartaoPrazo({
         corpo={
           <>
             {advogados.length > 0 ? (
-              <p className="mt-2 text-base text-muted">
+              <p className="mt-1 text-sm leading-snug text-muted">
                 {advogados.join(", ")}
               </p>
             ) : null}
             {item.observacao ? (
-              <p className="mt-3 text-lg whitespace-pre-wrap text-ink">
-                {item.observacao}
+              <p className="mt-1.5 text-sm leading-snug whitespace-pre-line text-ink">
+                {textoEncaixado(item.observacao)}
               </p>
             ) : null}
             {item.conteudo && inteiro ? (
-              <p className="mt-3 text-base whitespace-pre-wrap text-ink">
-                {item.conteudo}
+              <p className="mt-1.5 text-sm leading-snug whitespace-pre-line text-ink">
+                {textoEncaixado(item.conteudo)}
               </p>
             ) : item.conteudo ? (
-              <details className="mt-3">
+              <details className="mt-1.5">
                 <summary className="btn-texto cursor-pointer">
                   Ver publicação
                 </summary>
-                <p className="mt-3 rounded-xl bg-paper p-4 text-base whitespace-pre-wrap text-ink">
-                  {item.conteudo}
+                <p className="mt-1.5 rounded-lg bg-paper p-3 text-sm leading-snug whitespace-pre-line text-ink">
+                  {textoEncaixado(item.conteudo)}
                 </p>
               </details>
             ) : null}

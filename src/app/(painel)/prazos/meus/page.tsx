@@ -118,7 +118,7 @@ async function Lista() {
                           {marca.texto}
                         </span>
                       </div>
-                      <h3 className="mt-2 text-xl font-semibold text-ink">
+                      <h3 className="mt-1 text-base leading-tight font-semibold text-ink">
                         <Link
                           href={`/prazos?data=${item.data}`}
                           className="text-ink hover:text-pen"

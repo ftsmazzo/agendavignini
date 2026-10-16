@@ -549,6 +549,69 @@ p {
   color: var(--ink);
 }
 
+.prazo-admin,
+.prazo-civil,
+.prazo-trab,
+.prazo-cumprido,
+.prazo-defesa {
+  padding: 0.7rem 0.9rem;
+  font-size: 0.875rem;
+  line-height: 1.38;
+}
+.prazo-admin > :first-child,
+.prazo-civil > :first-child,
+.prazo-trab > :first-child,
+.prazo-cumprido > :first-child,
+.prazo-defesa > :first-child {
+  margin-top: 0;
+}
+.prazo-admin h3,
+.prazo-civil h3,
+.prazo-trab h3,
+.prazo-cumprido h3,
+.prazo-defesa h3 {
+  margin-top: 0.2rem;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+.prazo-admin p,
+.prazo-civil p,
+.prazo-trab p,
+.prazo-cumprido p,
+.prazo-defesa p,
+.prazo-admin a,
+.prazo-civil a,
+.prazo-trab a,
+.prazo-cumprido a,
+.prazo-defesa a {
+  font-size: 0.875rem;
+  line-height: 1.38;
+}
+.prazo-admin p,
+.prazo-civil p,
+.prazo-trab p,
+.prazo-cumprido p,
+.prazo-defesa p {
+  margin-top: 0.28rem;
+}
+.prazo-admin > div,
+.prazo-civil > div,
+.prazo-trab > div,
+.prazo-cumprido > div,
+.prazo-defesa > div {
+  margin-top: 0.45rem;
+}
+.prazo-admin .btn,
+.prazo-civil .btn,
+.prazo-trab .btn,
+.prazo-cumprido .btn,
+.prazo-defesa .btn {
+  min-height: 1.85rem;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.8125rem;
+  border-radius: 0.5rem;
+}
+
 @keyframes aparecer {
   from {
     opacity: 0;

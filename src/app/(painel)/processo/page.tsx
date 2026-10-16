@@ -256,7 +256,7 @@ function Grupo({
                   {marca.texto}
                 </span>
               </div>
-              <h3 className="mt-2 text-xl font-semibold text-ink">
+              <h3 className="mt-1 text-base leading-tight font-semibold text-ink">
                 {item.titulo}
               </h3>
               {nomes.length > 0 ? (

@@ -16,7 +16,7 @@ export function CorpoPrazo({
   return (
     <>
       {aberto ? corpo : null}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {temCorpo ? (
           <button
             type="button"

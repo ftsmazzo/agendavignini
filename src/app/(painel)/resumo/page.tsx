@@ -589,7 +589,7 @@ async function Corpo({
                         {marca.texto}
                       </span>
                     </div>
-                    <h3 className="mt-2 text-xl font-semibold text-ink">
+                    <h3 className="mt-1 text-base leading-tight font-semibold text-ink">
                       <Link
                         href={`/prazos?data=${item.data}`}
                         className="text-ink hover:text-pen"
@@ -615,7 +615,7 @@ async function Corpo({
                       </p>
                     ) : null}
                     {item.conteudo ? (
-                      <p className="mt-3 text-base whitespace-pre-wrap text-ink">
+                      <p className="mt-1.5 text-sm leading-snug whitespace-pre-line text-ink">
                         {item.conteudo}
                       </p>
                     ) : null}
