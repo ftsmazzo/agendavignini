@@ -529,24 +529,78 @@ p {
 
 .prazo-trab,
 .prazo-civil,
-.prazo-cumprido {
+.prazo-cumprido,
+.prazo-trab :where(p, h1, h2, h3, h4, a, span, li, summary, label, strong, em, div),
+.prazo-civil :where(p, h1, h2, h3, h4, a, span, li, summary, label, strong, em, div),
+.prazo-cumprido :where(p, h1, h2, h3, h4, a, span, li, summary, label, strong, em, div) {
   color: #f7f9ff;
 }
-.prazo-trab p,
-.prazo-trab h3,
-.prazo-trab a,
-.prazo-civil p,
-.prazo-civil h3,
-.prazo-civil a,
-.prazo-cumprido p,
-.prazo-cumprido h3,
-.prazo-cumprido a {
-  color: #f7f9ff;
+.prazo-trab .selo,
+.prazo-civil .selo,
+.prazo-cumprido .selo {
+  background: #e9efff;
+  color: #2447b3;
 }
-.prazo-trab .btn,
-.prazo-civil .btn,
-.prazo-cumprido .btn {
-  color: var(--ink);
+.prazo-trab .selo-neutro,
+.prazo-civil .selo-neutro,
+.prazo-cumprido .selo-neutro {
+  background: #eef1f6;
+  color: #1c2433;
+}
+.prazo-trab .selo-ok,
+.prazo-civil .selo-ok,
+.prazo-cumprido .selo-ok {
+  background: #e3f5ec;
+  color: #0f3d28;
+}
+.prazo-trab .selo-atraso,
+.prazo-civil .selo-atraso,
+.prazo-cumprido .selo-atraso {
+  background: #fdeae8;
+  color: #7f1d1d;
+}
+.prazo-trab .selo-audiencia,
+.prazo-civil .selo-audiencia,
+.prazo-cumprido .selo-audiencia {
+  background: #fbece8;
+  color: #7c2d12;
+}
+.prazo-trab .btn:not(.btn-primario):not(.btn-sucesso),
+.prazo-civil .btn:not(.btn-primario):not(.btn-sucesso),
+.prazo-cumprido .btn:not(.btn-primario):not(.btn-sucesso),
+.prazo-trab .campo,
+.prazo-civil .campo,
+.prazo-cumprido .campo,
+.prazo-trab select,
+.prazo-civil select,
+.prazo-cumprido select,
+.prazo-trab option,
+.prazo-civil option,
+.prazo-cumprido option {
+  background: #fff;
+  color: #0f1b33;
+}
+.prazo-trab .btn-primario,
+.prazo-civil .btn-primario,
+.prazo-cumprido .btn-primario {
+  background: #2447b3;
+  border-color: #2447b3;
+  color: #fff;
+}
+.prazo-trab .btn-sucesso,
+.prazo-civil .btn-sucesso,
+.prazo-cumprido .btn-sucesso {
+  background: #167a4a;
+  border-color: #167a4a;
+  color: #fff;
+}
+.prazo-trab .bg-paper,
+.prazo-trab .bg-paper :where(p, a, span),
+.prazo-civil .bg-paper,
+.prazo-civil .bg-paper :where(p, a, span),
+.prazo-cumprido .bg-paper,
+.prazo-cumprido .bg-paper :where(p, a, span) {
+  color: #0f1b33;
 }
 
 .prazo-admin,
