@@ -1,7 +1,8 @@
-import { and, asc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import Link from "next/link";
 import { Suspense } from "react";
 import { BotaoImprimir } from "@/components/botao-imprimir";
+import { FolhaPrazos, type LinhaFolha } from "@/components/folha-prazos";
 import { obterDb } from "@/db/client";
 import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
@@ -85,12 +86,7 @@ async function Folha({
         .from(prazos)
         .leftJoin(usuarios, eq(usuarios.id, prazos.cumpridoPorId))
         .where(filtro)
-        .orderBy(
-          asc(prazos.data),
-          sql`case ${prazos.area} when 'administrativo' then 1 when 'civil' then 2 else 3 end`,
-          asc(prazos.titulo),
-          asc(prazos.id),
-        )
+        .orderBy(asc(prazos.data), desc(prazos.id))
         .limit(400)
     : [];
 
@@ -126,12 +122,28 @@ async function Folha({
       : dia
         ? `Prazos de ${dataBr(dia)}`
         : "Informe o dia";
-  const diasDaFolha = recorte
-    ? [...new Set(linhas.map((item) => item.data))]
-    : [];
+  const folhas: LinhaFolha[] = linhas.map((item) => ({
+    id: item.id,
+    area: item.area,
+    data: item.data,
+    titulo: item.titulo,
+    processo: item.processo ?? "",
+    status: statusDoPrazo({
+      situacao: item.situacao,
+      cumpridoPor: item.cumpridoNome
+        ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
+        : null,
+      cumpridoEm: item.cumpridoEm,
+    }),
+    advogados: (advogados.get(item.id) ?? []).join(", "),
+    observacao: item.observacao,
+    conteudo: item.conteudo,
+    situacao: item.situacao,
+    compacta: Boolean(recorte),
+  }));
 
   return (
-    <section className="mx-auto w-full max-w-4xl">
+    <section className="folha-prazo mx-auto w-full max-w-4xl">
       <div className="nao-imprimir flex flex-wrap items-center gap-3">
         <BotaoImprimir />
         <Link
@@ -171,80 +183,8 @@ async function Folha({
       ) : null}
       {linhas.length === 0 ? (
         <p className="mt-8 text-xl text-ink">Nenhum prazo nesta folha.</p>
-      ) : recorte ? (
-        diasDaFolha.map((dataDia) => (
-          <section key={dataDia} className="mt-8">
-            <h2 className="text-2xl font-bold text-ink">
-              {dataBr(dataDia)} ·{" "}
-              {linhas.filter((item) => item.data === dataDia).length}
-            </h2>
-            <ul>
-              {linhas
-                .filter((item) => item.data === dataDia)
-                .map((item) => (
-                  <li key={item.id} className="mt-3 border-b border-line pb-3">
-                    <p className="text-xl font-semibold text-ink">
-                      {item.titulo}
-                    </p>
-                    <p className="mt-1 text-lg text-ink">
-                      {rotuloArea(item.area)}
-                      {item.processo ? ` · ${item.processo}` : ""}
-                      {" · "}
-                      {(advogados.get(item.id) ?? []).join(", ") ||
-                        "Sem advogado marcado"}
-                      {" · "}
-                      {statusDoPrazo({
-                        situacao: item.situacao,
-                        cumpridoPor: item.cumpridoNome
-                          ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-                          : null,
-                        cumpridoEm: item.cumpridoEm,
-                      })}
-                    </p>
-                  </li>
-                ))}
-            </ul>
-          </section>
-        ))
       ) : (
-        linhas.map((item) => (
-          <article key={item.id} className="mt-8 border-b border-line pb-6">
-            <h2 className="text-2xl font-bold text-ink">{item.titulo}</h2>
-            <p className="mt-2 text-lg text-ink">
-              {rotuloArea(item.area)} · {dataBr(item.data)} ·{" "}
-              {statusDoPrazo({
-                situacao: item.situacao,
-                cumpridoPor: item.cumpridoNome
-                  ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-                  : null,
-                cumpridoEm: item.cumpridoEm,
-              })}
-            </p>
-            {item.processo ? (
-              <p className="mt-2 text-lg text-ink">{item.processo}</p>
-            ) : null}
-            {(advogados.get(item.id) ?? []).length > 0 ? (
-              <p className="mt-4 text-xl text-ink">
-                <strong>Advogados:</strong>{" "}
-                {(advogados.get(item.id) ?? []).join(", ")}
-              </p>
-            ) : null}
-            {item.observacao ? (
-              <p className="mt-4 text-xl whitespace-pre-wrap text-ink">
-                <strong>Observação:</strong>
-                {"\n"}
-                {item.observacao}
-              </p>
-            ) : null}
-            {item.conteudo ? (
-              <p className="mt-4 text-xl whitespace-pre-wrap text-ink">
-                <strong>Descrição:</strong>
-                {"\n"}
-                {item.conteudo}
-              </p>
-            ) : null}
-          </article>
-        ))
+        <FolhaPrazos itens={folhas} agrupado={Boolean(recorte)} />
       )}
     </section>
   );

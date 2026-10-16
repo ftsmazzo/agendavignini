@@ -25,11 +25,64 @@ const DIAS = [
 const SETA =
   "inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-sheet text-ink shadow-suave transition-colors hover:border-pen hover:bg-pen-soft";
 
-function comSuas(href: string, suas: boolean) {
-  if (!suas) {
-    return href;
+const MODOS = ["presencial", "telepresencial", "hibrida"] as const;
+
+function rotuloModo(valor: string | null) {
+  if (valor === "presencial") return "Presencial";
+  if (valor === "telepresencial") return "Telepresencial";
+  if (valor === "hibrida") return "Híbrida";
+  return "";
+}
+
+function rotuloAto(valor: string | null) {
+  if (valor === "inicial") return "Inicial";
+  if (valor === "una") return "Una";
+  if (valor === "instrucao") return "Instrução";
+  if (valor === "conciliacao") return "Conciliação";
+  return "";
+}
+
+function comSuas(href: string, suas: boolean, modo = "") {
+  let destino = href;
+  if (suas) {
+    destino = href.includes("?") ? `${href}&minhas=1` : `${href}?minhas=1`;
   }
-  return href.includes("?") ? `${href}&minhas=1` : `${href}?minhas=1`;
+  if (!modo) {
+    return destino;
+  }
+  return destino.includes("?")
+    ? `${destino}&modo=${modo}`
+    : `${destino}?modo=${modo}`;
+}
+
+function AbasModo({ atual, base }: { atual: string; base: string }) {
+  const abas = [
+    { id: "", rotulo: "Todas as formas" },
+    { id: "presencial", rotulo: "Presenciais" },
+    { id: "telepresencial", rotulo: "Telepresenciais" },
+    { id: "hibrida", rotulo: "Híbridas" },
+  ];
+  return (
+    <nav aria-label="Forma da audiência" className="mt-4 flex flex-wrap gap-2">
+      {abas.map((aba) => {
+        const href = aba.id
+          ? base.includes("?")
+            ? `${base}&modo=${aba.id}`
+            : `${base}?modo=${aba.id}`
+          : base;
+        return (
+          <Link
+            key={aba.rotulo}
+            href={href}
+            aria-current={atual === aba.id ? "page" : undefined}
+            className="chip"
+          >
+            {aba.rotulo}
+          </Link>
+        );
+      })}
+    </nav>
+  );
 }
 
 function Vistas({
@@ -37,27 +90,29 @@ function Vistas({
   mes,
   ativo,
   suas,
+  modo = "",
 }: {
   semana: string;
   mes: string;
   ativo: "semana" | "mes" | "lista" | "dia";
   suas: boolean;
+  modo?: string;
 }) {
   const itens = [
     {
       id: "semana" as const,
       rotulo: "Semana",
-      href: comSuas(`/audiencias?semana=${semana}`, suas),
+      href: comSuas(`/audiencias?semana=${semana}`, suas, modo),
     },
     {
       id: "mes" as const,
       rotulo: "Mês",
-      href: comSuas(`/audiencias?mes=${mes}`, suas),
+      href: comSuas(`/audiencias?mes=${mes}`, suas, modo),
     },
     {
       id: "lista" as const,
       rotulo: "Próximas",
-      href: comSuas("/audiencias?lista=1", suas),
+      href: comSuas("/audiencias?lista=1", suas, modo),
     },
   ];
   return (
@@ -148,6 +203,7 @@ export default function Audiencias({
     lista?: string;
     mes?: string;
     minhas?: string;
+    modo?: string;
   }>;
 }) {
   return (
@@ -166,9 +222,18 @@ async function Lista({
     lista?: string;
     mes?: string;
     minhas?: string;
+    modo?: string;
   }>;
 }) {
-  const { data, semana, lista, mes, minhas } = await searchParams;
+  const {
+    data,
+    semana,
+    lista,
+    mes,
+    minhas,
+    modo: modoPedido,
+  } = await searchParams;
+  const modo = MODOS.find((item) => item === modoPedido) ?? "";
   const suas = minhas === "1";
   await connection();
   const usuario = await exigirUsuario();
@@ -182,7 +247,9 @@ async function Lista({
       const anterior = deslocarMes(ano, numero, -1);
       const proximo = deslocarMes(ano, numero, 1);
       const carregadas = await listarAudienciasDoMes(ano, numero, usuario.id);
-      const itens = suas ? carregadas.filter((item) => item.minha) : carregadas;
+      const itens = carregadas.filter(
+        (item) => (!suas || item.minha) && (!modo || item.modalidade === modo),
+      );
       const porDia = new Map<string, typeof itens>();
       for (const item of itens) {
         const listaDia = porDia.get(item.dia) ?? [];
@@ -228,12 +295,17 @@ async function Lista({
               </Link>
             </div>
           </div>
+          <AbasModo
+            atual={modo}
+            base={comSuas(`/audiencias?mes=${chaveMes(ano, numero)}`, suas)}
+          />
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Vistas
               ativo="mes"
               mes={chaveMes(ano, numero)}
               semana={`${chaveMes(ano, numero)}-01`}
               suas={suas}
+              modo={modo}
             />
             <Recorte
               base={`/audiencias?mes=${chaveMes(ano, numero)}`}
@@ -346,6 +418,15 @@ async function Lista({
                     <p className="mt-1 text-muted">
                       {[item.vara, item.local].filter(Boolean).join(" · ")}
                     </p>
+                    {rotuloModo(item.modalidade) || rotuloAto(item.ato) ? (
+                      <p className="mt-2">
+                        <span className="selo selo-audiencia">
+                          {[rotuloModo(item.modalidade), rotuloAto(item.ato)]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </p>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -358,12 +439,12 @@ async function Lista({
   if (!dia && lista !== "1") {
     const ancora = semana && dataIsoValida(semana) ? semana : hoje;
     const quadroCheio = await listarAudienciasDaSemana(ancora, usuario.id);
-    const quadro = suas
-      ? {
-          ...quadroCheio,
-          itens: quadroCheio.itens.filter((item) => item.minha),
-        }
-      : quadroCheio;
+    const quadro = {
+      ...quadroCheio,
+      itens: quadroCheio.itens.filter(
+        (item) => (!suas || item.minha) && (!modo || item.modalidade === modo),
+      ),
+    };
     const estaSemana = semanaDe(hoje).inicio === quadro.inicio;
     return (
       <section className="entrada mx-auto w-full max-w-7xl">
@@ -388,12 +469,17 @@ async function Lista({
             </Link>
           </div>
         </div>
+        <AbasModo
+          atual={modo}
+          base={comSuas(`/audiencias?semana=${quadro.inicio}`, suas)}
+        />
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <Vistas
             ativo="semana"
             semana={quadro.inicio}
             mes={quadro.inicio.slice(0, 7)}
             suas={suas}
+            modo={modo}
           />
           <Recorte
             base={
@@ -502,7 +588,9 @@ async function Lista({
     );
   }
   const carregadas = await listarAudiencias(dia, usuario.id);
-  const itens = suas ? carregadas.filter((item) => item.minha) : carregadas;
+  const itens = carregadas.filter(
+    (item) => (!suas || item.minha) && (!modo || item.modalidade === modo),
+  );
 
   return (
     <section className="entrada mx-auto w-full max-w-5xl">
@@ -514,12 +602,20 @@ async function Lista({
           </Link>
         ) : null}
       </div>
+      <AbasModo
+        atual={modo}
+        base={comSuas(
+          dia ? `/audiencias?data=${dia}` : "/audiencias?lista=1",
+          suas,
+        )}
+      />
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <Vistas
           ativo={dia ? "dia" : "lista"}
           semana={dia ?? hoje}
           mes={(dia ?? hoje).slice(0, 7)}
           suas={suas}
+          modo={modo}
         />
         <Recorte
           base={dia ? `/audiencias?data=${dia}` : "/audiencias?lista=1"}

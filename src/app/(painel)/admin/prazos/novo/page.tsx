@@ -70,6 +70,7 @@ async function Conteudo({
                 titulo: origem.titulo,
                 observacao: origem.observacao,
                 conteudo: origem.conteudo,
+                defesa: origem.defesa,
                 cumpridoPorId: null,
                 cumpridoEm: "",
               }

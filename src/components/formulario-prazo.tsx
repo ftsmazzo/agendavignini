@@ -29,6 +29,7 @@ export function FormularioPrazo({
     titulo: string;
     observacao: string;
     conteudo: string;
+    defesa?: boolean;
     cumpridoPorId: number | null;
     cumpridoEm: string;
   };
@@ -144,6 +145,16 @@ export function FormularioPrazo({
             className={classeCampo}
           />
         </Campo>
+        <label className="flex items-center gap-3 text-lg text-ink">
+          <input
+            type="checkbox"
+            name="defesa"
+            value="1"
+            defaultChecked={prazo?.defesa ?? false}
+            className="h-5 w-5"
+          />
+          Este prazo é uma defesa
+        </label>
         <Campo id="observacao" rotulo="Observação">
           <textarea
             id="observacao"

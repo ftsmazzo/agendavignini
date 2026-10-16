@@ -1,14 +1,20 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { CalendarioAno } from "@/components/calendario-ano";
 import { CalendarioMes } from "@/components/calendario-mes";
-import { lerMes } from "@/lib/calendario";
-import { contarPainel, hojeNoEscritorio, resumosDoMes } from "@/lib/contagens";
+import { chaveMes, lerMes } from "@/lib/calendario";
+import {
+  contarPainel,
+  hojeNoEscritorio,
+  marcasDoAno,
+  resumosDoMes,
+} from "@/lib/contagens";
 import { lerSessao } from "@/lib/sessao";
 
 export default function TelaInicial({
   searchParams,
 }: {
-  searchParams: Promise<{ mes?: string }>;
+  searchParams: Promise<{ mes?: string; vista?: string }>;
 }) {
   return (
     <Suspense fallback={<p className="text-xl text-muted">Abrindo o dia.</p>}>
@@ -20,10 +26,11 @@ export default function TelaInicial({
 async function PainelDoDia({
   searchParams,
 }: {
-  searchParams: Promise<{ mes?: string }>;
+  searchParams: Promise<{ mes?: string; vista?: string }>;
 }) {
   await connection();
-  const { mes } = await searchParams;
+  const { mes, vista } = await searchParams;
+  const anual = vista === "ano";
   const sessao = await lerSessao();
   const agora = new Date();
   const hoje = hojeNoEscritorio(agora);
@@ -41,7 +48,12 @@ async function PainelDoDia({
         atraso: 0,
         meusAbertos: 0,
       };
-  const resumos = await resumosDoMes(recorte.ano, recorte.mes);
+  const resumos = anual ? {} : await resumosDoMes(recorte.ano, recorte.mes);
+  const marcas = anual ? await marcasDoAno(recorte.ano, hoje) : {};
+  const hrefMes = mesAtual
+    ? "/"
+    : `/?mes=${chaveMes(recorte.ano, recorte.mes)}`;
+  const hrefAno = `/?vista=ano&mes=${chaveMes(recorte.ano, 1)}`;
   const dataLonga = new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",
     weekday: "long",
@@ -79,7 +91,7 @@ async function PainelDoDia({
   ];
 
   return (
-    <div className="mx-auto w-full max-w-6xl">
+    <div className={`mx-auto w-full ${anual ? "max-w-7xl" : "max-w-6xl"}`}>
       <p className="text-sm font-semibold tracking-[0.08em] text-muted uppercase">
         {dataExibida}
       </p>
@@ -120,13 +132,43 @@ async function PainelDoDia({
           </a>
         ))}
       </div>
-      <CalendarioMes
-        ano={recorte.ano}
-        mes={recorte.mes}
-        hoje={hoje}
-        resumos={resumos}
-        atual={mesAtual}
-      />
+      <nav aria-label="Vista da agenda" className="mt-8 flex flex-wrap gap-2">
+        <a
+          href={hrefMes}
+          aria-current={anual ? undefined : "page"}
+          className="chip"
+        >
+          Mensal
+        </a>
+        <a
+          href={hrefAno}
+          aria-current={anual ? "page" : undefined}
+          className="chip"
+        >
+          Anual
+        </a>
+        {anual ? (
+          <>
+            <a href={`/?vista=ano&mes=${recorte.ano - 1}-01`} className="btn">
+              ← {recorte.ano - 1}
+            </a>
+            <a href={`/?vista=ano&mes=${recorte.ano + 1}-01`} className="btn">
+              {recorte.ano + 1} →
+            </a>
+          </>
+        ) : null}
+      </nav>
+      {anual ? (
+        <CalendarioAno ano={recorte.ano} hoje={hoje} marcas={marcas} />
+      ) : (
+        <CalendarioMes
+          ano={recorte.ano}
+          mes={recorte.mes}
+          hoje={hoje}
+          resumos={resumos}
+          atual={mesAtual}
+        />
+      )}
     </div>
   );
 }

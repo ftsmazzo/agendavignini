@@ -80,6 +80,7 @@ async function Editor({
           titulo: prazo.titulo,
           observacao: prazo.observacao,
           conteudo: prazo.conteudo,
+          defesa: prazo.defesa,
           cumpridoPorId: prazo.cumpridoPorId,
           cumpridoEm: prazo.cumpridoEm
             ? paraCampoDataHora(prazo.cumpridoEm)

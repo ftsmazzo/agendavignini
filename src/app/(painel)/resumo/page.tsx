@@ -576,7 +576,7 @@ async function Corpo({
                 return (
                   <li
                     key={item.id}
-                    className={`px-5 py-4 ${faixaDaArea(item.area)}`}
+                    className={`px-5 py-4 ${faixaDaArea(item.area, item.situacao, item.defesa)}`}
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] text-muted">
@@ -609,15 +609,15 @@ async function Corpo({
                         {item.advogados.join(", ")}
                       </p>
                     ) : null}
+                    {item.defesa ? (
+                      <p className="mt-2">
+                        <span className="selo">Defesa</span>
+                      </p>
+                    ) : null}
                     {item.conteudo ? (
-                      <details className="mt-2">
-                        <summary className="btn-texto cursor-pointer">
-                          Ver publicação
-                        </summary>
-                        <p className="mt-2 rounded-xl bg-paper p-4 text-base whitespace-pre-wrap text-ink">
-                          {item.conteudo}
-                        </p>
-                      </details>
+                      <p className="mt-3 text-base whitespace-pre-wrap text-ink">
+                        {item.conteudo}
+                      </p>
                     ) : null}
                     {item.situacao === "aberto" ? (
                       <form action={cumprir} className="mt-3">

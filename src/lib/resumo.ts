@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { obterDb } from "@/db/client";
 import {
   audiencias,
@@ -65,9 +65,9 @@ export function statusDoPrazo(item: {
 }
 
 const FAIXA = {
-  administrativo: "border-l-4 border-area-admin",
-  civil: "border-l-4 border-area-civil",
-  trabalhista: "border-l-4 border-area-trab",
+  administrativo: "prazo-admin",
+  civil: "prazo-civil",
+  trabalhista: "prazo-trab",
 } as const;
 
 export function marcaDoPrazo(
@@ -94,7 +94,17 @@ export function rotuloArea(area: keyof typeof areas) {
   return areas[area];
 }
 
-export function faixaDaArea(area: keyof typeof areas) {
+export function faixaDaArea(
+  area: keyof typeof areas,
+  situacao?: "aberto" | "cumprido",
+  defesa?: boolean,
+) {
+  if (situacao === "cumprido") {
+    return "prazo-cumprido";
+  }
+  if (defesa) {
+    return "prazo-defesa";
+  }
   return FAIXA[area];
 }
 
@@ -458,6 +468,7 @@ export async function itensDoDia(dia: string, advogadoId: number | null) {
         titulo: prazos.titulo,
         observacao: prazos.observacao,
         conteudo: prazos.conteudo,
+        defesa: prazos.defesa,
         situacao: prazos.situacao,
         cumpridoNome: usuarios.nome,
         cumpridoSobrenome: usuarios.sobrenome,
@@ -466,7 +477,7 @@ export async function itensDoDia(dia: string, advogadoId: number | null) {
       .from(prazos)
       .leftJoin(usuarios, eq(usuarios.id, prazos.cumpridoPorId))
       .where(and(eq(prazos.data, dia), filtro))
-      .orderBy(asc(prazos.titulo), asc(prazos.id)),
+      .orderBy(desc(prazos.id)),
     db
       .select({
         id: audiencias.id,
@@ -485,7 +496,6 @@ export async function itensDoDia(dia: string, advogadoId: number | null) {
       .orderBy(asc(audiencias.dataHora), asc(audiencias.id)),
   ]);
 
-  const ordem = { administrativo: 0, civil: 1, trabalhista: 2 };
   const ids = prazosDia.map((item) => item.id);
   const vinculos =
     ids.length === 0
@@ -507,26 +517,21 @@ export async function itensDoDia(dia: string, advogadoId: number | null) {
     nomes.set(vinculo.prazoId, lista);
   }
   return {
-    prazos: prazosDia
-      .map((item) => ({
-        id: item.id,
-        area: item.area,
-        data: item.data,
-        titulo: item.titulo,
-        observacao: item.observacao,
-        conteudo: item.conteudo,
-        situacao: item.situacao,
-        cumpridoPor: item.cumpridoNome
-          ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-          : null,
-        cumpridoEm: item.cumpridoEm,
-        advogados: nomes.get(item.id) ?? [],
-      }))
-      .sort(
-        (a, b) =>
-          ordem[a.area] - ordem[b.area] ||
-          a.titulo.localeCompare(b.titulo, "pt-BR"),
-      ),
+    prazos: prazosDia.map((item) => ({
+      id: item.id,
+      area: item.area,
+      data: item.data,
+      titulo: item.titulo,
+      observacao: item.observacao,
+      conteudo: item.conteudo,
+      defesa: item.defesa,
+      situacao: item.situacao,
+      cumpridoPor: item.cumpridoNome
+        ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
+        : null,
+      cumpridoEm: item.cumpridoEm,
+      advogados: nomes.get(item.id) ?? [],
+    })),
     audiencias: audienciasDia,
   };
 }

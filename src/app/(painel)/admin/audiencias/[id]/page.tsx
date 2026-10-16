@@ -70,6 +70,8 @@ async function Editor({
           reclamado: audiencia.reclamado ?? "",
           preposto: audiencia.preposto ?? "",
           dataHora: paraCampoDataHora(audiencia.dataHora),
+          modalidade: audiencia.modalidade ?? "",
+          ato: audiencia.ato ?? "",
           observacao: audiencia.observacao ?? "",
         }}
         responsaveis={pessoas.filter(

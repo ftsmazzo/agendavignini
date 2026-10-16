@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import Link from "next/link";
 import { Suspense } from "react";
 import {
@@ -36,6 +36,7 @@ function consultaDaLista(base: {
   situacao?: string;
   meus?: boolean;
   advogado?: string;
+  defesa?: boolean;
 }) {
   const params = new URLSearchParams();
   if (base.quando === "hoje" || base.quando === "semana") {
@@ -55,6 +56,9 @@ function consultaDaLista(base: {
   }
   if (base.advogado === "0" || /^\d+$/.test(base.advogado ?? "")) {
     params.set("advogado", base.advogado ?? "");
+  }
+  if (base.defesa) {
+    params.set("defesa", "1");
   }
   const texto = params.toString();
   return texto ? `/prazos?${texto}` : "/prazos";
@@ -105,9 +109,10 @@ async function Lista({
     situacao?: string;
     meus?: string;
     advogado?: string;
+    defesa?: string;
   }>;
 }) {
-  const { data, quando, excluido, area, situacao, meus, advogado } =
+  const { data, quando, excluido, area, situacao, meus, advogado, defesa } =
     await searchParams;
   const usuario = await exigirUsuario();
   const hoje = hojeNoEscritorio();
@@ -116,6 +121,7 @@ async function Lista({
   const situacaoOk =
     situacao === "aberto" || situacao === "cumprido" ? situacao : undefined;
   const soMeus = meus === "1";
+  const soDefesas = defesa === "1";
   const pessoas = (await listarPessoas()).filter((pessoa) => pessoa.ativo);
   const advogadoNumero = Number(advogado);
   const advogadoFiltro =
@@ -152,6 +158,9 @@ async function Lista({
       sql`exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id} and usuario_id = ${usuario.id})`,
     );
   }
+  if (soDefesas) {
+    filtros.push(eq(prazos.defesa, true));
+  }
   if (advogadoFiltro === "0") {
     filtros.push(
       sql`not exists (select 1 from prazos_usuarios where prazo_id = ${prazos.id})`,
@@ -177,6 +186,7 @@ async function Lista({
       titulo: prazos.titulo,
       observacao: prazos.observacao,
       conteudo: prazos.conteudo,
+      defesa: prazos.defesa,
       situacao: prazos.situacao,
       cumpridoNome: usuarios.nome,
       cumpridoSobrenome: usuarios.sobrenome,
@@ -185,7 +195,7 @@ async function Lista({
     .from(prazos)
     .leftJoin(usuarios, eq(usuarios.id, prazos.cumpridoPorId))
     .where(and(...filtros))
-    .orderBy(asc(prazos.data), asc(prazos.titulo), asc(prazos.id))
+    .orderBy(asc(prazos.data), desc(prazos.id))
     .limit(300);
 
   const ids = itens.map((item) => item.id);
@@ -262,6 +272,11 @@ async function Lista({
       ),
     );
   const meusTotal = meusConta?.total ?? 0;
+  const [defesasConta] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(prazos)
+    .where(and(filtroData, eq(prazos.defesa, true)));
+  const defesasTotal = defesasConta?.total ?? 0;
   const filtrosVisiveis: Array<{
     rotulo: string;
     href: string;
@@ -270,13 +285,18 @@ async function Lista({
     {
       rotulo: `Mostrar todos (${total})`,
       href: consultaDaLista(recorte),
-      ativo: !areaOk && !situacaoOk && !soMeus,
+      ativo: !areaOk && !situacaoOk && !soMeus && !soDefesas,
     },
     ...AREAS.map((item) => ({
       rotulo: `${rotuloArea(item)} (${porArea[item]})`,
       href: consultaDaLista({ ...recorte, area: item }),
-      ativo: areaOk === item && !situacaoOk && !soMeus,
+      ativo: areaOk === item && !situacaoOk && !soMeus && !soDefesas,
     })),
+    {
+      rotulo: `Defesas (${defesasTotal})`,
+      href: consultaDaLista({ ...recorte, defesa: true }),
+      ativo: soDefesas,
+    },
     {
       rotulo: `Cumprido (${cumpridos})`,
       href: consultaDaLista({ ...recorte, situacao: "cumprido" }),
@@ -489,7 +509,7 @@ async function Lista({
                   .map((item) => (
                     <li
                       key={item.id}
-                      className={`px-5 py-5 ${faixaDaArea(item.area)}`}
+                      className={`px-5 py-5 ${faixaDaArea(item.area, item.situacao, item.defesa)}`}
                     >
                       <CartaoPrazo
                         item={item}
@@ -498,6 +518,7 @@ async function Lista({
                         voltar={voltar}
                         admin={usuario.papel === "admin"}
                         pessoas={pessoas}
+                        inteiro={quando !== "semana"}
                       />
                     </li>
                   ))}
@@ -508,7 +529,10 @@ async function Lista({
       ) : (
         <ul className="lista-cartoes mt-8">
           {itens.map((item) => (
-            <li key={item.id} className={`px-5 py-5 ${faixaDaArea(item.area)}`}>
+            <li
+              key={item.id}
+              className={`px-5 py-5 ${faixaDaArea(item.area, item.situacao, item.defesa)}`}
+            >
               <CartaoPrazo
                 item={item}
                 advogados={advogados.get(item.id) ?? []}
@@ -516,6 +540,7 @@ async function Lista({
                 voltar={voltar}
                 admin={usuario.papel === "admin"}
                 pessoas={pessoas}
+                inteiro
               />
             </li>
           ))}
@@ -532,6 +557,7 @@ function CartaoPrazo({
   voltar,
   admin,
   pessoas,
+  inteiro,
 }: {
   item: {
     id: number;
@@ -540,6 +566,7 @@ function CartaoPrazo({
     titulo: string;
     observacao: string;
     conteudo: string;
+    defesa: boolean;
     situacao: "aberto" | "cumprido";
     cumpridoNome: string | null;
     cumpridoSobrenome: string | null;
@@ -550,6 +577,7 @@ function CartaoPrazo({
   voltar: string;
   admin: boolean;
   pessoas: Array<{ id: number; nome: string }>;
+  inteiro: boolean;
 }) {
   return (
     <>
@@ -568,6 +596,7 @@ function CartaoPrazo({
           })}
         </span>
         {seu ? <span className="selo selo-audiencia">Seu prazo</span> : null}
+        {item.defesa ? <span className="selo">Defesa</span> : null}
       </p>
       <h3 className="mt-2 text-xl font-semibold text-ink">{item.titulo}</h3>
       <ProcessoPrazo
@@ -591,7 +620,11 @@ function CartaoPrazo({
                 {item.observacao}
               </p>
             ) : null}
-            {item.conteudo ? (
+            {item.conteudo && inteiro ? (
+              <p className="mt-3 text-base whitespace-pre-wrap text-ink">
+                {item.conteudo}
+              </p>
+            ) : item.conteudo ? (
               <details className="mt-3">
                 <summary className="btn-texto cursor-pointer">
                   Ver publicação

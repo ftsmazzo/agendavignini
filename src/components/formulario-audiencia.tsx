@@ -218,6 +218,8 @@ export function FormularioAudiencia({
     reclamado: string;
     preposto: string;
     dataHora: string;
+    modalidade: string;
+    ato: string;
     observacao: string;
   };
   responsaveis: Pessoa[];
@@ -321,6 +323,35 @@ export function FormularioAudiencia({
               }
               className={classeCampo}
             />
+          </Campo>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          <Campo id="modalidade" rotulo="Forma">
+            <select
+              id="modalidade"
+              name="modalidade"
+              defaultValue={audiencia?.modalidade ?? ""}
+              className={classeCampo}
+            >
+              <option value="">Sem classificação</option>
+              <option value="presencial">Presencial</option>
+              <option value="telepresencial">Telepresencial</option>
+              <option value="hibrida">Híbrida</option>
+            </select>
+          </Campo>
+          <Campo id="ato" rotulo="Modalidade">
+            <select
+              id="ato"
+              name="ato"
+              defaultValue={audiencia?.ato ?? ""}
+              className={classeCampo}
+            >
+              <option value="">Sem modalidade</option>
+              <option value="inicial">Inicial</option>
+              <option value="una">Una</option>
+              <option value="instrucao">Instrução</option>
+              <option value="conciliacao">Conciliação</option>
+            </select>
           </Campo>
         </div>
         <Campo id="preposto" rotulo="Preposto">

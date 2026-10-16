@@ -155,6 +155,7 @@ export async function salvarPrazo(
           titulo,
           observacao,
           conteudo,
+          defesa: formData.get("defesa") === "1",
           situacao,
           cumpridoPorId,
           cumpridoEm,
@@ -185,6 +186,7 @@ export async function salvarPrazo(
         titulo,
         observacao,
         conteudo,
+        defesa: formData.get("defesa") === "1",
         situacao,
         cumpridoPorId,
         cumpridoEm:

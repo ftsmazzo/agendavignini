@@ -237,6 +237,8 @@ async function marcarAudiencias(
     reclamante: linha.reclamante,
     reclamado: linha.reclamado,
     preposto: linha.preposto,
+    modalidade: linha.modalidade,
+    ato: linha.ato,
     observacao: linha.observacao,
     advogados: nomes.get(linha.id) ?? [],
     minha: minhas.has(linha.id),

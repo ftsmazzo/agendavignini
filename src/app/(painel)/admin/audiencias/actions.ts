@@ -106,6 +106,16 @@ export async function salvarAudiencia(
   const reclamado = texto(formData, "reclamado", 200);
   const preposto = texto(formData, "preposto", 200);
   const observacao = texto(formData, "observacao", 8000);
+  const modalidadeBruta = texto(formData, "modalidade", 20);
+  const atoBruto = texto(formData, "ato", 20);
+  const modalidade = ["presencial", "telepresencial", "hibrida"].includes(
+    modalidadeBruta,
+  )
+    ? modalidadeBruta
+    : null;
+  const ato = ["inicial", "una", "instrucao", "conciliacao"].includes(atoBruto)
+    ? atoBruto
+    : null;
   const dataHora = instanteEscritorio(texto(formData, "dataHora", 16));
   const ids = [
     ...new Set(
@@ -161,6 +171,8 @@ export async function salvarAudiencia(
     reclamante: reclamante || null,
     reclamado: reclamado || null,
     preposto: preposto || null,
+    modalidade,
+    ato,
     dataHora,
     observacao: observacao || null,
   };

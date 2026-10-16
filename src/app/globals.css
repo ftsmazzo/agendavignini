@@ -219,6 +219,48 @@ p {
   .lista-cartoes > li:hover {
     background: color-mix(in srgb, var(--pen-soft) 45%, transparent);
   }
+  .prazo-admin {
+    background: #e5f6ec;
+  }
+  .prazo-civil {
+    background: #e7e9ee;
+  }
+  .prazo-trab,
+  .prazo-cumprido {
+    color: #f7f9ff;
+  }
+  .prazo-trab {
+    background: #0c2f5b;
+  }
+  .prazo-cumprido {
+    background: #c0261c;
+  }
+  .prazo-defesa {
+    background: #f3e9fb;
+  }
+  .prazo-trab .text-ink,
+  .prazo-trab .text-muted,
+  .prazo-trab .btn-texto,
+  .prazo-cumprido .text-ink,
+  .prazo-cumprido .text-muted,
+  .prazo-cumprido .btn-texto {
+    color: inherit;
+  }
+  .lista-cartoes > li.prazo-admin:hover {
+    background: #e5f6ec;
+  }
+  .lista-cartoes > li.prazo-civil:hover {
+    background: #e7e9ee;
+  }
+  .lista-cartoes > li.prazo-trab:hover {
+    background: #0c2f5b;
+  }
+  .lista-cartoes > li.prazo-cumprido:hover {
+    background: #c0261c;
+  }
+  .lista-cartoes > li.prazo-defesa:hover {
+    background: #f3e9fb;
+  }
 
   /* Botões */
   .btn {
@@ -512,6 +554,24 @@ p {
 }
 
 @media print {
+  .folha-prazo,
+  .folha-prazo p,
+  .folha-prazo li {
+    font-family: Arial, sans-serif;
+    font-size: 9pt;
+    line-height: 1.35;
+  }
+  .folha-prazo h1,
+  .folha-prazo h2,
+  .folha-prazo h3 {
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 9pt;
+    line-height: 1.3;
+  }
+  .fora-da-folha,
+  .bloco-dia:not(:has(.folha-item:not(.fora-da-folha))) {
+    display: none;
+  }
   :root,
   .dark {
     --paper: #fff;
