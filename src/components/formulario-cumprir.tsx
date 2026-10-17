@@ -79,7 +79,7 @@ export function FormularioCumprir({
           return (
             <li
               key={item.id}
-              className={`${item.faixa} ${ligado ? "bg-pen-soft" : ""}`}
+              className={`${item.faixa}${ligado ? " prazo-selecionado" : ""}`}
             >
               <label className="flex cursor-pointer items-start gap-4 px-5 py-4">
                 <input
