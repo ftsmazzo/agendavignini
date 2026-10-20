@@ -39,6 +39,8 @@ const ICONES: Record<string, string> = {
   Usuários:
     "M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20a6 6 0 0 1 12 0M14 20a5 5 0 0 1 8 0",
   "/admin/relatorios": "M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7",
+  "/admin/mcp":
+    "M12 3a4 4 0 0 1 4 4v1h1a3 3 0 0 1 0 6h-1v1a4 4 0 1 1-8 0v-1H7a3 3 0 0 1 0-6h1V7a4 4 0 0 1 4-4z",
 };
 
 function Icone({ chave }: { chave: string }) {
@@ -221,6 +223,7 @@ export function Casca({
                   <Grupo key={grupo.rotulo} grupo={grupo} />
                 ))}
                 <Ligacao href="/admin/relatorios" rotulo="Relatórios" />
+                <Ligacao href="/admin/mcp" rotulo="Conectar IA" />
               </>
             ) : null}
           </nav>

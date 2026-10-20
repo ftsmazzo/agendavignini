@@ -57,6 +57,10 @@ export const menuAdmin: GrupoMenu[] = [
       { href: "/admin/usuarios", rotulo: "Listar" },
     ],
   },
+  {
+    rotulo: "Inteligência",
+    itens: [{ href: "/admin/mcp", rotulo: "Conectar IA" }],
+  },
 ];
 
 export function itemAtivo(caminho: string, href: string) {

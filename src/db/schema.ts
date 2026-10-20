@@ -131,3 +131,25 @@ export const auditoria = pgTable(
     index("auditoria_entidade_idx").on(tabela.entidade, tabela.entidadeId),
   ],
 );
+
+/** Tokens Bearer só de leitura para Claude, GPT e similares. */
+export const mcpTokens = pgTable(
+  "mcp_tokens",
+  {
+    id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+    nome: text("nome").notNull(),
+    prefixo: text("prefixo").notNull().unique(),
+    tokenHash: text("token_hash").notNull().unique(),
+    perfil: text("perfil").notNull(),
+    usuarioId: integer("usuario_id").references(() => usuarios.id, {
+      onDelete: "set null",
+    }),
+    ativo: boolean("ativo").notNull().default(true),
+    criadoEm: timestamp("criado_em", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    ultimoUso: timestamp("ultimo_uso", { withTimezone: true }),
+    usoTotal: integer("uso_total").notNull().default(0),
+  },
+  (tabela) => [index("mcp_tokens_ativo_idx").on(tabela.ativo)],
+);

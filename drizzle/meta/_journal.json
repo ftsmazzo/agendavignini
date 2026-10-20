@@ -15,6 +15,13 @@
       "when": 1792000000000,
       "tag": "0001_pedido_cliente",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792500000000,
+      "tag": "0002_mcp",
+      "breakpoints": true
     }
   ]
 }
