@@ -115,13 +115,22 @@ ${REGRA_COMUM}
     arquivo: "skill-uso-mcp.md",
     conteudo: `# Skill — Uso do MCP Agenda Coelho Vignini
 
-## Conexão
+## Conexão no Claude Desktop
+
+O Claude Desktop **não aceita** o campo \`headers\` em MCP remoto. Use a ponte stdio:
 
 1. No admin da agenda, em **Conectar IA**, crie um token.
-2. Copie o JSON do Claude Desktop ou cole o token no conector HTTP.
-3. Endpoint: \`POST /mcp\` com cabeçalho \`Authorization: Bearer <token>\`.
-4. Corpo típico: \`{"method":"prazos_hoje","params":{"data":"2026-10-20"}}\`.
-5. Para listar tools: \`{"method":"catalogo"}\`.
+2. Copie o bloco **Claude Desktop (recomendado — ponte stdio)**.
+3. Cole em \`claude_desktop_config.json\` (substitua \`COLE_O_TOKEN_AQUI\`).
+4. Reinicie o Claude Desktop.
+
+A ponte é o arquivo \`scripts/mcp-stdio.mjs\` do repositório. Ela envia o token nos cabeçalhos \`Authorization\` e \`X-Api-Key\`.
+
+## Conexão no Claude.ai
+
+1. URL: \`…/mcp\`
+2. Nome do cabeçalho: **\`x-api-key\`** (exato, minúsculo)
+3. Valor: o token (sem a palavra Bearer)
 
 ## Perfis
 
@@ -130,7 +139,7 @@ ${REGRA_COMUM}
 
 ## Boas práticas
 
-- Comece com \`catalogo\` se não souber as tools.
+- Comece com \`tools/list\` / \`catalogo\` se não souber as tools.
 - Prefira listas (\`prazos_hoje\`, \`prazos_atraso\`) e só então \`prazo_detalhe\`.
 - Não peça à IA para gravar no sistema: o MCP é somente leitura.
 

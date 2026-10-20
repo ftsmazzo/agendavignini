@@ -39,6 +39,15 @@ function tokenDoPedido(pedido: Request) {
   if (bearer) {
     return bearer;
   }
+  // Claude.ai (conector com cabeçalho estático) aceita estes nomes.
+  const apiKey = pedido.headers.get("x-api-key")?.trim();
+  if (apiKey) {
+    return apiKey.replace(/^Bearer\s+/i, "");
+  }
+  const authToken = pedido.headers.get("x-auth-token")?.trim();
+  if (authToken) {
+    return authToken.replace(/^Bearer\s+/i, "");
+  }
   return pedido.headers.get("x-token")?.trim() ?? "";
 }
 

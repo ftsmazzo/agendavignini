@@ -1,6 +1,6 @@
 import { connection } from "next/server";
 import { autenticarMcp } from "@/lib/mcp/auth";
-import { despacharMcp } from "@/lib/mcp/despachar";
+import { tratarMensagemMcp } from "@/lib/mcp/protocolo";
 
 export const maxDuration = 60;
 
@@ -8,10 +8,32 @@ function cors(resposta: Response) {
   resposta.headers.set("Access-Control-Allow-Origin", "*");
   resposta.headers.set(
     "Access-Control-Allow-Headers",
-    "Authorization, Content-Type, X-Token",
+    "Authorization, Content-Type, X-Token, X-Api-Key, X-Auth-Token, Mcp-Session-Id",
   );
   resposta.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   return resposta;
+}
+
+function naoAutorizado() {
+  return cors(
+    new Response(
+      JSON.stringify({
+        erro: "Token ausente ou inválido.",
+        auth: [
+          "Authorization: Bearer <token>",
+          "X-Api-Key: <token>",
+          "X-Auth-Token: <token>",
+        ],
+      }),
+      {
+        status: 401,
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "WWW-Authenticate": 'Bearer realm="agenda-mcp", charset="UTF-8"',
+        },
+      },
+    ),
+  );
 }
 
 export async function OPTIONS() {
@@ -22,29 +44,25 @@ export async function GET(pedido: Request) {
   await connection();
   const sessao = await autenticarMcp(pedido);
   if (!sessao) {
-    return cors(
-      Response.json(
-        {
-          servidor: "Agenda Coelho Vignini MCP",
-          modo: "somente leitura",
-          auth: "Authorization: Bearer <token>",
-          uso: 'POST JSON {"method":"catalogo"} ou {"method":"prazos_hoje","params":{}}',
-        },
-        { status: 200 },
-      ),
-    );
+    return naoAutorizado();
   }
-  const resultado = await despacharMcp(sessao, "catalogo", {});
-  return cors(Response.json(resultado));
+  const tratado = await tratarMensagemMcp(sessao, {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "tools/list",
+  });
+  return cors(
+    Response.json(tratado.corpo, {
+      status: tratado.status,
+    }),
+  );
 }
 
 export async function POST(pedido: Request) {
   await connection();
   const sessao = await autenticarMcp(pedido);
   if (!sessao) {
-    return cors(
-      Response.json({ erro: "Token ausente ou inválido." }, { status: 401 }),
-    );
+    return naoAutorizado();
   }
 
   let corpo: unknown;
@@ -54,79 +72,54 @@ export async function POST(pedido: Request) {
     return cors(Response.json({ erro: "JSON inválido." }, { status: 400 }));
   }
 
+  if (Array.isArray(corpo)) {
+    const respostas = [];
+    for (const item of corpo) {
+      if (!item || typeof item !== "object") {
+        continue;
+      }
+      const tratado = await tratarMensagemMcp(
+        sessao,
+        item as {
+          method?: string;
+          params?: unknown;
+          jsonrpc?: string;
+          id?: string | number | null;
+        },
+      );
+      if (tratado.corpo !== null) {
+        respostas.push(tratado.corpo);
+      }
+    }
+    return cors(Response.json(respostas));
+  }
+
   if (!corpo || typeof corpo !== "object") {
     return cors(
       Response.json({ erro: "Corpo JSON esperado." }, { status: 400 }),
     );
   }
 
-  const bruto = corpo as {
-    method?: string;
-    metodo?: string;
-    params?: unknown;
-    arguments?: unknown;
-    name?: string;
-    jsonrpc?: string;
-    id?: string | number | null;
-  };
+  const tratado = await tratarMensagemMcp(
+    sessao,
+    corpo as {
+      method?: string;
+      metodo?: string;
+      params?: unknown;
+      arguments?: unknown;
+      name?: string;
+      jsonrpc?: string;
+      id?: string | number | null;
+    },
+  );
 
-  const metodo =
-    bruto.method?.trim() || bruto.metodo?.trim() || (bruto.name?.trim() ?? "");
-
-  if (!metodo) {
-    return cors(
-      Response.json(
-        {
-          erro: 'Informe method. Ex.: {"method":"catalogo"} ou {"method":"prazos_hoje","params":{}}',
-        },
-        { status: 400 },
-      ),
-    );
+  if (tratado.status === 202 && tratado.corpo === null) {
+    return cors(new Response(null, { status: 202 }));
   }
 
-  let params: Record<string, unknown> = {};
-  if (bruto.params && typeof bruto.params === "object") {
-    params = bruto.params as Record<string, unknown>;
-  } else if (bruto.arguments && typeof bruto.arguments === "object") {
-    params = bruto.arguments as Record<string, unknown>;
-  }
-
-  if (metodo === "tools/call") {
-    const nome = String(params.name ?? params.tool ?? "").trim();
-    const args =
-      params.arguments && typeof params.arguments === "object"
-        ? (params.arguments as Record<string, unknown>)
-        : {};
-    if (!nome) {
-      return cors(
-        Response.json(
-          { erro: "tools/call exige params.name." },
-          { status: 400 },
-        ),
-      );
-    }
-    const resultado = await despacharMcp(sessao, nome, args);
-    if (bruto.jsonrpc === "2.0") {
-      return cors(
-        Response.json({
-          jsonrpc: "2.0",
-          id: bruto.id ?? null,
-          result: resultado,
-        }),
-      );
-    }
-    return cors(Response.json(resultado));
-  }
-
-  const resultado = await despacharMcp(sessao, metodo, params);
-  if (bruto.jsonrpc === "2.0") {
-    return cors(
-      Response.json({
-        jsonrpc: "2.0",
-        id: bruto.id ?? null,
-        result: resultado,
-      }),
-    );
-  }
-  return cors(Response.json(resultado));
+  return cors(
+    Response.json(tratado.corpo, {
+      status: tratado.status,
+    }),
+  );
 }
