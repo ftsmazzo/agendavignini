@@ -4,8 +4,15 @@ import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { obterDb } from "@/db/client";
-import { auditoria, prazos, prazosUsuarios, usuarios } from "@/db/schema";
+import {
+  auditoria,
+  notificacoes,
+  prazos,
+  prazosUsuarios,
+  usuarios,
+} from "@/db/schema";
 import { exigirAdmin, exigirUsuario } from "@/lib/acesso";
+import { linhasDeAviso } from "@/lib/avisos";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import {
   caminhoInterno,
@@ -13,6 +20,7 @@ import {
   ehFimDeSemana,
   instanteEscritorio,
 } from "@/lib/datas";
+import { datasRecorrentes } from "@/lib/recorrencia";
 
 const AREAS = new Set(["administrativo", "civil", "trabalhista"]);
 
@@ -39,6 +47,8 @@ function atualizarListas() {
   revalidatePath("/admin/relatorios");
   revalidatePath("/busca");
   revalidatePath("/processo", "layout");
+  revalidatePath("/conta");
+  revalidatePath("/", "layout");
 }
 
 export async function salvarPrazo(
@@ -96,6 +106,31 @@ export async function salvarPrazo(
     return { erro: "A data de um prazo novo é hoje ou um dia à frente." };
   }
 
+  const mesesBruto = texto(formData, "meses", 3);
+  const intervaloBruto = texto(formData, "intervalo", 3);
+  const repetir = Boolean(mesesBruto || intervaloBruto);
+  let meses = 0;
+  let intervalo = 0;
+  if (!id && repetir) {
+    meses = Number(mesesBruto);
+    intervalo = Number(intervaloBruto);
+    if (
+      !Number.isInteger(meses) ||
+      meses < 1 ||
+      meses > 24 ||
+      !Number.isInteger(intervalo) ||
+      intervalo < 1 ||
+      intervalo > 180
+    ) {
+      return {
+        erro: "Informe os meses (1 a 24) e o intervalo em dias (1 a 180), ou deixe os dois em branco.",
+      };
+    }
+    if (cumpridoBruto) {
+      return { erro: "A repetição vale para prazo em aberto." };
+    }
+  }
+
   const db = obterDb();
   let jaLigados = new Set<number>();
   if (id) {
@@ -137,7 +172,7 @@ export async function salvarPrazo(
 
   if (id) {
     const [atual] = await db
-      .select({ id: prazos.id })
+      .select({ id: prazos.id, data: prazos.data })
       .from(prazos)
       .where(eq(prazos.id, id))
       .limit(1);
@@ -146,6 +181,17 @@ export async function salvarPrazo(
     }
     const cumpridoEm =
       situacao === "cumprido" ? (cumpridoEmInformado ?? new Date()) : null;
+    const avisos =
+      atual.data === data
+        ? []
+        : linhasDeAviso({
+            prazoId: id,
+            titulo,
+            dataAnterior: atual.data,
+            dataNova: data,
+            advogados: ids,
+            atorId: usuario.id,
+          });
     await db.transaction(async (tx) => {
       await tx
         .update(prazos)
@@ -165,6 +211,9 @@ export async function salvarPrazo(
       await tx
         .insert(prazosUsuarios)
         .values(ids.map((usuarioId) => ({ prazoId: id, usuarioId })));
+      if (avisos.length > 0) {
+        await tx.insert(notificacoes).values(avisos);
+      }
       await tx.insert(auditoria).values({
         atorId: usuario.id,
         acao: "atualizar",
@@ -177,43 +226,67 @@ export async function salvarPrazo(
     redirect(`/admin/prazos/${id}?salvo=1`);
   }
 
+  const serie = repetir ? datasRecorrentes(data, meses, intervalo) : null;
+  if (serie?.estourou) {
+    return {
+      erro: "Essa repetição gera prazos demais. Encurte os meses ou aumente o intervalo.",
+    };
+  }
+  const datas = serie?.datas.length ? serie.datas : [data];
+
   const criadoId = await db.transaction(async (tx) => {
-    const [criado] = await tx
-      .insert(prazos)
-      .values({
-        area: areaPrazo,
-        data,
-        titulo,
-        observacao,
-        conteudo,
-        defesa: formData.get("defesa") === "1",
-        situacao,
-        cumpridoPorId,
-        cumpridoEm:
-          situacao === "cumprido" ? (cumpridoEmInformado ?? new Date()) : null,
-      })
-      .returning({ id: prazos.id });
-    if (!criado) {
+    let primeiro: number | null = null;
+    for (const dia of datas) {
+      const [criado] = await tx
+        .insert(prazos)
+        .values({
+          area: areaPrazo,
+          data: dia,
+          titulo,
+          observacao,
+          conteudo,
+          defesa: formData.get("defesa") === "1",
+          situacao,
+          cumpridoPorId,
+          cumpridoEm:
+            situacao === "cumprido"
+              ? (cumpridoEmInformado ?? new Date())
+              : null,
+        })
+        .returning({ id: prazos.id });
+      if (!criado) {
+        continue;
+      }
+      primeiro ??= criado.id;
+      await tx
+        .insert(prazosUsuarios)
+        .values(ids.map((usuarioId) => ({ prazoId: criado.id, usuarioId })));
+    }
+    if (!primeiro) {
       return null;
     }
-    await tx
-      .insert(prazosUsuarios)
-      .values(ids.map((usuarioId) => ({ prazoId: criado.id, usuarioId })));
     await tx.insert(auditoria).values({
       atorId: usuario.id,
       acao: "criar",
       entidade: "prazos",
-      entidadeId: String(criado.id),
-      detalhe: titulo.slice(0, 180),
+      entidadeId: String(primeiro),
+      detalhe:
+        datas.length > 1
+          ? `${datas.length} prazos, a cada ${intervalo} dias, por ${meses} meses`
+          : titulo.slice(0, 180),
     });
-    return criado.id;
+    return primeiro;
   });
 
   if (!criadoId) {
     return { erro: "Não foi possível salvar o prazo." };
   }
   atualizarListas();
-  redirect(`/prazos?data=${data}`);
+  redirect(
+    datas.length > 1
+      ? `/prazos?data=${data}&repetidos=${datas.length}`
+      : `/prazos?data=${data}`,
+  );
 }
 
 export async function cumprir(formData: FormData) {

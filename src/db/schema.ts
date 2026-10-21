@@ -116,6 +116,32 @@ export const audienciasUsuarios = pgTable(
   (tabela) => [primaryKey({ columns: [tabela.audienciaId, tabela.usuarioId] })],
 );
 
+export const notificacoes = pgTable(
+  "notificacoes",
+  {
+    id: integer("id").primaryKey().generatedByDefaultAsIdentity(),
+    usuarioId: integer("usuario_id")
+      .notNull()
+      .references(() => usuarios.id, { onDelete: "cascade" }),
+    prazoId: integer("prazo_id").references(() => prazos.id, {
+      onDelete: "set null",
+    }),
+    titulo: text("titulo").notNull(),
+    dataAnterior: date("data_anterior").notNull(),
+    dataNova: date("data_nova").notNull(),
+    atorId: integer("ator_id").references(() => usuarios.id, {
+      onDelete: "set null",
+    }),
+    lida: boolean("lida").notNull().default(false),
+    criadaEm: timestamp("criada_em", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (tabela) => [
+    index("notificacoes_usuario_idx").on(tabela.usuarioId, tabela.lida),
+  ],
+);
+
 export const auditoria = pgTable(
   "auditoria",
   {

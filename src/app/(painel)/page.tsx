@@ -1,7 +1,9 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { AvisoAudiencias } from "@/components/aviso-audiencias";
 import { CalendarioAno } from "@/components/calendario-ano";
 import { CalendarioMes } from "@/components/calendario-mes";
+import { contarAudienciasPendentes } from "@/lib/audiencias";
 import { chaveMes, lerMes } from "@/lib/calendario";
 import {
   contarPainel,
@@ -48,6 +50,9 @@ async function PainelDoDia({
         atraso: 0,
         meusAbertos: 0,
       };
+  const audienciasPendentes = sessao
+    ? await contarAudienciasPendentes(sessao.id)
+    : 0;
   const resumos = anual ? {} : await resumosDoMes(recorte.ano, recorte.mes);
   const marcas = anual ? await marcasDoAno(recorte.ano, hoje) : {};
   const hrefMes = `/?vista=mes&mes=${chaveMes(recorte.ano, recorte.mes)}`;
@@ -90,6 +95,9 @@ async function PainelDoDia({
 
   return (
     <div className={`mx-auto w-full ${anual ? "max-w-7xl" : "max-w-6xl"}`}>
+      {sessao && audienciasPendentes > 0 ? (
+        <AvisoAudiencias total={audienciasPendentes} usuarioId={sessao.id} />
+      ) : null}
       <p className="text-sm font-semibold tracking-[0.08em] text-muted uppercase">
         {dataExibida}
       </p>

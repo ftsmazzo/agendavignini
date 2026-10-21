@@ -4,8 +4,9 @@ import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { obterDb } from "@/db/client";
-import { auditoria, prazos } from "@/db/schema";
+import { auditoria, notificacoes, prazos, prazosUsuarios } from "@/db/schema";
 import { exigirAdmin } from "@/lib/acesso";
+import { linhasDeAviso } from "@/lib/avisos";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataIsoValida } from "@/lib/datas";
 import { ehDiaUtil } from "@/lib/publicacao";
@@ -45,12 +46,26 @@ export async function adiarPrazos(
 
   const db = obterDb();
   const quantidade = await db.transaction(async (tx) => {
+    const atuais = await tx
+      .select({ id: prazos.id, data: prazos.data, titulo: prazos.titulo })
+      .from(prazos)
+      .where(
+        and(
+          inArray(prazos.id, pedidos),
+          eq(prazos.situacao, "aberto"),
+          eq(prazos.data, origem),
+        ),
+      );
+    if (atuais.length === 0) {
+      return 0;
+    }
+    const idsAtuais = atuais.map((item) => item.id);
     const movidos = await tx
       .update(prazos)
       .set({ data: destino })
       .where(
         and(
-          inArray(prazos.id, pedidos),
+          inArray(prazos.id, idsAtuais),
           eq(prazos.situacao, "aberto"),
           eq(prazos.data, origem),
         ),
@@ -58,6 +73,35 @@ export async function adiarPrazos(
       .returning({ id: prazos.id });
     if (movidos.length === 0) {
       return 0;
+    }
+    const movidosIds = new Set(movidos.map((item) => item.id));
+    const vinculos = await tx
+      .select({
+        prazoId: prazosUsuarios.prazoId,
+        usuarioId: prazosUsuarios.usuarioId,
+      })
+      .from(prazosUsuarios)
+      .where(inArray(prazosUsuarios.prazoId, [...movidosIds]));
+    const porPrazo = new Map<number, number[]>();
+    for (const vinculo of vinculos) {
+      const lista = porPrazo.get(vinculo.prazoId) ?? [];
+      lista.push(vinculo.usuarioId);
+      porPrazo.set(vinculo.prazoId, lista);
+    }
+    const avisos = atuais
+      .filter((item) => movidosIds.has(item.id))
+      .flatMap((item) =>
+        linhasDeAviso({
+          prazoId: item.id,
+          titulo: item.titulo,
+          dataAnterior: item.data,
+          dataNova: destino,
+          advogados: porPrazo.get(item.id) ?? [],
+          atorId: usuario.id,
+        }),
+      );
+    if (avisos.length > 0) {
+      await tx.insert(notificacoes).values(avisos);
     }
     await tx.insert(auditoria).values({
       atorId: usuario.id,
@@ -85,6 +129,8 @@ export async function adiarPrazos(
   revalidatePath("/admin/prazos/adiar");
   revalidatePath("/admin/relatorios");
   revalidatePath("/busca");
+  revalidatePath("/conta");
+  revalidatePath("/", "layout");
   redirect(
     `/admin/prazos/adiar?dia=${origem}&destino=${destino}&adiados=${quantidade}`,
   );

@@ -1,9 +1,9 @@
 "use server";
 
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { obterDb } from "@/db/client";
-import { auditoria, usuarios } from "@/db/schema";
+import { auditoria, notificacoes, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { argonConfere, gerarArgon2id, md5Confere } from "@/lib/senha";
 
@@ -117,4 +117,17 @@ export async function salvarSenha(
     detalhe: "senha da própria conta",
   });
   return { erro: "", ok: "Senha atualizada." };
+}
+
+export async function marcarAvisosLidos() {
+  const sessao = await exigirUsuario();
+  const db = obterDb();
+  await db
+    .update(notificacoes)
+    .set({ lida: true })
+    .where(
+      and(eq(notificacoes.usuarioId, sessao.id), eq(notificacoes.lida, false)),
+    );
+  revalidatePath("/conta");
+  revalidatePath("/", "layout");
 }

@@ -62,6 +62,24 @@ export async function listarAudienciasAdmin(opcoes: {
     .limit(termo ? 80 : 500);
 }
 
+export async function contarAudienciasPendentes(usuarioId: number) {
+  const db = obterDb();
+  const [linha] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(audiencias)
+    .innerJoin(
+      audienciasUsuarios,
+      eq(audienciasUsuarios.audienciaId, audiencias.id),
+    )
+    .where(
+      and(
+        eq(audienciasUsuarios.usuarioId, usuarioId),
+        gte(audiencias.dataHora, new Date()),
+      ),
+    );
+  return linha?.total ?? 0;
+}
+
 export async function listarAudiencias(dia: string | null, usuarioId: number) {
   const db = obterDb();
   const hoje = hojeNoEscritorio();

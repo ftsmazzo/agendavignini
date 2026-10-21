@@ -68,7 +68,8 @@ function Ligacao({
   href,
   rotulo,
   icone = true,
-}: ItemMenu & { icone?: boolean }) {
+  selo,
+}: ItemMenu & { icone?: boolean; selo?: number }) {
   const caminho = usePathname();
   const ativo = itemAtivo(caminho, href);
 
@@ -83,7 +84,8 @@ function Ligacao({
       }`}
     >
       {icone ? <Icone chave={href} /> : null}
-      {rotulo}
+      <span className="min-w-0 flex-1">{rotulo}</span>
+      {selo ? <span className="selo">{selo}</span> : null}
     </Link>
   );
 }
@@ -150,7 +152,7 @@ export function Casca({
   usuario,
 }: {
   children: ReactNode;
-  usuario: { nome: string; admin: boolean };
+  usuario: { nome: string; admin: boolean; avisos: number };
 }) {
   const [menuAberto, setMenuAberto] = useState(false);
   const caminho = usePathname();
@@ -211,6 +213,7 @@ export function Casca({
                   key={item.href}
                   href={item.href}
                   rotulo={item.rotulo}
+                  selo={item.href === "/conta" ? usuario.avisos : undefined}
                 />
               ),
             )}

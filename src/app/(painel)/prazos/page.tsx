@@ -75,6 +75,7 @@ export default function Prazos({
     situacao?: string;
     meus?: string;
     advogado?: string;
+    repetidos?: string;
   }>;
 }) {
   return (
@@ -110,10 +111,20 @@ async function Lista({
     meus?: string;
     advogado?: string;
     defesa?: string;
+    repetidos?: string;
   }>;
 }) {
-  const { data, quando, excluido, area, situacao, meus, advogado, defesa } =
-    await searchParams;
+  const {
+    data,
+    quando,
+    excluido,
+    area,
+    situacao,
+    meus,
+    advogado,
+    defesa,
+    repetidos,
+  } = await searchParams;
   const usuario = await exigirUsuario();
   const hoje = hojeNoEscritorio();
   const dataPedida = data && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : null;
@@ -504,6 +515,11 @@ async function Lista({
       ) : null}
       {excluido ? (
         <output className="aviso aviso-ok mt-4 block">Prazo excluído.</output>
+      ) : null}
+      {/^\d{1,3}$/.test(repetidos ?? "") && Number(repetidos) > 1 ? (
+        <output className="aviso aviso-ok mt-4 block">
+          {`${repetidos} prazos foram gravados a partir de ${dataBr(dataPedida ?? hoje)}.`}
+        </output>
       ) : null}
       {itens.length === 0 ? (
         <p className="vazio mt-8">

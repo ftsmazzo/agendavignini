@@ -5,7 +5,9 @@ import { excluirPrazo, salvarPrazo } from "@/app/(painel)/admin/prazos/actions";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { CaixasAdvogados } from "@/components/caixas-advogados";
 import { Campo, classeCampo } from "@/components/campo";
+import { dataBr, dataIsoValida, ehFimDeSemana } from "@/lib/datas";
 import { sugerirPublicacao } from "@/lib/publicacao";
+import { datasRecorrentes } from "@/lib/recorrencia";
 
 const AREAS = [
   { valor: "administrativo", rotulo: "Administrativo" },
@@ -49,6 +51,22 @@ export function FormularioPrazo({
   const [advogadosMarcados, setAdvogadosMarcados] = useState(
     advogados.map(String),
   );
+  const [meses, setMeses] = useState("");
+  const [intervalo, setIntervalo] = useState("");
+  const mesesNumero = Number(meses);
+  const intervaloNumero = Number(intervalo);
+  const previa =
+    !prazo?.id &&
+    Number.isInteger(mesesNumero) &&
+    mesesNumero >= 1 &&
+    mesesNumero <= 24 &&
+    Number.isInteger(intervaloNumero) &&
+    intervaloNumero >= 1 &&
+    intervaloNumero <= 180 &&
+    dataIsoValida(data) &&
+    !ehFimDeSemana(data)
+      ? datasRecorrentes(data, mesesNumero, intervaloNumero)
+      : null;
 
   function aplicarSugestao() {
     const sugestao = sugerirPublicacao(rascunho, hoje, responsaveis);
@@ -135,6 +153,45 @@ export function FormularioPrazo({
             />
           </Campo>
         </div>
+        {prazo?.id ? null : (
+          <div className="grid gap-5 md:grid-cols-2">
+            <Campo id="meses" rotulo="Repetir por quantos meses">
+              <input
+                id="meses"
+                name="meses"
+                type="number"
+                min={1}
+                max={24}
+                inputMode="numeric"
+                value={meses}
+                onChange={(evento) => setMeses(evento.target.value)}
+                className={classeCampo}
+              />
+            </Campo>
+            <Campo id="intervalo" rotulo="A cada quantos dias">
+              <input
+                id="intervalo"
+                name="intervalo"
+                type="number"
+                min={1}
+                max={180}
+                inputMode="numeric"
+                value={intervalo}
+                onChange={(evento) => setIntervalo(evento.target.value)}
+                className={classeCampo}
+              />
+            </Campo>
+          </div>
+        )}
+        {prazo?.id ? null : (
+          <p className="ajuda-campo">
+            Em branco, grava só a data de cima. Sábado, domingo e feriado passam
+            para o próximo dia útil. A série para no fim desses meses.
+            {previa && previa.datas.length > 1
+              ? ` Vai gravar ${previa.datas.length} datas, de ${dataBr(previa.datas[0] ?? data)} até ${dataBr(previa.datas[previa.datas.length - 1] ?? data)}.`
+              : ""}
+          </p>
+        )}
         <Campo id="titulo" rotulo="Prazo">
           <input
             id="titulo"

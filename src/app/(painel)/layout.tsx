@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { Casca } from "@/components/casca";
 import { obterDb } from "@/db/client";
 import { usuarios } from "@/db/schema";
+import { contarAvisosNaoLidos } from "@/lib/avisos";
 import { lerSessao } from "@/lib/sessao";
 
 export default function PainelLayout({ children }: { children: ReactNode }) {
@@ -40,8 +41,9 @@ async function PainelAutenticado({ children }: { children: ReactNode }) {
   }
 
   const nome = `${usuario.nome} ${usuario.sobrenome}`.trim();
+  const avisos = await contarAvisosNaoLidos(sessao.id);
   return (
-    <Casca usuario={{ nome, admin: usuario.papel === "admin" }}>
+    <Casca usuario={{ nome, admin: usuario.papel === "admin", avisos }}>
       {children}
     </Casca>
   );
