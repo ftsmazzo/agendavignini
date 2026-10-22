@@ -28,22 +28,22 @@ export function AvisoAudiencias({
     setAberto(true);
   }, [total, chave]);
 
-  if (total <= 0) {
-    return null;
-  }
-
   function alternar() {
     setAberto((valor) => {
       const proximo = !valor;
-      sessionStorage.setItem(chave, proximo ? "0" : "1");
+      if (total > 0) {
+        sessionStorage.setItem(chave, proximo ? "0" : "1");
+      }
       return proximo;
     });
   }
 
   const frase =
-    total === 1
-      ? "Você tem 1 audiência em aberto no seu nome."
-      : `Você tem ${total} audiências em aberto no seu nome.`;
+    total === 0
+      ? "Nenhuma audiência em aberto no seu nome."
+      : total === 1
+        ? "Você tem 1 audiência em aberto no seu nome."
+        : `Você tem ${total} audiências em aberto no seu nome.`;
 
   return (
     <>
@@ -69,7 +69,9 @@ export function AvisoAudiencias({
           <path d="M10 20a2 2 0 0 0 4 0" />
         </svg>
         <span className="sr-only">Audiências pendentes</span>
-        <span className="selo selo-audiencia">{total}</span>
+        {total > 0 ? (
+          <span className="selo selo-audiencia">{total}</span>
+        ) : null}
       </button>
       {aberto && montado
         ? createPortal(
