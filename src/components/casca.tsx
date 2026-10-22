@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { sair } from "@/app/sair/actions";
 import { AlternarTema } from "@/components/alternar-tema";
+import { AvisoAudiencias } from "@/components/aviso-audiencias";
 import { Marca } from "@/components/marca";
 import {
   type GrupoMenu,
@@ -152,7 +153,13 @@ export function Casca({
   usuario,
 }: {
   children: ReactNode;
-  usuario: { nome: string; admin: boolean; avisos: number };
+  usuario: {
+    id: number;
+    nome: string;
+    admin: boolean;
+    avisos: number;
+    audiencias: number;
+  };
 }) {
   const [menuAberto, setMenuAberto] = useState(false);
   const caminho = usePathname();
@@ -259,6 +266,10 @@ export function Casca({
             </p>
             <div className="ml-auto flex items-center gap-3">
               <AlternarTema />
+              <AvisoAudiencias
+                total={usuario.audiencias}
+                usuarioId={usuario.id}
+              />
               <div className="hidden items-center gap-2.5 sm:flex">
                 <span
                   className="grid h-9 w-9 place-items-center rounded-full bg-pen-soft text-sm font-bold text-pen"
