@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { FormularioRetirar } from "@/components/formulario-retirar";
+import { Seta } from "@/components/seta";
 import { obterDb } from "@/db/client";
 import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { hojeNoEscritorio } from "@/lib/contagens";
@@ -130,7 +131,7 @@ async function Lista({
                 href={`/admin/prazos/tirar-advogado?dia=${anterior.data}`}
                 className="btn"
               >
-                <span aria-hidden="true">←</span>
+                <Seta />
                 <span className="text-left">
                   Anterior
                   <span className="block text-sm font-normal text-muted">
@@ -158,7 +159,7 @@ async function Lista({
                     {dataBr(proximo.data)} · {proximo.total}
                   </span>
                 </span>
-                <span aria-hidden="true">→</span>
+                <Seta direcao="direita" />
               </Link>
             ) : (
               <span />

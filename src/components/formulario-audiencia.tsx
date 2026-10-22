@@ -11,6 +11,7 @@ import {
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { CaixasAdvogados } from "@/components/caixas-advogados";
 import { Campo, classeCampo } from "@/components/campo";
+import { Seta } from "@/components/seta";
 import type { ProcessoCadastrado } from "@/lib/processos-cadastrados";
 import { numeroDoProcesso } from "@/lib/publicacao";
 
@@ -239,8 +240,9 @@ export function FormularioAudiencia({
 
   return (
     <div className="entrada mx-auto w-full max-w-3xl">
-      <Link href="/admin/audiencias" className="btn-texto text-[0.9688rem]">
-        ← Voltar às audiências
+      <Link href="/admin/audiencias" className="btn-texto">
+        <Seta />
+        Voltar às audiências
       </Link>
       <h1 className="titulo-pagina mt-2">
         {audiencia ? "Editar audiência" : "Adicionar audiência"}

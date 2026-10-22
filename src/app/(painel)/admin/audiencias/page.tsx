@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { classeCampo } from "@/components/campo";
+import { Seta } from "@/components/seta";
 import {
   anosDasAudiencias,
   listarAudiencias,
@@ -121,7 +122,8 @@ async function Lista({
             href={`/admin/audiencias?ano=${dia.slice(0, 4)}`}
             className="btn-texto"
           >
-            ← Todas as audiências
+            <Seta />
+            Todas as audiências
           </Link>
         </p>
       ) : null}

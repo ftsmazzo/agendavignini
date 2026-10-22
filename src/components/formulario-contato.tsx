@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { excluirContato, salvarContato } from "@/app/(painel)/agenda/actions";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { Campo, classeCampo } from "@/components/campo";
+import { Seta } from "@/components/seta";
 
 type ContatoFormulario = {
   id: number;
@@ -25,8 +26,9 @@ export function FormularioContato({
 
   return (
     <div className="entrada mx-auto w-full max-w-3xl">
-      <Link href="/agenda" className="btn-texto text-[0.9688rem]">
-        ← Voltar à agenda
+      <Link href="/agenda" className="btn-texto">
+        <Seta />
+        Voltar à agenda
       </Link>
       <h1 className="titulo-pagina mt-2">
         {contato ? "Editar contato" : "Adicionar contato"}

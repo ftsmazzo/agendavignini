@@ -78,7 +78,7 @@ function Ligacao({
     <Link
       href={href}
       aria-current={ativo ? "page" : undefined}
-      className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm transition-colors ${
+      className={`flex min-h-10 items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition-colors ${
         ativo
           ? "bg-rail-active font-semibold text-rail-ink shadow-[inset_3px_0_0_var(--sage)]"
           : "text-rail-muted hover:bg-rail-active/60 hover:text-rail-ink"
@@ -110,7 +110,7 @@ function Grupo({ grupo }: { grupo: GrupoMenu }) {
       }}
       className="group"
     >
-      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-rail-ink marker:content-none hover:bg-rail-active/60">
+      <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-semibold text-rail-ink marker:content-none hover:bg-rail-active/60">
         <Icone chave={grupo.rotulo} />
         <span className="flex-1">{grupo.rotulo}</span>
         <svg
@@ -204,7 +204,7 @@ export function Casca({
                 name="q"
                 type="search"
                 placeholder="Buscar prazo ou audiência"
-                className="w-full rounded-lg border border-rail-line bg-rail-active/50 py-2 pr-3 pl-9 text-sm text-rail-ink placeholder:text-rail-muted focus:border-sage focus:outline-none"
+                className="w-full rounded-lg border border-rail-line bg-rail-active/50 py-2.5 pr-3 pl-9 text-sm text-rail-ink placeholder:text-rail-muted focus:border-sage focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--sage)_28%,transparent)] focus:outline-none"
               />
             </div>
           </form>
@@ -226,7 +226,7 @@ export function Casca({
             )}
             {usuario.admin ? (
               <>
-                <p className="mt-6 mb-1 px-3 text-xs font-bold tracking-[0.12em] text-sage uppercase">
+                <p className="mt-6 mb-1 px-3 text-xs font-bold tracking-[0.08em] text-sage uppercase">
                   Painel do administrador
                 </p>
                 {menuAdmin.map((grupo) => (
@@ -259,7 +259,18 @@ export function Casca({
               aria-expanded={menuAberto}
               onClick={() => setMenuAberto((aberto) => !aberto)}
             >
-              ☰ Menu
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+              Menu
             </button>
             <p className="hidden text-sm text-muted md:block">
               Prazos, audiências e contatos
@@ -285,7 +296,7 @@ export function Casca({
                 </p>
               </div>
               <form action={sair}>
-                <button type="submit" className="btn btn-primario btn-pequeno">
+                <button type="submit" className="btn btn-pequeno">
                   Sair
                 </button>
               </form>

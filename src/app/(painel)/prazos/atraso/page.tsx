@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { FormularioCumprir } from "@/components/formulario-cumprir";
+import { Seta } from "@/components/seta";
 import { obterDb } from "@/db/client";
 import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { hojeNoEscritorio } from "@/lib/contagens";
@@ -160,11 +161,14 @@ async function Lista({
             {maisNovo ? (
               <Link
                 href={`/prazos/atraso?dia=${maisNovo.data}`}
-                className="cartao-link px-4 py-3 text-base font-semibold text-ink"
+                className="cartao-link flex items-center gap-3 px-4 py-3 text-base font-semibold text-ink"
               >
-                <span aria-hidden="true">← </span>Mais recente
-                <span className="mt-1 block text-sm font-normal text-muted">
-                  {dataBr(maisNovo.data)} · {maisNovo.total}
+                <Seta />
+                <span>
+                  Mais recente
+                  <span className="mt-1 block text-sm font-normal text-muted">
+                    {dataBr(maisNovo.data)} · {maisNovo.total}
+                  </span>
                 </span>
               </Link>
             ) : (
@@ -179,12 +183,15 @@ async function Lista({
             {antigo ? (
               <Link
                 href={`/prazos/atraso?dia=${antigo.data}`}
-                className="cartao-link px-4 py-3 text-right text-base font-semibold text-ink"
+                className="cartao-link flex items-center justify-end gap-3 px-4 py-3 text-right text-base font-semibold text-ink"
               >
-                Mais antigo<span aria-hidden="true"> →</span>
-                <span className="mt-1 block text-sm font-normal text-muted">
-                  {dataBr(antigo.data)} · {antigo.total}
+                <span>
+                  Mais antigo
+                  <span className="mt-1 block text-sm font-normal text-muted">
+                    {dataBr(antigo.data)} · {antigo.total}
+                  </span>
                 </span>
+                <Seta direcao="direita" />
               </Link>
             ) : (
               <span />

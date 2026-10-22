@@ -34,7 +34,11 @@ async function Conteudo() {
 
   return (
     <div className="mx-auto w-full max-w-5xl">
-      <section className="cartao mb-6 p-5 md:p-7">
+      <h1 className="titulo-pagina">Alterar dados</h1>
+      <p className="subtitulo-pagina">
+        Seus dados de contato, a senha de acesso e os avisos de prazo.
+      </p>
+      <section className="mt-8">
         <h2 className="titulo-secao">Avisos de prazo</h2>
         <p className="mt-2 text-base text-muted">
           Quando a data de um prazo seu muda, a data antiga e a nova ficam aqui.
@@ -49,11 +53,11 @@ async function Conteudo() {
         {avisos.length === 0 ? (
           <p className="vazio mt-6">Nenhum aviso por enquanto.</p>
         ) : (
-          <ul className="mt-6 space-y-3">
+          <ul className="lista-cartoes mt-6">
             {avisos.map((item) => (
               <li
                 key={item.id}
-                className={`rounded-xl border border-line px-4 py-3 ${item.lida ? "opacity-70" : "bg-pen-soft"}`}
+                className={`px-4 py-3 ${item.lida ? "" : "bg-pen-soft"}`}
               >
                 <p className="font-semibold text-ink">{item.titulo}</p>
                 <p className="mt-1 text-base text-ink">

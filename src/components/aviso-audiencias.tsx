@@ -49,7 +49,7 @@ export function AvisoAudiencias({
     <>
       <button
         type="button"
-        className="btn btn-pequeno relative"
+        className="btn btn-pequeno btn-icone relative"
         aria-expanded={aberto}
         aria-controls="aviso-audiencias"
         title="Audiências pendentes"
@@ -70,7 +70,9 @@ export function AvisoAudiencias({
         </svg>
         <span className="sr-only">Audiências pendentes</span>
         {total > 0 ? (
-          <span className="selo selo-audiencia">{total}</span>
+          <span className="selo selo-audiencia absolute -top-1.5 -right-1.5 min-w-5 justify-center px-1">
+            {total}
+          </span>
         ) : null}
       </button>
       {aberto && montado
@@ -81,10 +83,7 @@ export function AvisoAudiencias({
               aria-labelledby="aviso-audiencias-titulo"
               className="cartao fixed top-[4.25rem] right-4 z-40 w-[min(22rem,calc(100vw-2rem))] p-4 shadow-alta md:right-8"
             >
-              <h2
-                id="aviso-audiencias-titulo"
-                className="text-base font-semibold"
-              >
+              <h2 id="aviso-audiencias-titulo" className="titulo-secao">
                 Audiências pendentes
               </h2>
               <p className="mt-2 text-sm leading-snug text-ink">{frase}</p>

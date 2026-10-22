@@ -44,11 +44,17 @@ async function Formulario({
 
   return (
     <div className="entrada cartao w-full max-w-md p-8 shadow-media md:p-10">
-      <h1 className="flex items-center gap-3 text-2xl font-bold tracking-tight text-ink">
-        <Simbolo cor="verde" className="h-9 w-auto dark:hidden" />
-        <Simbolo cor="branco" className="hidden h-9 w-auto dark:block" />
-        Agenda Coelho Vignini
+      <h1 className="text-2xl font-bold tracking-tight text-ink">
+        <span className="flex items-center gap-3 lg:hidden">
+          <Simbolo cor="verde" className="h-9 w-auto dark:hidden" />
+          <Simbolo cor="branco" className="hidden h-9 w-auto dark:block" />
+          Agenda Coelho Vignini
+        </span>
+        <span className="hidden lg:inline">Entrar</span>
       </h1>
+      <p className="subtitulo-pagina hidden lg:block">
+        Usuário e senha do escritório.
+      </p>
       <form className="mt-8 space-y-5" action={entrar}>
         <div>
           <label htmlFor="login" className="rotulo-campo">

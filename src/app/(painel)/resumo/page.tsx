@@ -371,9 +371,7 @@ async function Corpo({
         {cartoes.map((cartao) => {
           const corpo = (
             <>
-              <p className="text-[0.9688rem] font-medium text-muted">
-                {cartao.rotulo}
-              </p>
+              <p className="text-sm font-medium text-muted">{cartao.rotulo}</p>
               <p
                 className={`mt-2 text-4xl leading-none font-bold tracking-tight ${cartao.tom}`}
               >

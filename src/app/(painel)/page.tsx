@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { CalendarioAno } from "@/components/calendario-ano";
 import { CalendarioMes } from "@/components/calendario-mes";
+import { Seta } from "@/components/seta";
 import { chaveMes, lerMes } from "@/lib/calendario";
 import {
   contarPainel,
@@ -90,10 +91,8 @@ async function PainelDoDia({
 
   return (
     <div className={`mx-auto w-full ${anual ? "max-w-7xl" : "max-w-6xl"}`}>
-      <p className="text-sm font-semibold tracking-[0.08em] text-muted uppercase">
-        {dataExibida}
-      </p>
-      <h1 className="titulo-pagina mt-1">Seu dia no escritório</h1>
+      <h1 className="titulo-pagina">Seu dia no escritório</h1>
+      <p className="subtitulo-pagina">{dataExibida}</p>
       <p className="mt-4 flex flex-wrap gap-3">
         <a href="/resumo" className="btn btn-primario">
           Seu resumo de hoje
@@ -106,11 +105,9 @@ async function PainelDoDia({
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cartoes.map((item) => (
           <a key={item.href} href={item.href} className="cartao-link p-6">
-            <p className="text-[0.9688rem] font-medium text-muted">
-              {item.rotulo}
-            </p>
+            <p className="text-sm font-medium text-muted">{item.rotulo}</p>
             <p
-              className={`mt-2 text-5xl leading-none font-bold tracking-tight ${
+              className={`mt-3 text-5xl leading-none font-bold tracking-tight ${
                 item.tom === "hearing"
                   ? "text-hearing"
                   : item.tom === "late"
@@ -120,13 +117,7 @@ async function PainelDoDia({
             >
               {item.valor}
             </p>
-            <p className="mt-4">
-              <span
-                className={`selo ${item.tom === "late" ? "selo-atraso" : item.tom === "hearing" ? "selo-audiencia" : "selo-ok"}`}
-              >
-                {item.detalhe}
-              </span>
-            </p>
+            <p className="mt-3 text-sm text-muted">{item.detalhe}</p>
           </a>
         ))}
       </div>
@@ -148,10 +139,12 @@ async function PainelDoDia({
         {anual ? (
           <>
             <a href={`/?mes=${recorte.ano - 1}-01`} className="btn">
-              ← {recorte.ano - 1}
+              <Seta />
+              {recorte.ano - 1}
             </a>
             <a href={`/?mes=${recorte.ano + 1}-01`} className="btn">
-              {recorte.ano + 1} →
+              {recorte.ano + 1}
+              <Seta direcao="direita" />
             </a>
           </>
         ) : null}

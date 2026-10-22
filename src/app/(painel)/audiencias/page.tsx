@@ -2,6 +2,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { classeCampo } from "@/components/campo";
+import { Seta } from "@/components/seta";
 import { exigirUsuario } from "@/lib/acesso";
 import {
   listarAudiencias,
@@ -459,13 +460,15 @@ async function Lista({
               href={comSuas(`/audiencias?semana=${quadro.anterior}`, suas)}
               className="btn"
             >
-              ← Semana anterior
+              <Seta />
+              Semana anterior
             </Link>
             <Link
               href={comSuas(`/audiencias?semana=${quadro.proxima}`, suas)}
               className="btn"
             >
-              Próxima semana →
+              Próxima semana
+              <Seta direcao="direita" />
             </Link>
           </div>
         </div>
@@ -545,26 +548,26 @@ async function Lista({
                         <p className="mt-2 font-bold text-ink">
                           {item.numeroProcesso || "Sem número"}
                         </p>
-                        <p className="mt-1 text-[0.9688rem] text-ink">
+                        <p className="mt-1 text-sm text-ink">
                           {[item.reclamante, item.reclamado]
                             .filter(Boolean)
                             .join(" × ")}
                         </p>
-                        <p className="mt-1 text-[0.9688rem] text-muted">
+                        <p className="mt-1 text-sm text-muted">
                           {[item.vara, item.local].filter(Boolean).join(" · ")}
                         </p>
                         {item.preposto ? (
-                          <p className="mt-1 text-[0.9688rem] text-muted">
+                          <p className="mt-1 text-sm text-muted">
                             Preposto: {item.preposto}
                           </p>
                         ) : null}
                         {item.advogados.length > 0 ? (
-                          <p className="mt-1 text-[0.9688rem] text-muted">
+                          <p className="mt-1 text-sm text-muted">
                             {item.advogados.join(", ")}
                           </p>
                         ) : null}
                         {item.observacao ? (
-                          <p className="mt-2 text-[0.9688rem] whitespace-pre-wrap text-ink">
+                          <p className="mt-2 text-sm whitespace-pre-wrap text-ink">
                             {item.observacao}
                           </p>
                         ) : null}

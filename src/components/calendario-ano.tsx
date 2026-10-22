@@ -3,13 +3,13 @@ import { chaveMes, montarMes } from "@/lib/calendario";
 import type { MarcaDia } from "@/lib/contagens";
 
 const SEMANA = [
-  { id: "domingo", letra: "D" },
-  { id: "segunda", letra: "S" },
-  { id: "terca", letra: "T" },
-  { id: "quarta", letra: "Q" },
-  { id: "quinta", letra: "Q" },
-  { id: "sexta", letra: "S" },
-  { id: "sabado", letra: "S" },
+  { id: "domingo", letra: "Dom" },
+  { id: "segunda", letra: "Seg" },
+  { id: "terca", letra: "Ter" },
+  { id: "quarta", letra: "Qua" },
+  { id: "quinta", letra: "Qui" },
+  { id: "sexta", letra: "Sex" },
+  { id: "sabado", letra: "Sáb" },
 ];
 
 const APARENCIA: Record<MarcaDia, string> = {
@@ -76,7 +76,7 @@ export function CalendarioAno({
                   {SEMANA.map((coluna) => (
                     <th
                       key={coluna.id}
-                      className="pb-1 text-center text-sm font-semibold text-muted"
+                      className="pb-1 text-center text-xs font-semibold text-muted"
                     >
                       {coluna.letra}
                     </th>
@@ -131,7 +131,7 @@ export function CalendarioAno({
           </section>
         );
       })}
-      <ul className="cartao flex flex-wrap gap-x-6 gap-y-2 p-4 text-[0.9688rem] md:col-span-2 xl:col-span-3">
+      <ul className="cartao flex flex-wrap gap-x-6 gap-y-2 p-4 text-sm md:col-span-2 xl:col-span-3">
         {LEGENDA.map((item) => (
           <li key={item.marca} className="flex items-center gap-2">
             <span

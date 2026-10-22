@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { FormularioResponsavel } from "@/components/formulario-responsavel";
+import { Seta } from "@/components/seta";
 import { obterDb } from "@/db/client";
 import { prazos } from "@/db/schema";
 import { hojeNoEscritorio } from "@/lib/contagens";
@@ -207,7 +208,7 @@ async function Lista({
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             {anterior ? (
               <Link href={endereco(anterior.data)} className="btn">
-                <span aria-hidden="true">←</span>
+                <Seta />
                 <span className="text-left">
                   {emAtraso ? "Mais recente" : "Anterior"}
                   <span className="block text-sm font-normal text-muted">
@@ -232,7 +233,7 @@ async function Lista({
                     {dataBr(proximo.data)} · {proximo.total}
                   </span>
                 </span>
-                <span aria-hidden="true">→</span>
+                <Seta direcao="direita" />
               </Link>
             ) : (
               <span />

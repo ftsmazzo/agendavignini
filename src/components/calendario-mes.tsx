@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Seta } from "@/components/seta";
 import { chaveMes, deslocarMes, montarMes } from "@/lib/calendario";
 import type { MarcaDia, ResumoDia } from "@/lib/contagens";
 
@@ -92,9 +93,6 @@ function linhasDoDia(resumo: ResumoDia | undefined) {
   return linhas;
 }
 
-const SETA =
-  "inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-sheet text-ink shadow-suave transition-colors hover:border-pen hover:bg-pen-soft";
-
 export function CalendarioMes({
   ano,
   mes,
@@ -125,49 +123,28 @@ export function CalendarioMes({
           {atual ? (
             <span className="selo mt-3">Mês atual</span>
           ) : (
-            <Link href="/" className="btn-texto mt-3 text-[0.9688rem]">
-              ↩ Voltar ao mês atual
+            <Link href="/" className="btn-texto mt-3">
+              <Seta />
+              Voltar ao mês atual
             </Link>
           )}
         </div>
         <div className="flex items-center gap-2">
           <Link
             href={`/?vista=mes&mes=${chaveMes(anterior.ano, anterior.mes)}`}
-            className={SETA}
+            className="btn btn-icone"
             aria-label={`Mês anterior: ${nomeAnterior}`}
             title={nomeAnterior}
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M15 6l-6 6 6 6" />
-            </svg>
+            <Seta />
           </Link>
           <Link
             href={`/?vista=mes&mes=${chaveMes(proximo.ano, proximo.mes)}`}
-            className={SETA}
+            className="btn btn-icone"
             aria-label={`Próximo mês: ${nomeProximo}`}
             title={nomeProximo}
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M9 6l6 6-6 6" />
-            </svg>
+            <Seta direcao="direita" />
           </Link>
         </div>
       </div>
@@ -197,7 +174,7 @@ export function CalendarioMes({
           const total = (resumo?.abertos ?? 0) + (resumo?.cumpridos ?? 0);
           const audiencias = resumo?.audiencias ?? 0;
           const classe = [
-            "group relative z-0 flex h-16 w-full flex-col items-center justify-center gap-1 rounded-xl text-lg transition-all hover:z-30 hover:-translate-y-0.5 hover:shadow-media focus-visible:z-30 md:h-24 md:text-2xl",
+            "group relative z-0 flex h-16 w-full flex-col items-center justify-center gap-1 rounded-xl text-lg transition-colors hover:z-30 hover:shadow-media focus-visible:z-30 md:h-24 md:text-2xl",
             marca
               ? APARENCIA[marca]
               : celula.fimDeSemana
