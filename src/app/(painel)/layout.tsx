@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { Casca } from "@/components/casca";
@@ -20,6 +21,7 @@ export default function PainelLayout({ children }: { children: ReactNode }) {
 }
 
 async function PainelAutenticado({ children }: { children: ReactNode }) {
+  await connection();
   const sessao = await lerSessao();
   if (!sessao) {
     redirect("/entrar");
