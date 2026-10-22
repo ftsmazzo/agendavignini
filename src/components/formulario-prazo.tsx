@@ -184,13 +184,23 @@ export function FormularioPrazo({
           </div>
         )}
         {prazo?.id ? null : (
-          <p className="ajuda-campo">
-            Em branco, grava só a data de cima. Sábado, domingo e feriado passam
-            para o próximo dia útil. A série para no fim desses meses.
-            {previa && previa.datas.length > 1
-              ? ` Vai gravar ${previa.datas.length} datas, de ${dataBr(previa.datas[0] ?? data)} até ${dataBr(previa.datas[previa.datas.length - 1] ?? data)}.`
-              : ""}
-          </p>
+          <div className="ajuda-campo">
+            <ol className="list-decimal space-y-1 pl-5">
+              <li>
+                Meses e intervalo em branco: registra uma data só, a escolhida
+                acima.
+              </li>
+              <li>
+                Sábado, domingo ou feriado: essa data pula para o próximo dia
+                útil.
+              </li>
+            </ol>
+            {previa && previa.datas.length > 1 ? (
+              <p className="mt-2">
+                {`Vai gravar ${previa.datas.length} datas, de ${dataBr(previa.datas[0] ?? data)} até ${dataBr(previa.datas[previa.datas.length - 1] ?? data)}.`}
+              </p>
+            ) : null}
+          </div>
         )}
         <Campo id="titulo" rotulo="Prazo">
           <input
