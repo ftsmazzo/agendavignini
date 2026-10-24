@@ -522,6 +522,18 @@ p {
     font-weight: 600;
   }
 
+  /* Confirmação dentro da Agenda, sem a janela do navegador */
+  dialog.confirmacao {
+    width: min(26rem, calc(100% - 2rem));
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--ink);
+  }
+  dialog.confirmacao::backdrop {
+    background: rgb(15 27 51 / 0.5);
+  }
+
   /* Estado vazio */
   .vazio {
     padding: 2.5rem 1.5rem;

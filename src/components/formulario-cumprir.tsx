@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useId, useRef, useState } from "react";
 import { cumprirVarios } from "@/app/(painel)/prazos/cumprir/actions";
 
 type PrazoAberto = {
@@ -28,22 +28,16 @@ export function FormularioCumprir({
     erro: "",
   });
   const [ids, setIds] = useState<number[]>([]);
+  const dialogo = useRef<HTMLDialogElement>(null);
+  const titulo = useId();
   const todos = itens.length > 0 && ids.length === itens.length;
+  const frase =
+    ids.length === 1
+      ? "Você deseja realmente cumprir este prazo?"
+      : "Você deseja realmente cumprir estes prazos?";
 
   return (
-    <form
-      action={acao}
-      className="mt-6"
-      onSubmit={(evento) => {
-        const frase =
-          ids.length === 1
-            ? "Você deseja realmente cumprir este prazo?"
-            : "Você deseja realmente cumprir estes prazos?";
-        if (!window.confirm(frase)) {
-          evento.preventDefault();
-        }
-      }}
-    >
+    <form action={acao} className="mt-6">
       <input type="hidden" name="dia" value={dia} />
       <input type="hidden" name="origem" value={origem} />
       {estado.erro ? (
@@ -64,9 +58,10 @@ export function FormularioCumprir({
           Selecionar todos deste dia
         </label>
         <button
-          type="submit"
+          type="button"
           disabled={pendente || ids.length === 0}
           className="btn btn-sucesso disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() => dialogo.current?.showModal()}
         >
           <svg
             aria-hidden="true"
@@ -145,6 +140,34 @@ export function FormularioCumprir({
           );
         })}
       </ul>
+      <dialog ref={dialogo} className="confirmacao" aria-labelledby={titulo}>
+        <div className="cartao p-6 shadow-alta">
+          <h2 id={titulo} className="titulo-secao">
+            {frase}
+          </h2>
+          <p className="mt-2 text-base text-muted">
+            {ids.length === 1
+              ? "1 prazo em aberto."
+              : `${ids.length} prazos em aberto.`}
+          </p>
+          <div className="mt-6 flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              className="btn"
+              onClick={() => dialogo.current?.close()}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="btn btn-sucesso"
+              disabled={pendente}
+            >
+              {pendente ? "Cumprindo." : "Cumprir"}
+            </button>
+          </div>
+        </div>
+      </dialog>
     </form>
   );
 }
