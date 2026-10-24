@@ -141,26 +141,24 @@ export function FormularioCumprir({
         })}
       </ul>
       <dialog ref={dialogo} className="confirmacao" aria-labelledby={titulo}>
-        <div className="cartao p-6 shadow-alta">
-          <h2 id={titulo} className="titulo-secao">
-            {frase}
-          </h2>
-          <p className="mt-2 text-base text-muted">
+        <div className="cartao p-5 shadow-alta">
+          <h2 id={titulo}>{frase}</h2>
+          <p>
             {ids.length === 1
               ? "1 prazo em aberto."
               : `${ids.length} prazos em aberto.`}
           </p>
-          <div className="mt-6 flex flex-wrap justify-end gap-2">
+          <div className="confirmacao-acoes mt-4 flex flex-wrap gap-2">
             <button
               type="button"
-              className="btn"
+              className="btn btn-pequeno"
               onClick={() => dialogo.current?.close()}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="btn btn-sucesso"
+              className="btn btn-sucesso btn-pequeno"
               disabled={pendente}
             >
               {pendente ? "Cumprindo." : "Cumprir"}

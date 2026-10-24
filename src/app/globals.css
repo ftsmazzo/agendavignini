@@ -522,18 +522,6 @@ p {
     font-weight: 600;
   }
 
-  /* Confirmação dentro da Agenda, sem a janela do navegador */
-  dialog.confirmacao {
-    width: min(26rem, calc(100% - 2rem));
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: var(--ink);
-  }
-  dialog.confirmacao::backdrop {
-    background: rgb(15 27 51 / 0.5);
-  }
-
   /* Estado vazio */
   .vazio {
     padding: 2.5rem 1.5rem;
@@ -566,6 +554,53 @@ p {
 .prazo-cumprido
   :where(p, h1, h2, h3, h4, a, span, li, summary, label, strong, em, div) {
   color: #f7f9ff;
+}
+
+dialog.confirmacao:modal {
+  position: fixed;
+  inset: 4.5rem auto auto 50%;
+  width: min(22rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  height: fit-content;
+  max-height: calc(100vh - 6rem);
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  overflow: visible;
+  translate: -50% 0;
+}
+
+dialog.confirmacao::backdrop {
+  background: rgb(15 27 51 / 0.5);
+}
+
+dialog.confirmacao .cartao,
+dialog.confirmacao h2,
+dialog.confirmacao p,
+dialog.confirmacao .btn:not(.btn-sucesso) {
+  color: var(--ink);
+}
+
+dialog.confirmacao h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
+dialog.confirmacao p {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--muted);
+}
+
+dialog.confirmacao .confirmacao-acoes {
+  justify-content: center;
 }
 .prazo-trab .selo,
 .prazo-civil .selo,

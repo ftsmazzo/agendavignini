@@ -25,19 +25,17 @@ export function BotaoCumprir({
         Cumprir
       </button>
       <dialog ref={dialogo} className="confirmacao" aria-labelledby={titulo}>
-        <div className="cartao p-6 shadow-alta">
-          <h2 id={titulo} className="titulo-secao">
-            Você deseja realmente cumprir este prazo?
-          </h2>
-          <div className="mt-6 flex flex-wrap justify-end gap-2">
+        <div className="cartao p-5 shadow-alta">
+          <h2 id={titulo}>Você deseja realmente cumprir este prazo?</h2>
+          <div className="confirmacao-acoes mt-4 flex flex-wrap gap-2">
             <button
               type="button"
-              className="btn"
+              className="btn btn-pequeno"
               onClick={() => dialogo.current?.close()}
             >
               Cancelar
             </button>
-            <button type="submit" className="btn btn-sucesso">
+            <button type="submit" className="btn btn-sucesso btn-pequeno">
               Cumprir
             </button>
           </div>
