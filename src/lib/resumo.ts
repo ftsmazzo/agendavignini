@@ -108,6 +108,18 @@ export function faixaDaArea(
   return FAIXA[area];
 }
 
+function tituloIndicaDefesa(titulo: string) {
+  return /\bdefesas?\b/i.test(titulo);
+}
+
+export function prazoEhDefesa(marcado: boolean, titulo: string) {
+  return marcado || tituloIndicaDefesa(titulo);
+}
+
+export function filtroDefesa() {
+  return sql`(${prazos.defesa} = true or ${prazos.titulo} ~* '\\mdefesas?\\M')`;
+}
+
 function carimbo(agora: Date) {
   const partes = new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",

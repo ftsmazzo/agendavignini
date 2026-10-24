@@ -31,7 +31,19 @@ export function FormularioCumprir({
   const todos = itens.length > 0 && ids.length === itens.length;
 
   return (
-    <form action={acao} className="mt-6">
+    <form
+      action={acao}
+      className="mt-6"
+      onSubmit={(evento) => {
+        const frase =
+          ids.length === 1
+            ? "Você deseja realmente cumprir este prazo?"
+            : "Você deseja realmente cumprir estes prazos?";
+        if (!window.confirm(frase)) {
+          evento.preventDefault();
+        }
+      }}
+    >
       <input type="hidden" name="dia" value={dia} />
       <input type="hidden" name="origem" value={origem} />
       {estado.erro ? (

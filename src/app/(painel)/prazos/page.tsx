@@ -6,6 +6,7 @@ import {
   desfazer,
   excluirPrazo,
 } from "@/app/(painel)/admin/prazos/actions";
+import { BotaoCumprir } from "@/components/botao-cumprir";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { CorpoPrazo } from "@/components/corpo-prazo";
 import { MarcarAdvogado } from "@/components/marcar-advogado";
@@ -17,7 +18,13 @@ import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr, semanaDe, somarDias } from "@/lib/datas";
 import { listarPessoas } from "@/lib/pessoas";
 import { numeroDoProcesso } from "@/lib/publicacao";
-import { faixaDaArea, rotuloArea, statusDoPrazo } from "@/lib/resumo";
+import {
+  faixaDaArea,
+  filtroDefesa,
+  prazoEhDefesa,
+  rotuloArea,
+  statusDoPrazo,
+} from "@/lib/resumo";
 
 const AREAS = ["administrativo", "civil", "trabalhista"] as const;
 
@@ -170,7 +177,7 @@ async function Lista({
     );
   }
   if (soDefesas) {
-    filtros.push(eq(prazos.defesa, true));
+    filtros.push(filtroDefesa());
   }
   if (advogadoFiltro === "0") {
     filtros.push(
@@ -286,7 +293,7 @@ async function Lista({
   const [defesasConta] = await db
     .select({ total: sql<number>`count(*)::int` })
     .from(prazos)
-    .where(and(filtroData, eq(prazos.defesa, true)));
+    .where(and(filtroData, filtroDefesa()));
   const defesasTotal = defesasConta?.total ?? 0;
   const filtrosVisiveis: Array<{
     rotulo: string;
@@ -524,7 +531,7 @@ async function Lista({
       {itens.length === 0 ? (
         <p className="vazio mt-8">
           {soDefesas
-            ? "Nenhuma defesa marcada neste dia. No cadastro do prazo, escolha Classificação: Defesa."
+            ? "Nenhuma defesa neste dia. Vale a classificação Defesa, ou a palavra defesa no título."
             : "Nenhum prazo neste recorte."}
         </p>
       ) : quando === "semana" ? (
@@ -543,7 +550,7 @@ async function Lista({
                   .map((item) => (
                     <li
                       key={item.id}
-                      className={`px-4 py-3 ${faixaDaArea(item.area, item.situacao, item.defesa)}`}
+                      className={`px-4 py-3 ${faixaDaArea(item.area, item.situacao, prazoEhDefesa(item.defesa, item.titulo))}`}
                     >
                       <CartaoPrazo
                         item={item}
@@ -565,7 +572,7 @@ async function Lista({
           {itens.map((item) => (
             <li
               key={item.id}
-              className={`px-4 py-3 ${faixaDaArea(item.area, item.situacao, item.defesa)}`}
+              className={`px-4 py-3 ${faixaDaArea(item.area, item.situacao, prazoEhDefesa(item.defesa, item.titulo))}`}
             >
               <CartaoPrazo
                 item={item}
@@ -637,7 +644,9 @@ function CartaoPrazo({
           })}
         </span>
         {seu ? <span className="selo selo-audiencia">Seu prazo</span> : null}
-        {item.defesa ? <span className="selo">Defesa</span> : null}
+        {prazoEhDefesa(item.defesa, item.titulo) ? (
+          <span className="selo">Defesa</span>
+        ) : null}
       </p>
       <h3 className="mt-1 text-base leading-tight font-semibold text-ink">
         {item.titulo}
@@ -695,13 +704,10 @@ function CartaoPrazo({
               />
             ) : null}
             {item.situacao === "aberto" ? (
-              <form action={cumprir}>
+              <BotaoCumprir action={cumprir}>
                 <input type="hidden" name="id" value={item.id} />
                 <input type="hidden" name="voltar" value={voltar} />
-                <button type="submit" className="btn btn-sucesso btn-pequeno">
-                  Cumprir
-                </button>
-              </form>
+              </BotaoCumprir>
             ) : null}
             {admin && item.situacao === "cumprido" ? (
               <form action={desfazer}>

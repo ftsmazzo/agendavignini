@@ -3,12 +3,18 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { cumprir } from "@/app/(painel)/admin/prazos/actions";
+import { BotaoCumprir } from "@/components/botao-cumprir";
 import { obterDb } from "@/db/client";
 import { prazos } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr } from "@/lib/datas";
-import { faixaDaArea, marcaDoPrazo, rotuloArea } from "@/lib/resumo";
+import {
+  faixaDaArea,
+  marcaDoPrazo,
+  prazoEhDefesa,
+  rotuloArea,
+} from "@/lib/resumo";
 
 const SELO = {
   vermelho: "bg-late text-late-ink",
@@ -35,6 +41,7 @@ async function Lista() {
       area: prazos.area,
       data: prazos.data,
       titulo: prazos.titulo,
+      defesa: prazos.defesa,
       situacao: prazos.situacao,
     })
     .from(prazos)
@@ -105,7 +112,7 @@ async function Lista() {
                   return (
                     <li
                       key={item.id}
-                      className={`px-5 py-4 ${faixaDaArea(item.area)}`}
+                      className={`px-5 py-4 ${faixaDaArea(item.area, item.situacao, prazoEhDefesa(item.defesa, item.titulo))}`}
                     >
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] text-muted">
@@ -126,20 +133,14 @@ async function Lista() {
                           {item.titulo}
                         </Link>
                       </h3>
-                      <form action={cumprir} className="mt-3">
+                      <BotaoCumprir action={cumprir} className="mt-3">
                         <input type="hidden" name="id" value={item.id} />
                         <input
                           type="hidden"
                           name="voltar"
                           value="/prazos/meus"
                         />
-                        <button
-                          type="submit"
-                          className="btn btn-sucesso btn-pequeno"
-                        >
-                          Cumprir
-                        </button>
-                      </form>
+                      </BotaoCumprir>
                     </li>
                   );
                 })}

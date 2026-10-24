@@ -239,7 +239,8 @@ export function FormularioPrazo({
             </label>
           </div>
           <p className="mt-3 text-base text-muted">
-            Defesa entra na aba Defesas do dia e fica em lilás.
+            Defesa, ou a palavra defesa no título, entra na aba Defesas e fica
+            em lilás, no lugar da cor da área. Prazo cumprido continua vermelho.
           </p>
         </fieldset>
         <Campo id="observacao" rotulo="Observação">

@@ -7,7 +7,12 @@ import { obterDb } from "@/db/client";
 import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr, dataIsoValida } from "@/lib/datas";
-import { faixaDaArea, marcaDoPrazo, rotuloArea } from "@/lib/resumo";
+import {
+  faixaDaArea,
+  marcaDoPrazo,
+  prazoEhDefesa,
+  rotuloArea,
+} from "@/lib/resumo";
 
 const SELO = {
   vermelho: "bg-late text-late-ink",
@@ -45,6 +50,7 @@ async function Lista({
       area: prazos.area,
       data: prazos.data,
       titulo: prazos.titulo,
+      defesa: prazos.defesa,
       situacao: prazos.situacao,
       processo: sql<
         string | null
@@ -141,7 +147,11 @@ async function Lista({
             return {
               id: item.id,
               titulo: item.titulo,
-              faixa: faixaDaArea(item.area),
+              faixa: faixaDaArea(
+                item.area,
+                item.situacao,
+                prazoEhDefesa(item.defesa, item.titulo),
+              ),
               rotulo: rotuloArea(item.area),
               marca: marca.texto,
               selo: SELO[marca.tom],
