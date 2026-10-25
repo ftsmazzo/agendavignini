@@ -219,6 +219,7 @@ export function FormularioAudiencia({
     reclamado: string;
     preposto: string;
     dataHora: string;
+    tipo: string;
     modalidade: string;
     ato: string;
     observacao: string;
@@ -229,6 +230,10 @@ export function FormularioAudiencia({
   const [estado, acao, pendente] = useActionState(salvarAudiencia, {
     erro: "",
   });
+  const [tipo, setTipo] = useState(
+    audiencia?.tipo === "pericia" ? "pericia" : "audiencia",
+  );
+  const pericia = tipo === "pericia";
   const [campos, setCampos] = useState<Campos>({
     numeroProcesso: audiencia?.numeroProcesso ?? "",
     vara: audiencia?.vara ?? "",
@@ -245,12 +250,49 @@ export function FormularioAudiencia({
         Voltar às audiências
       </Link>
       <h1 className="titulo-pagina mt-2">
-        {audiencia ? "Editar audiência" : "Adicionar audiência"}
+        {audiencia
+          ? pericia
+            ? "Editar perícia"
+            : "Editar audiência"
+          : pericia
+            ? "Adicionar perícia"
+            : "Adicionar audiência"}
       </h1>
       <form action={acao} className="cartao mt-6 space-y-5 p-5 md:p-7">
         {audiencia ? (
           <input type="hidden" name="id" value={audiencia.id} />
         ) : null}
+        <fieldset className="rounded-xl border border-line p-4">
+          <legend className="px-2 text-lg font-semibold text-ink">Tipo</legend>
+          <div className="mt-2 flex flex-wrap gap-3">
+            <label className="flex items-center gap-2 text-lg text-ink">
+              <input
+                type="radio"
+                name="tipo"
+                value="audiencia"
+                checked={tipo === "audiencia"}
+                onChange={() => setTipo("audiencia")}
+                className="h-5 w-5"
+              />
+              Audiência
+            </label>
+            <label className="flex items-center gap-2 rounded-xl bg-hearing-soft px-3 py-2 text-lg text-ink">
+              <input
+                type="radio"
+                name="tipo"
+                value="pericia"
+                checked={tipo === "pericia"}
+                onChange={() => setTipo("pericia")}
+                className="h-5 w-5"
+              />
+              Perícia
+            </label>
+          </div>
+          <p className="mt-3 text-base text-muted">
+            A perícia entra na mesma lista, com os mesmos advogados. O local
+            registra onde ela será realizada.
+          </p>
+        </fieldset>
         <Campo id="numeroProcesso" rotulo="Núm. processo">
           <CampoProcesso
             valor={campos.numeroProcesso}
@@ -274,7 +316,7 @@ export function FormularioAudiencia({
               className={classeCampo}
             />
           </Campo>
-          <Campo id="local" rotulo="Local">
+          <Campo id="local" rotulo={pericia ? "Local da perícia" : "Local"}>
             <input
               id="local"
               name="local"
@@ -285,6 +327,7 @@ export function FormularioAudiencia({
                   local: evento.target.value,
                 }))
               }
+              placeholder="Onde será realizada"
               className={classeCampo}
             />
           </Campo>
@@ -393,15 +436,21 @@ export function FormularioAudiencia({
           disabled={pendente}
           className="btn btn-primario btn-cheio disabled:opacity-60"
         >
-          {pendente ? "Salvando…" : "Salvar audiência"}
+          {pendente
+            ? "Salvando…"
+            : pericia
+              ? "Salvar perícia"
+              : "Salvar audiência"}
         </button>
       </form>
       {audiencia ? (
         <div className="mt-4">
           <BotaoExcluir
             action={excluirAudiencia}
-            pergunta="Excluir esta audiência?"
-            rotulo="Excluir audiência"
+            pergunta={
+              pericia ? "Excluir esta perícia?" : "Excluir esta audiência?"
+            }
+            rotulo={pericia ? "Excluir perícia" : "Excluir audiência"}
           >
             <input type="hidden" name="id" value={audiencia.id} />
           </BotaoExcluir>

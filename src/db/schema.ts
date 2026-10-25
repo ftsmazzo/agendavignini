@@ -96,6 +96,7 @@ export const audiencias = pgTable(
     reclamado: text("reclamado"),
     preposto: text("preposto"),
     dataHora: timestamp("data_hora", { withTimezone: true }).notNull(),
+    tipo: text("tipo").notNull().default("audiencia"),
     modalidade: text("modalidade"),
     ato: text("ato"),
     observacao: text("observacao"),

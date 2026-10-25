@@ -55,6 +55,7 @@ export async function listarAudienciasAdmin(opcoes: {
       reclamante: audiencias.reclamante,
       reclamado: audiencias.reclamado,
       preposto: audiencias.preposto,
+      tipo: audiencias.tipo,
     })
     .from(audiencias)
     .where(and(filtroTexto, filtroAno))
@@ -255,6 +256,7 @@ async function marcarAudiencias(
     reclamante: linha.reclamante,
     reclamado: linha.reclamado,
     preposto: linha.preposto,
+    tipo: linha.tipo,
     modalidade: linha.modalidade,
     ato: linha.ato,
     observacao: linha.observacao,

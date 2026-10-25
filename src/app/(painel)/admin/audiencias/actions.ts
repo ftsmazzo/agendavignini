@@ -106,6 +106,8 @@ export async function salvarAudiencia(
   const reclamado = texto(formData, "reclamado", 200);
   const preposto = texto(formData, "preposto", 200);
   const observacao = texto(formData, "observacao", 8000);
+  const tipoBruto = texto(formData, "tipo", 20);
+  const tipo = tipoBruto === "pericia" ? "pericia" : "audiencia";
   const modalidadeBruta = texto(formData, "modalidade", 20);
   const atoBruto = texto(formData, "ato", 20);
   const modalidade = ["presencial", "telepresencial", "hibrida"].includes(
@@ -131,7 +133,7 @@ export async function salvarAudiencia(
   }
   const dia = texto(formData, "dataHora", 10);
   if (!dataIsoValida(dia) || ehFimDeSemana(dia)) {
-    return { erro: "A audiência não cai em sábado nem domingo." };
+    return { erro: "Audiência e perícia não caem em sábado nem domingo." };
   }
 
   const idBruto = texto(formData, "id", 12);
@@ -171,6 +173,7 @@ export async function salvarAudiencia(
     reclamante: reclamante || null,
     reclamado: reclamado || null,
     preposto: preposto || null,
+    tipo,
     modalidade,
     ato,
     dataHora,

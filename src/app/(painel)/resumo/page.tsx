@@ -552,9 +552,15 @@ async function Corpo({
                       {dataHoraBr(item.dataHora)}
                       {item.vara ? ` · ${item.vara}` : ""}
                     </span>
+                    {item.tipo === "pericia" ? (
+                      <span className="selo">Perícia</span>
+                    ) : null}
                   </p>
                   <p className="mt-1 text-lg font-semibold text-ink">
-                    {item.numeroProcesso || "Audiência sem número"}
+                    {item.numeroProcesso ||
+                      (item.tipo === "pericia"
+                        ? "Perícia sem número"
+                        : "Audiência sem número")}
                   </p>
                   <p className="mt-1 text-base text-muted">
                     {[item.reclamante, item.reclamado]

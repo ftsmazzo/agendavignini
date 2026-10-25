@@ -150,6 +150,9 @@ async function Lista({
                   <span className="selo selo-audiencia">
                     {dataHoraBr(item.dataHora)}
                   </span>
+                  {item.tipo === "pericia" ? (
+                    <span className="selo">Perícia</span>
+                  ) : null}
                   {item.preposto ? (
                     <span className="selo selo-neutro">
                       Preposto: {item.preposto}

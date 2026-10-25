@@ -25,6 +25,7 @@ type AudienciaDoDia = {
   preposto: string | null;
   dataHora: Date;
   observacao: string | null;
+  tipo: string;
 };
 
 export type PrazoDoDia = {
@@ -155,6 +156,7 @@ export function textoDoResumo(
         "",
         "--------------------------------------------------",
         `Num. Processo: ${item.numeroProcesso}`,
+        `Tipo:          ${item.tipo === "pericia" ? "Perícia" : "Audiência"}`,
         `Vara:          ${item.vara}`,
         `Local:         ${item.local}`,
         `Reclamante:    ${item.reclamante ?? ""}`,
@@ -210,6 +212,7 @@ export async function resumoDoDia(
       preposto: audiencias.preposto,
       dataHora: audiencias.dataHora,
       observacao: audiencias.observacao,
+      tipo: audiencias.tipo,
     })
     .from(audienciasUsuarios)
     .innerJoin(audiencias, eq(audiencias.id, audienciasUsuarios.audienciaId))
@@ -500,6 +503,7 @@ export async function itensDoDia(dia: string, advogadoId: number | null) {
         reclamado: audiencias.reclamado,
         preposto: audiencias.preposto,
         dataHora: audiencias.dataHora,
+        tipo: audiencias.tipo,
       })
       .from(audiencias)
       .where(

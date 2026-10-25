@@ -435,6 +435,7 @@ async function listarAudiencias(opcoes: {
         dataHora: audiencias.dataHora,
         modalidade: audiencias.modalidade,
         ato: audiencias.ato,
+        tipo: audiencias.tipo,
       })
       .from(audiencias)
       .innerJoin(
@@ -459,6 +460,7 @@ async function listarAudiencias(opcoes: {
       dataHora: audiencias.dataHora,
       modalidade: audiencias.modalidade,
       ato: audiencias.ato,
+      tipo: audiencias.tipo,
     })
     .from(audiencias)
     .where(and(...filtros))
@@ -561,6 +563,7 @@ export async function resumoDiaUsuarioMcp(
       numero_processo: item.numeroProcesso,
       vara: item.vara,
       local: item.local,
+      tipo: item.tipo,
       reclamante: item.reclamante,
       reclamado: item.reclamado,
       data_hora: item.dataHora,

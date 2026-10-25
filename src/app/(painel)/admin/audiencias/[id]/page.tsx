@@ -57,7 +57,7 @@ async function Editor({
     <div>
       {salvo ? (
         <output className="aviso aviso-ok mx-auto mb-6 block w-full max-w-3xl">
-          Audiência salva.
+          {audiencia.tipo === "pericia" ? "Perícia salva." : "Audiência salva."}
         </output>
       ) : null}
       <FormularioAudiencia
@@ -70,6 +70,7 @@ async function Editor({
           reclamado: audiencia.reclamado ?? "",
           preposto: audiencia.preposto ?? "",
           dataHora: paraCampoDataHora(audiencia.dataHora),
+          tipo: audiencia.tipo,
           modalidade: audiencia.modalidade ?? "",
           ato: audiencia.ato ?? "",
           observacao: audiencia.observacao ?? "",

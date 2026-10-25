@@ -406,6 +406,9 @@ async function Lista({
                   <li key={item.id} className="px-5 py-4">
                     <p className="flex flex-wrap items-center gap-2">
                       <span className="selo selo-audiencia">{item.hora}</span>
+                      {item.tipo === "pericia" ? (
+                        <span className="selo">Perícia</span>
+                      ) : null}
                       {item.minha ? <span className="selo">Sua</span> : null}
                     </p>
                     <p className="mt-2 text-lg font-bold text-ink">
@@ -541,6 +544,9 @@ async function Lista({
                           <span className="selo selo-audiencia">
                             {item.hora}
                           </span>
+                          {item.tipo === "pericia" ? (
+                            <span className="selo">Perícia</span>
+                          ) : null}
                           {item.minha ? (
                             <span className="selo">Sua</span>
                           ) : null}
@@ -686,6 +692,9 @@ async function Lista({
                 <span className="selo selo-audiencia">
                   {dataHoraBr(item.dataHora)}
                 </span>
+                {item.tipo === "pericia" ? (
+                  <span className="selo">Perícia</span>
+                ) : null}
                 {item.minha ? <span className="selo">Sua</span> : null}
               </p>
               <h2 className="mt-2 text-lg font-bold text-ink">

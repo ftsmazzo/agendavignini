@@ -227,7 +227,7 @@ export function FormularioPrazo({
               />
               Prazo comum
             </label>
-            <label className="flex items-center gap-2 rounded-xl bg-[#f3e9fb] px-3 py-2 text-lg text-ink">
+            <label className="flex items-center gap-2 rounded-xl bg-[#c48be0] px-3 py-2 text-lg text-ink">
               <input
                 type="radio"
                 name="defesa"

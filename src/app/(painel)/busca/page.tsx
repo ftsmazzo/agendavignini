@@ -78,6 +78,7 @@ async function Resultado({
           local: audiencias.local,
           reclamante: audiencias.reclamante,
           reclamado: audiencias.reclamado,
+          tipo: audiencias.tipo,
         })
         .from(audiencias)
         .where(
@@ -182,6 +183,9 @@ async function Resultado({
                         <span className="selo selo-audiencia">
                           {dataHoraBr(item.dataHora)}
                         </span>
+                        {item.tipo === "pericia" ? (
+                          <span className="selo">Perícia</span>
+                        ) : null}
                       </p>
                       <Link
                         href={`/audiencias?data=${dia}`}

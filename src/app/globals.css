@@ -251,7 +251,7 @@ p {
     background: #c0261c;
   }
   .prazo-defesa {
-    background: #f3e9fb;
+    background: #c48be0;
   }
   .lista-cartoes > li.prazo-admin:hover {
     background: #e5f6ec;
@@ -266,7 +266,7 @@ p {
     background: #c0261c;
   }
   .lista-cartoes > li.prazo-defesa:hover {
-    background: #f3e9fb;
+    background: #c48be0;
   }
 
   /* Botões */
@@ -556,6 +556,11 @@ p {
   color: #f7f9ff;
 }
 
+.prazo-defesa,
+.prazo-defesa :where(p, h1, h2, h3, h4, a, span, li, summary, label, strong, em, div) {
+  color: #0f1b33;
+}
+
 dialog.confirmacao:modal {
   position: fixed;
   inset: 4.5rem auto auto 50%;
@@ -687,7 +692,7 @@ dialog.confirmacao .confirmacao-acoes {
   background: #c0261c;
 }
 .prazo-defesa.prazo-selecionado {
-  background: #f3e9fb;
+  background: #c48be0;
 }
 .lista-cartoes > li.prazo-admin.prazo-selecionado:hover {
   background: #e5f6ec;
@@ -702,7 +707,7 @@ dialog.confirmacao .confirmacao-acoes {
   background: #c0261c;
 }
 .lista-cartoes > li.prazo-defesa.prazo-selecionado:hover {
-  background: #f3e9fb;
+  background: #c48be0;
 }
 
 .prazo-admin,

@@ -45,6 +45,7 @@ async function Folha({
       preposto: audiencias.preposto,
       dataHora: audiencias.dataHora,
       observacao: audiencias.observacao,
+      tipo: audiencias.tipo,
     })
     .from(audiencias)
     .where(
@@ -104,7 +105,10 @@ async function Folha({
               {item.reclamante || ""}
             </p>
             <p className="mt-2 text-xl text-ink">
-              <strong>Audiência:</strong> {dataHoraBr(item.dataHora)}
+              <strong>
+                {item.tipo === "pericia" ? "Perícia" : "Audiência"}:
+              </strong>{" "}
+              {dataHoraBr(item.dataHora)}
               {item.vara ? ` · ${item.vara}` : ""}
               {item.local ? ` · ${item.local}` : ""}
             </p>

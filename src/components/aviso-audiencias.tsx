@@ -40,10 +40,10 @@ export function AvisoAudiencias({
 
   const frase =
     total === 0
-      ? "Nenhuma audiência em aberto no seu nome."
+      ? "Nenhuma audiência ou perícia em aberto no seu nome."
       : total === 1
-        ? "Você tem 1 audiência em aberto no seu nome."
-        : `Você tem ${total} audiências em aberto no seu nome.`;
+        ? "Você tem 1 audiência ou perícia em aberto no seu nome."
+        : `Você tem ${total} audiências ou perícias em aberto no seu nome.`;
 
   return (
     <>
@@ -52,7 +52,7 @@ export function AvisoAudiencias({
         className="btn btn-pequeno btn-icone relative"
         aria-expanded={aberto}
         aria-controls="aviso-audiencias"
-        title="Audiências pendentes"
+        title="Audiências e perícias"
         onClick={alternar}
       >
         <svg
@@ -68,7 +68,7 @@ export function AvisoAudiencias({
           <path d="M6 9a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9" />
           <path d="M10 20a2 2 0 0 0 4 0" />
         </svg>
-        <span className="sr-only">Audiências pendentes</span>
+        <span className="sr-only">Audiências e perícias</span>
         {total > 0 ? (
           <span className="selo selo-audiencia absolute -top-1.5 -right-1.5 min-w-5 justify-center px-1">
             {total}
@@ -84,7 +84,7 @@ export function AvisoAudiencias({
               className="cartao fixed top-[4.25rem] right-4 z-40 w-[min(22rem,calc(100vw-2rem))] p-4 shadow-alta md:right-8"
             >
               <h2 id="aviso-audiencias-titulo" className="titulo-secao">
-                Audiências pendentes
+                Audiências e perícias
               </h2>
               <p className="mt-2 text-sm leading-snug text-ink">{frase}</p>
               <div className="mt-4 flex flex-wrap gap-2">
