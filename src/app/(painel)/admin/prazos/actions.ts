@@ -60,10 +60,7 @@ export async function salvarPrazo(
   const data = texto(formData, "data", 10);
   const titulo = texto(formData, "titulo", 4000);
   const observacao = texto(formData, "observacao", 20000);
-  const conteudo = String(formData.get("conteudo") ?? "")
-    .replaceAll("\u0000", "")
-    .trim()
-    .slice(0, 200000);
+  const conteudo = "";
   const cumpridoBruto = texto(formData, "cumpridoPor", 12);
   const cumpridoEmBruto = texto(formData, "cumpridoEm", 16);
   const cumpridoEmInformado = cumpridoEmBruto
@@ -92,9 +89,6 @@ export async function salvarPrazo(
   }
   if (!titulo) {
     return { erro: "Informe o prazo." };
-  }
-  if (ids.length === 0) {
-    return { erro: "Escolha ao menos um advogado." };
   }
 
   const idBruto = texto(formData, "id", 12);
@@ -140,15 +134,20 @@ export async function salvarPrazo(
       .where(eq(prazosUsuarios.prazoId, id));
     jaLigados = new Set(vinculos.map((item) => item.usuarioId));
   }
-  const escolhidos = await db
-    .select({ id: usuarios.id, ativo: usuarios.ativo })
-    .from(usuarios)
-    .where(inArray(usuarios.id, ids));
-  if (escolhidos.length !== ids.length) {
-    return { erro: "Escolha advogados que existam no escritório." };
-  }
-  if (escolhidos.some((pessoa) => !pessoa.ativo && !jaLigados.has(pessoa.id))) {
-    return { erro: "Escolha advogados ativos." };
+  let escolhidos: Array<{ id: number; ativo: boolean }> = [];
+  if (ids.length > 0) {
+    escolhidos = await db
+      .select({ id: usuarios.id, ativo: usuarios.ativo })
+      .from(usuarios)
+      .where(inArray(usuarios.id, ids));
+    if (escolhidos.length !== ids.length) {
+      return { erro: "Escolha advogados que existam no escritório." };
+    }
+    if (
+      escolhidos.some((pessoa) => !pessoa.ativo && !jaLigados.has(pessoa.id))
+    ) {
+      return { erro: "Escolha advogados ativos." };
+    }
   }
 
   let cumpridoPorId: number | null = null;
@@ -200,7 +199,6 @@ export async function salvarPrazo(
           data,
           titulo,
           observacao,
-          conteudo,
           defesa: formData.get("defesa") === "1",
           situacao,
           cumpridoPorId,
@@ -208,9 +206,11 @@ export async function salvarPrazo(
         })
         .where(eq(prazos.id, id));
       await tx.delete(prazosUsuarios).where(eq(prazosUsuarios.prazoId, id));
-      await tx
-        .insert(prazosUsuarios)
-        .values(ids.map((usuarioId) => ({ prazoId: id, usuarioId })));
+      if (ids.length > 0) {
+        await tx
+          .insert(prazosUsuarios)
+          .values(ids.map((usuarioId) => ({ prazoId: id, usuarioId })));
+      }
       if (avisos.length > 0) {
         await tx.insert(notificacoes).values(avisos);
       }
@@ -258,9 +258,11 @@ export async function salvarPrazo(
         continue;
       }
       primeiro ??= criado.id;
-      await tx
-        .insert(prazosUsuarios)
-        .values(ids.map((usuarioId) => ({ prazoId: criado.id, usuarioId })));
+      if (ids.length > 0) {
+        await tx
+          .insert(prazosUsuarios)
+          .values(ids.map((usuarioId) => ({ prazoId: criado.id, usuarioId })));
+      }
     }
     if (!primeiro) {
       return null;

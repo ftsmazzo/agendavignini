@@ -47,7 +47,6 @@ export function FormularioPrazo({
   const [data, setData] = useState(prazo?.data ?? hoje);
   const [titulo, setTitulo] = useState(prazo?.titulo ?? "");
   const [observacao, setObservacao] = useState(prazo?.observacao ?? "");
-  const [conteudo, setConteudo] = useState(prazo?.conteudo ?? "");
   const [advogadosMarcados, setAdvogadosMarcados] = useState(
     advogados.map(String),
   );
@@ -82,9 +81,6 @@ export function FormularioPrazo({
     }
     if (sugestao.observacao) {
       setObservacao(sugestao.observacao);
-    }
-    if (sugestao.conteudo) {
-      setConteudo(sugestao.conteudo);
     }
     if (sugestao.advogados.length > 0) {
       setAdvogadosMarcados(sugestao.advogados.map(String));
@@ -253,16 +249,6 @@ export function FormularioPrazo({
             className={classeCampo}
           />
         </Campo>
-        <Campo id="conteudo" rotulo="Conteúdo">
-          <textarea
-            id="conteudo"
-            name="conteudo"
-            rows={12}
-            value={conteudo}
-            onChange={(evento) => setConteudo(evento.target.value)}
-            className={classeCampo}
-          />
-        </Campo>
         <Campo id="cumpridoPor" rotulo="Status">
           <select
             id="cumpridoPor"
@@ -298,7 +284,9 @@ export function FormularioPrazo({
           marcados={advogadosMarcados}
           onChange={setAdvogadosMarcados}
         />
-        <p className="ajuda-campo">Pelo menos um advogado.</p>
+        <p className="ajuda-campo">
+          Pode ficar sem advogado. A distribuição é feita depois.
+        </p>
         {estado.erro ? (
           <p className="aviso aviso-erro" role="alert">
             {estado.erro}

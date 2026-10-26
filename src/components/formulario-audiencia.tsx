@@ -41,10 +41,12 @@ function CampoProcesso({
   valor,
   onChange,
   onEscolher,
+  onLimpar,
 }: {
   valor: string;
   onChange: (valor: string) => void;
   onEscolher: (item: ProcessoCadastrado) => void;
+  onLimpar: () => void;
 }) {
   const [lista, setLista] = useState<ProcessoCadastrado[]>([]);
   const [aberto, setAberto] = useState(false);
@@ -151,9 +153,14 @@ function CampoProcesso({
         aria-controls="processos-cadastrados"
         autoComplete="off"
         onChange={(evento) => {
+          const proximo = evento.target.value;
           setAviso("");
           setErro("");
-          onChange(evento.target.value);
+          if (proximo.trim() === "" && valor.trim() !== "") {
+            consultado.current = "";
+            onLimpar();
+          }
+          onChange(proximo);
         }}
         onFocus={() => {
           if (lista.length > 0) {
@@ -334,6 +341,17 @@ export function FormularioAudiencia({
             }
             onEscolher={(item) =>
               setCampos((atual) => aplicarProcesso(atual, item))
+            }
+            onLimpar={() =>
+              setCampos((atual) => ({
+                ...atual,
+                numeroProcesso: "",
+                vara: "",
+                local: "",
+                reclamante: "",
+                reclamado: "",
+                preposto: "",
+              }))
             }
           />
         </Campo>
