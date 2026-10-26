@@ -128,6 +128,109 @@ function comprovanteSeguro(valor: unknown) {
   }
 }
 
+const LIGACAO = new Set(["de", "da", "do", "das", "dos", "e"]);
+const NAO_E_CIDADE = new Set([
+  "trabalho",
+  "civel",
+  "familia",
+  "fazenda",
+  "infancia",
+  "juventude",
+  "execucao",
+  "execucoes",
+  "falencia",
+  "falencias",
+  "sucessoes",
+  "registros",
+  "publicos",
+  "acidentes",
+  "federal",
+  "estadual",
+  "unica",
+  "juizado",
+  "vara",
+  "foro",
+  "comarca",
+  "tribunal",
+  "central",
+  "criminal",
+]);
+
+function semAcento(valor: string) {
+  return valor
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function apresentarCidade(valor: string) {
+  const limpo = valor.replace(/\s+/g, " ").trim();
+  const letras = limpo.replace(/[^A-Za-zÀ-ÿ]/g, "");
+  const tudoMaiusculo =
+    letras.length > 0 && letras === letras.toLocaleUpperCase("pt-BR");
+  if (!tudoMaiusculo) {
+    return limpo;
+  }
+  return limpo
+    .toLocaleLowerCase("pt-BR")
+    .replace(
+      /(^|\s)([a-zà-ÿ])/g,
+      (_, espaco: string, letra: string) =>
+        espaco + letra.toLocaleUpperCase("pt-BR"),
+    )
+    .replace(/\b(De|Da|Do|Das|Dos|E)\b/g, (palavra) => palavra.toLowerCase());
+}
+
+function pareceCidade(valor: string) {
+  const limpo = valor
+    .replace(/\s*[/-]\s*[A-Za-z]{2}$/g, "")
+    .replace(/[.,;]+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!limpo || limpo.length > 60) {
+    return "";
+  }
+  const nucleo = limpo
+    .split(" ")
+    .filter((parte) => !LIGACAO.has(semAcento(parte)));
+  if (nucleo.length === 0 || nucleo.length > 5) {
+    return "";
+  }
+  if (nucleo.some((parte) => NAO_E_CIDADE.has(semAcento(parte)))) {
+    return "";
+  }
+  return apresentarCidade(limpo);
+}
+
+function cidadeNaVara(vara: string) {
+  const limpa = vara.replace(/\s+/g, " ").trim();
+  if (!limpa) {
+    return "";
+  }
+  const partes = limpa.split(/\s+[-–—]\s+/);
+  if (partes.length >= 2) {
+    const ultimo = (partes[partes.length - 1] ?? "").trim();
+    if (!/^[A-Za-z]{2}$/.test(ultimo)) {
+      const direita = pareceCidade(ultimo);
+      if (direita) {
+        return direita;
+      }
+    }
+  }
+  const preposicoes = [...limpa.matchAll(/\bde\s+/gi)];
+  for (let indice = preposicoes.length - 1; indice >= 0; indice -= 1) {
+    const achado = preposicoes[indice];
+    if (!achado || achado.index === undefined) {
+      continue;
+    }
+    const cidade = pareceCidade(limpa.slice(achado.index + achado[0].length));
+    if (cidade) {
+      return cidade;
+    }
+  }
+  return "";
+}
+
 function vistaDe(
   bruto: unknown,
   destino: Destino,
@@ -173,6 +276,13 @@ function vistaDe(
   const reclamado = processo
     ? texto(ficha.reqdo)
     : nomes(ficha.polo_passivo).map(semTipo).filter(Boolean).join(", ");
+  const vara = texto(ficha.vara) || texto(ficha.orgao_julgador);
+  const local =
+    texto(ficha.foro) ||
+    texto(ficha.comarca) ||
+    texto(ficha.municipio) ||
+    texto(ficha.cidade) ||
+    cidadeNaVara(vara);
 
   return {
     fonte: destino.fonte,
@@ -180,8 +290,8 @@ function vistaDe(
     partes: [reclamante, reclamado].filter(Boolean),
     reclamante,
     reclamado,
-    vara: texto(ficha.vara) || texto(ficha.orgao_julgador),
-    local: texto(ficha.foro),
+    vara,
+    local,
     classe: texto(ficha.classe),
     assunto: assuntos,
     valor: texto(ficha.valor_acao) || texto(ficha.valor_causa),
