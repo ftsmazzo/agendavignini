@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { sair } from "@/app/sair/actions";
 import { AlternarTema } from "@/components/alternar-tema";
 import { AvisoAudiencias } from "@/components/aviso-audiencias";
+import { ChatSuporte } from "@/components/chat-suporte";
 import { Marca } from "@/components/marca";
 import {
   type GrupoMenu,
@@ -307,6 +308,7 @@ export function Casca({
           </main>
         </div>
       </div>
+      <ChatSuporte admin={usuario.admin} />
     </div>
   );
 }
