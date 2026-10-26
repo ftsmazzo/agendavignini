@@ -17,7 +17,7 @@ import {
   listarProcessosCadastrados,
   type ProcessoCadastrado,
 } from "@/lib/processos-cadastrados";
-import { numeroDoProcesso } from "@/lib/publicacao";
+import { formatarProcesso } from "@/lib/publicacao";
 
 function texto(formData: FormData, nome: string, limite: number) {
   return String(formData.get(nome) ?? "")
@@ -50,8 +50,8 @@ export async function puxarCamposDoTribunal(numero: string): Promise<{
       campos: null,
     };
   }
-  const pedido = String(numero ?? "").trim();
-  if (numeroDoProcesso(pedido) !== pedido) {
+  const pedido = formatarProcesso(String(numero ?? "").trim()) ?? "";
+  if (!pedido) {
     return {
       erro: "Cole o número completo do processo para consultar o tribunal.",
       campos: null,

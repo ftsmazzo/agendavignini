@@ -13,7 +13,7 @@ import { CaixasAdvogados } from "@/components/caixas-advogados";
 import { Campo, classeCampo } from "@/components/campo";
 import { Seta } from "@/components/seta";
 import type { ProcessoCadastrado } from "@/lib/processos-cadastrados";
-import { numeroDoProcesso } from "@/lib/publicacao";
+import { formatarProcesso } from "@/lib/publicacao";
 
 type Pessoa = { id: number; nome: string };
 
@@ -53,8 +53,8 @@ function CampoProcesso({
   const [erro, setErro] = useState("");
   const [puxando, setPuxando] = useState(false);
   const pedido = useRef(0);
-  const numeroCompleto = numeroDoProcesso(valor.trim());
-  const podeTribunal = numeroCompleto === valor.trim() && valor.trim() !== "";
+  const consultado = useRef("");
+  const numeroConsulta = formatarProcesso(valor.trim()) ?? "";
 
   useEffect(() => {
     const termo = valor.trim();
@@ -66,16 +66,25 @@ function CampoProcesso({
     }
     const id = pedido.current + 1;
     pedido.current = id;
+    setBuscando(true);
     const timer = setTimeout(() => {
-      setBuscando(true);
-      void sugerirProcessos(termo).then((achados) => {
-        if (pedido.current !== id) {
-          return;
-        }
-        setLista(achados);
-        setAberto(true);
-        setBuscando(false);
-      });
+      void sugerirProcessos(termo)
+        .then((achados) => {
+          if (pedido.current !== id) {
+            return;
+          }
+          setLista(achados);
+          setAberto(true);
+          setBuscando(false);
+        })
+        .catch(() => {
+          if (pedido.current !== id) {
+            return;
+          }
+          setLista([]);
+          setAberto(true);
+          setBuscando(false);
+        });
     }, 280);
     return () => clearTimeout(timer);
   }, [valor]);
@@ -91,14 +100,18 @@ function CampoProcesso({
     );
   }
 
-  async function puxarTribunal() {
-    if (!podeTribunal || puxando) {
+  async function puxarTribunal(numero = numeroConsulta) {
+    if (!numero || puxando) {
       return;
     }
+    consultado.current = numero;
     setPuxando(true);
     setErro("");
     setAviso("");
-    const resultado = await puxarCamposDoTribunal(valor.trim());
+    if (valor.trim() !== numero) {
+      onChange(numero);
+    }
+    const resultado = await puxarCamposDoTribunal(numero);
     setPuxando(false);
     if (resultado.erro || !resultado.campos) {
       setErro(
@@ -111,6 +124,20 @@ function CampoProcesso({
     setAviso("Vara e partes preenchidas com a consulta do tribunal.");
     setAberto(false);
   }
+
+  const puxarAtual = useRef(puxarTribunal);
+  puxarAtual.current = puxarTribunal;
+
+  useEffect(() => {
+    if (!numeroConsulta || buscando || !aberto || lista.length > 0) {
+      return;
+    }
+    if (consultado.current === numeroConsulta) {
+      return;
+    }
+    consultado.current = numeroConsulta;
+    void puxarAtual.current(numeroConsulta);
+  }, [numeroConsulta, buscando, aberto, lista.length]);
 
   return (
     <div className="relative">
@@ -141,15 +168,21 @@ function CampoProcesso({
         className={classeCampo}
       />
       <p className="mt-2 text-base text-muted">
-        Digite o número, a parte ou a vara. A lista mostra processos já lançados
-        no escritório.
+        Digite o número, a parte ou a vara. Se o processo não estiver no
+        escritório, o número completo consulta o tribunal e preenche vara e
+        partes.
       </p>
       {buscando ? (
         <p className="mt-2 text-base text-muted">Buscando processos.</p>
       ) : null}
-      {aberto && !buscando && lista.length === 0 && valor.trim().length >= 3 ? (
+      {aberto &&
+      !buscando &&
+      lista.length === 0 &&
+      !numeroConsulta &&
+      valor.trim().length >= 3 ? (
         <p className="aviso mt-3">
-          Nenhum processo cadastrado com esse trecho.
+          Nenhum processo cadastrado com esse trecho. Informe o número completo
+          para consultar o tribunal.
         </p>
       ) : null}
       {aberto && lista.length > 0 ? (
@@ -183,12 +216,12 @@ function CampoProcesso({
           })}
         </div>
       ) : null}
-      {podeTribunal ? (
+      {numeroConsulta ? (
         <button
           type="button"
           disabled={puxando}
-          onClick={() => void puxarTribunal()}
-          className="btn-texto mt-3 disabled:opacity-60"
+          onClick={() => void puxarTribunal(numeroConsulta)}
+          className="btn btn-pequeno mt-3 disabled:opacity-60"
         >
           {puxando
             ? "Consultando o tribunal."
