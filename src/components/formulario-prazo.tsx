@@ -6,9 +6,9 @@ import { BotaoExcluir } from "@/components/botao-excluir";
 import { CaixasAdvogados } from "@/components/caixas-advogados";
 import { Campo, classeCampo } from "@/components/campo";
 import { dataBr, dataIsoValida, ehFimDeSemana } from "@/lib/datas";
+import { prazoEhDefesa } from "@/lib/defesa";
 import { sugerirPublicacao } from "@/lib/publicacao";
 import { datasRecorrentes } from "@/lib/recorrencia";
-import { prazoEhDefesa } from "@/lib/resumo";
 
 const AREAS = [
   { valor: "administrativo", rotulo: "Administrativo" },

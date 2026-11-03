@@ -109,13 +109,7 @@ export function faixaDaArea(
   return FAIXA[area];
 }
 
-function tituloIndicaDefesa(titulo: string) {
-  return /\bdefesas?\b/i.test(titulo);
-}
-
-export function prazoEhDefesa(marcado: boolean, titulo: string) {
-  return marcado || tituloIndicaDefesa(titulo);
-}
+export { prazoEhDefesa, tituloIndicaDefesa } from "@/lib/defesa";
 
 export function filtroDefesa() {
   return sql`(${prazos.defesa} = true or ${prazos.titulo} ~* '\\mdefesas?\\M')`;
