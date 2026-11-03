@@ -333,7 +333,7 @@ const GUIAS: Guia[] = [
       },
       {
         texto:
-          "Se tiver o texto da intimação, cole em Colar publicação e clique em Sugerir campos. A tela preenche tipo, data e título. Nada grava até você salvar.",
+          "Se tiver o texto da intimação, cole em Publicação e clique em Sugerir campos. A tela preenche tipo, data e título. O texto colado fica gravado com o prazo.",
       },
       {
         texto:
@@ -341,7 +341,7 @@ const GUIAS: Guia[] = [
       },
       {
         texto:
-          "Em Classificação, deixe Prazo comum ou marque Defesa. Observação é livre. O campo Conteúdo não existe mais nesta tela.",
+          "Em Classificação, deixe Prazo comum ou marque Defesa. Observação é só para anotação livre. A publicação completa fica no campo Publicação.",
       },
       {
         texto:
@@ -358,7 +358,8 @@ const GUIAS: Guia[] = [
     admin: true,
     gatilhos: ["colar publicacao", "sugerir campos", "intimacao", "publicacao"],
     relacionados: ["criar-prazo"],
-    abertura: "A publicação só sugere. Quem grava é o botão Salvar prazo.",
+    abertura:
+      "O texto colado em Publicação fica gravado. Observação é só anotação extra. Quem grava é Salvar prazo.",
     passos: [
       {
         texto: "Abra Adicionar novo, em Prazos.",
@@ -366,11 +367,11 @@ const GUIAS: Guia[] = [
         rotulo: "Abrir agendar prazo",
       },
       {
-        texto: "Cole o texto em Colar publicação e clique em Sugerir campos.",
+        texto: "Cole o texto em Publicação e clique em Sugerir campos.",
       },
       {
         texto:
-          "Leia os avisos amarelos, ajuste o que faltar e clique em Salvar prazo.",
+          "Leia os avisos amarelos, ajuste o que faltar e clique em Salvar prazo. Na lista aparece Ver publicação.",
       },
     ],
   },
@@ -750,7 +751,8 @@ const GUIAS: Guia[] = [
     admin: false,
     gatilhos: ["pesquisar", "buscar", "procurar", "caixa de busca"],
     relacionados: ["perguntar", "contatos"],
-    abertura: "A busca do menu olha processo, parte, cliente e local.",
+    abertura:
+      "A busca do menu olha processo, parte, cliente, local e o texto da publicação.",
     passos: [
       {
         texto:
@@ -760,7 +762,7 @@ const GUIAS: Guia[] = [
       },
       {
         texto:
-          "A resposta separa prazos e audiências. Clique no item para ir ao dia.",
+          "Nos prazos, use Todos os prazos, Em aberto ou Cumpridos. Em cada cartão dá para abrir Ver publicação.",
       },
     ],
   },
@@ -916,16 +918,16 @@ const GUIAS: Guia[] = [
     gatilhos: ["ver publicacao", "publicacao antiga", "texto da intimacao"],
     relacionados: ["publicacao", "hoje"],
     abertura:
-      "Prazo antigo ainda guarda o texto colado. O formulário novo não tem mais o campo Conteúdo.",
+      "A publicação colada no agendamento aparece na lista e na pesquisa. Observação continua só para anotação extra.",
     passos: [
       {
-        texto: "Abra o dia do prazo.",
+        texto: "Abra o dia do prazo ou a pesquisa.",
         href: "/prazos?quando=hoje",
         rotulo: "Abrir prazos de hoje",
       },
       {
         texto:
-          "No cartão, se existir, clique em Ver publicação. O texto abre ali mesmo. Prazo novo não mostra esse bloco.",
+          "No cartão, clique em Ver publicação. Se o prazo antigo ficou sem texto, abra Editar e cole de novo em Publicação.",
       },
     ],
   },

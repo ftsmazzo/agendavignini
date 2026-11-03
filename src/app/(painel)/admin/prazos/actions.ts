@@ -60,7 +60,7 @@ export async function salvarPrazo(
   const data = texto(formData, "data", 10);
   const titulo = texto(formData, "titulo", 4000);
   const observacao = texto(formData, "observacao", 20000);
-  const conteudo = "";
+  const conteudo = texto(formData, "conteudo", 200000);
   const cumpridoBruto = texto(formData, "cumpridoPor", 12);
   const cumpridoEmBruto = texto(formData, "cumpridoEm", 16);
   const cumpridoEmInformado = cumpridoEmBruto
@@ -199,6 +199,7 @@ export async function salvarPrazo(
           data,
           titulo,
           observacao,
+          conteudo,
           defesa: formData.get("defesa") === "1",
           situacao,
           cumpridoPorId,

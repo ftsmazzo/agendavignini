@@ -358,7 +358,7 @@ export function sugerirPublicacao(
     area,
     data,
     titulo,
-    observacao: processo ? `Processo ${processo}` : null,
+    observacao: null,
     conteudo,
     advogados,
     avisos,

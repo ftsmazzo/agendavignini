@@ -1,4 +1,4 @@
-import { or, sql } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ProcessoPrazo } from "@/components/processo-prazo";
@@ -17,10 +17,30 @@ function diaDaAudiencia(valor: Date) {
   }).format(valor);
 }
 
+function textoEncaixado(valor: string) {
+  const limpo = valor.trim();
+  if (limpo.length <= 420) {
+    return limpo;
+  }
+  return `${limpo.slice(0, 420).trimEnd()}…`;
+}
+
+function consultaBusca(termo: string, situacao?: string) {
+  const params = new URLSearchParams();
+  if (termo) {
+    params.set("q", termo);
+  }
+  if (situacao === "aberto" || situacao === "cumprido") {
+    params.set("situacao", situacao);
+  }
+  const texto = params.toString();
+  return texto ? `/busca?${texto}` : "/busca";
+}
+
 export default function Busca({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; situacao?: string }>;
 }) {
   return (
     <Suspense fallback={<p className="text-muted">Abrindo a busca.</p>}>
@@ -37,14 +57,21 @@ function padrao(termo: string) {
 async function Resultado({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; situacao?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, situacao } = await searchParams;
   const termo = q?.trim().slice(0, 120) ?? "";
+  const situacaoOk =
+    situacao === "aberto" || situacao === "cumprido" ? situacao : null;
   const formatado = formatarProcesso(termo);
   const consulta = formatado && formatado !== termo ? formatado : termo;
   const db = obterDb();
   const filtro = padrao(consulta);
+  const filtroTexto = or(
+    sql`${prazos.titulo} ilike ${filtro}`,
+    sql`${prazos.observacao} ilike ${filtro}`,
+    sql`${prazos.conteudo} ilike ${filtro}`,
+  );
   const itens = termo
     ? await db
         .select({
@@ -52,6 +79,8 @@ async function Resultado({
           area: prazos.area,
           data: prazos.data,
           titulo: prazos.titulo,
+          observacao: prazos.observacao,
+          conteudo: prazos.conteudo,
           situacao: prazos.situacao,
           processo: sql<
             string | null
@@ -59,11 +88,9 @@ async function Resultado({
         })
         .from(prazos)
         .where(
-          or(
-            sql`${prazos.titulo} ilike ${filtro}`,
-            sql`${prazos.observacao} ilike ${filtro}`,
-            sql`${prazos.conteudo} ilike ${filtro}`,
-          ),
+          situacaoOk
+            ? and(filtroTexto, eq(prazos.situacao, situacaoOk))
+            : filtroTexto,
         )
         .orderBy(sql`${prazos.data} desc`, sql`${prazos.id} desc`)
         .limit(80)
@@ -102,7 +129,7 @@ async function Resultado({
         Procure em prazos e audiências por processo, cliente, parte ou ato.
       </p>
       <search className="mt-6 block">
-        <form method="get">
+        <form method="get" className="space-y-3">
           <label htmlFor="busca-prazo" className="sr-only">
             Pesquisar prazo ou audiência
           </label>
@@ -114,8 +141,42 @@ async function Resultado({
             placeholder="Processo, cliente, parte ou ato"
             className="campo"
           />
+          {situacaoOk ? (
+            <input type="hidden" name="situacao" value={situacaoOk} />
+          ) : null}
+          <button type="submit" className="btn btn-primario btn-pequeno">
+            Pesquisar
+          </button>
         </form>
       </search>
+      {termo ? (
+        <nav
+          aria-label="Situação do prazo"
+          className="mt-4 flex flex-wrap gap-2"
+        >
+          <Link
+            href={consultaBusca(termo)}
+            aria-current={!situacaoOk ? "page" : undefined}
+            className="chip"
+          >
+            Todos os prazos
+          </Link>
+          <Link
+            href={consultaBusca(termo, "aberto")}
+            aria-current={situacaoOk === "aberto" ? "page" : undefined}
+            className="chip"
+          >
+            Em aberto
+          </Link>
+          <Link
+            href={consultaBusca(termo, "cumprido")}
+            aria-current={situacaoOk === "cumprido" ? "page" : undefined}
+            className="chip"
+          >
+            Cumpridos
+          </Link>
+        </nav>
+      ) : null}
       {!termo ? (
         <p className="vazio mt-6">
           Digite um processo, um cliente ou uma parte na caixa do menu.
@@ -126,7 +187,13 @@ async function Resultado({
         <>
           <h2 className="titulo-secao mt-8">Prazos</h2>
           {itens.length === 0 ? (
-            <p className="vazio mt-3">Nenhum prazo com esse texto.</p>
+            <p className="vazio mt-3">
+              {situacaoOk === "aberto"
+                ? "Nenhum prazo em aberto com esse texto."
+                : situacaoOk === "cumprido"
+                  ? "Nenhum prazo cumprido com esse texto."
+                  : "Nenhum prazo com esse texto."}
+            </p>
           ) : (
             <>
               <p className="mt-1 text-muted">
@@ -157,6 +224,25 @@ async function Resultado({
                       {item.titulo}
                     </Link>
                     <ProcessoPrazo numero={item.processo} />
+                    {item.observacao ? (
+                      <p className="mt-1.5 text-sm leading-snug whitespace-pre-line text-ink">
+                        {textoEncaixado(item.observacao)}
+                      </p>
+                    ) : null}
+                    {item.conteudo ? (
+                      <details className="mt-1.5">
+                        <summary className="btn-texto cursor-pointer">
+                          Ver publicação
+                        </summary>
+                        <p className="mt-1.5 rounded-lg bg-paper p-3 text-sm leading-snug whitespace-pre-line text-ink">
+                          {textoEncaixado(item.conteudo)}
+                        </p>
+                      </details>
+                    ) : (
+                      <p className="mt-1.5 text-sm text-muted">
+                        Sem publicação gravada neste prazo.
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>

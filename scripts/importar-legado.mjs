@@ -4,6 +4,8 @@ import postgres from "postgres";
 const AREAS = new Set(["administrativo", "civil", "trabalhista"]);
 const MARCA = "INSERT INTO `";
 const ESCAPES = { 0: "\0", b: "\b", n: "\n", r: "\r", t: "\t", Z: "\u001a" };
+/** Logins do dump MySQL que não entram no Postgres. O arquivo .sql não é alterado. */
+const LOGINS_FORA = new Set(["vitorm"]);
 
 class Leitor {
   constructor(aoRegistro) {
@@ -343,7 +345,12 @@ async function importar(caminho, url) {
   const pulados = {};
   await percorrer(caminho, (tabela, registro) => {
     if (tabela === "usuarios") {
-      usuarios.push(usuarioDe(registro));
+      const pessoa = usuarioDe(registro);
+      if (LOGINS_FORA.has(pessoa.login.toLowerCase())) {
+        somar(pulados, `usuario_${pessoa.login}`);
+        return;
+      }
+      usuarios.push(pessoa);
     }
   });
 
@@ -358,10 +365,13 @@ async function importar(caminho, url) {
     audiencias: [],
     audiencias_usuarios: [],
   };
+  console.log(
+    `usuarios no dump filtrados: ${usuarios.length}; fora: ${[...LOGINS_FORA].join(", ")}`,
+  );
 
   try {
     await sql.begin(async (tx) => {
-      await tx`truncate table auditoria, audiencias_usuarios, prazos_usuarios, audiencias, prazos, contatos, usuarios restart identity cascade`;
+      await tx`truncate table auditoria, notificacoes, mcp_tokens, audiencias_usuarios, prazos_usuarios, audiencias, prazos, contatos, usuarios restart identity cascade`;
       await gravarLote(tx, "usuarios", usuarios);
 
       await percorrer(caminho, async (tabela, registro) => {

@@ -41,7 +41,7 @@ export function FormularioPrazo({
   hoje: string;
 }) {
   const [estado, acao, pendente] = useActionState(salvarPrazo, { erro: "" });
-  const [rascunho, setRascunho] = useState("");
+  const [rascunho, setRascunho] = useState(prazo?.conteudo ?? "");
   const [avisos, setAvisos] = useState<string[]>([]);
   const [area, setArea] = useState(prazo?.area ?? "administrativo");
   const [data, setData] = useState(prazo?.data ?? hoje);
@@ -79,9 +79,6 @@ export function FormularioPrazo({
     if (sugestao.titulo) {
       setTitulo(sugestao.titulo);
     }
-    if (sugestao.observacao) {
-      setObservacao(sugestao.observacao);
-    }
     if (sugestao.advogados.length > 0) {
       setAdvogadosMarcados(sugestao.advogados.map(String));
     }
@@ -92,34 +89,38 @@ export function FormularioPrazo({
       <h1 className="titulo-pagina">
         {prazo?.id ? "Editar prazo" : "Adicionar prazo"}
       </h1>
-      {prazo ? null : (
-        <div className="cartao mt-6 p-5">
-          <Campo id="publicacao" rotulo="Colar publicação">
+      <form action={acao} className="cartao mt-6 space-y-5 p-5">
+        {prazo?.id ? <input type="hidden" name="id" value={prazo.id} /> : null}
+        <div className="space-y-3">
+          <Campo id="publicacao" rotulo="Publicação">
             <textarea
               id="publicacao"
+              name="conteudo"
               value={rascunho}
               rows={8}
               onChange={(evento) => setRascunho(evento.target.value)}
               className={classeCampo}
+              placeholder="Cole aqui o texto da publicação ou intimação"
             />
           </Campo>
-          <button type="button" onClick={aplicarSugestao} className="btn mt-3">
-            Sugerir campos
-          </button>
+          {prazo?.id ? null : (
+            <button type="button" onClick={aplicarSugestao} className="btn">
+              Sugerir campos
+            </button>
+          )}
           <p className="ajuda-campo">
-            A sugestão só preenche. O prazo só entra quando você salva.
+            O texto colado fica gravado com o prazo e aparece na pesquisa e na
+            lista. A sugestão só preenche tipo, data e título. O prazo só entra
+            quando você salva.
           </p>
           {avisos.length > 0 ? (
-            <ul className="aviso mt-3 list-disc pl-8">
+            <ul className="aviso list-disc pl-8">
               {avisos.map((aviso) => (
                 <li key={aviso}>{aviso}</li>
               ))}
             </ul>
           ) : null}
         </div>
-      )}
-      <form action={acao} className="cartao mt-6 space-y-5 p-5">
-        {prazo?.id ? <input type="hidden" name="id" value={prazo.id} /> : null}
         <div className="grid gap-5 md:grid-cols-2">
           <Campo id="area" rotulo="Tipo">
             <select
@@ -243,12 +244,17 @@ export function FormularioPrazo({
           <textarea
             id="observacao"
             name="observacao"
-            rows={5}
+            rows={4}
             value={observacao}
             onChange={(evento) => setObservacao(evento.target.value)}
             className={classeCampo}
+            placeholder="Anotação livre, se precisar"
           />
         </Campo>
+        <p className="ajuda-campo">
+          Use a observação só para um recado a mais. A publicação completa fica
+          no campo Publicação, acima.
+        </p>
         <Campo id="cumpridoPor" rotulo="Status">
           <select
             id="cumpridoPor"
