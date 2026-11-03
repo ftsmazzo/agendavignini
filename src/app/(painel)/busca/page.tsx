@@ -9,12 +9,14 @@ import {
 import { BotaoCumprir } from "@/components/botao-cumprir";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { ProcessoPrazo } from "@/components/processo-prazo";
+import { VerPublicacao } from "@/components/ver-publicacao";
 import { obterDb } from "@/db/client";
 import { audiencias, prazos } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { dataBr, dataHoraBr } from "@/lib/datas";
 import { formatarProcesso } from "@/lib/publicacao";
 import { faixaDaArea, prazoEhDefesa, rotuloArea } from "@/lib/resumo";
+import { textoPrazo } from "@/lib/texto-prazo";
 
 function diaDaAudiencia(valor: Date) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -23,14 +25,6 @@ function diaDaAudiencia(valor: Date) {
     month: "2-digit",
     day: "2-digit",
   }).format(valor);
-}
-
-function textoEncaixado(valor: string) {
-  const limpo = valor.trim();
-  if (limpo.length <= 420) {
-    return limpo;
-  }
-  return `${limpo.slice(0, 420).trimEnd()}…`;
 }
 
 function consultaBusca(termo: string, situacao?: string) {
@@ -240,10 +234,10 @@ async function Resultado({
                     </Link>
                     <ProcessoPrazo numero={item.processo} />
                     {item.conteudo ? (
-                      <p className="mt-2 text-sm leading-snug whitespace-pre-line text-ink">
+                      <p className="mt-2 text-sm leading-snug break-words whitespace-pre-wrap text-ink">
                         <span className="font-semibold">Descrição:</span>
                         <br />
-                        {textoEncaixado(item.conteudo)}
+                        {textoPrazo(item.conteudo)}
                       </p>
                     ) : (
                       <p className="mt-2 text-sm text-muted">
@@ -252,13 +246,16 @@ async function Resultado({
                       </p>
                     )}
                     {item.observacao ? (
-                      <p className="mt-2 text-sm leading-snug whitespace-pre-line text-ink">
+                      <p className="mt-2 text-sm leading-snug break-words whitespace-pre-wrap text-ink">
                         <span className="font-semibold">Observação:</span>
                         <br />
-                        {textoEncaixado(item.observacao)}
+                        {textoPrazo(item.observacao)}
                       </p>
                     ) : null}
                     <div className="mt-3 flex flex-wrap gap-2">
+                      {item.conteudo ? (
+                        <VerPublicacao texto={item.conteudo} />
+                      ) : null}
                       <Link
                         href={`/prazos/impressao?id=${item.id}`}
                         className="btn btn-pequeno"

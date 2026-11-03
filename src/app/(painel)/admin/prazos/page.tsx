@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { classeCampo } from "@/components/campo";
+import { VerPublicacao } from "@/components/ver-publicacao";
 import { obterDb } from "@/db/client";
 import { prazos, usuarios } from "@/db/schema";
 import { hojeNoEscritorio } from "@/lib/contagens";
@@ -13,6 +14,7 @@ import {
   rotuloArea,
   statusDoPrazo,
 } from "@/lib/resumo";
+import { textoPrazo } from "@/lib/texto-prazo";
 
 export default function ListarPrazosAdmin({
   searchParams,
@@ -246,18 +248,23 @@ async function Lista({
                 {item.titulo}
               </Link>
               {item.conteudo ? (
-                <p className="mt-2 whitespace-pre-wrap text-ink">
+                <p className="mt-2 break-words whitespace-pre-wrap text-ink">
                   <span className="font-semibold">Descrição:</span>
                   <br />
-                  {item.conteudo}
+                  {textoPrazo(item.conteudo)}
                 </p>
               ) : null}
               {item.observacao ? (
-                <p className="mt-2 whitespace-pre-wrap text-ink">
+                <p className="mt-2 break-words whitespace-pre-wrap text-ink">
                   <span className="font-semibold">Observação:</span>
                   <br />
-                  {item.observacao}
+                  {textoPrazo(item.observacao)}
                 </p>
+              ) : null}
+              {item.conteudo ? (
+                <div className="mt-2">
+                  <VerPublicacao texto={item.conteudo} />
+                </div>
               ) : null}
             </li>
           ))}

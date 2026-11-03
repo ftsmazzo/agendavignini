@@ -11,6 +11,7 @@ import { BotaoExcluir } from "@/components/botao-excluir";
 import { CorpoPrazo } from "@/components/corpo-prazo";
 import { MarcarAdvogado } from "@/components/marcar-advogado";
 import { ProcessoPrazo } from "@/components/processo-prazo";
+import { VerPublicacao } from "@/components/ver-publicacao";
 import { obterDb } from "@/db/client";
 import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
@@ -25,6 +26,7 @@ import {
   rotuloArea,
   statusDoPrazo,
 } from "@/lib/resumo";
+import { textoPrazo } from "@/lib/texto-prazo";
 
 const AREAS = ["administrativo", "civil", "trabalhista"] as const;
 
@@ -559,7 +561,6 @@ async function Lista({
                         voltar={voltar}
                         admin={usuario.papel === "admin"}
                         pessoas={pessoas}
-                        inteiro={quando !== "semana"}
                       />
                     </li>
                   ))}
@@ -581,7 +582,6 @@ async function Lista({
                 voltar={voltar}
                 admin={usuario.papel === "admin"}
                 pessoas={pessoas}
-                inteiro
               />
             </li>
           ))}
@@ -591,13 +591,6 @@ async function Lista({
   );
 }
 
-function textoEncaixado(texto: string) {
-  return texto
-    .replace(/[^\S\n]+\n/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
 function CartaoPrazo({
   item,
   advogados,
@@ -605,7 +598,6 @@ function CartaoPrazo({
   voltar,
   admin,
   pessoas,
-  inteiro,
 }: {
   item: {
     id: number;
@@ -625,7 +617,6 @@ function CartaoPrazo({
   voltar: string;
   admin: boolean;
   pessoas: Array<{ id: number; nome: string }>;
-  inteiro: boolean;
 }) {
   return (
     <>
@@ -667,33 +658,25 @@ function CartaoPrazo({
                 {advogados.join(", ")}
               </p>
             ) : null}
-            {item.conteudo && inteiro ? (
-              <p className="mt-1.5 text-sm leading-snug whitespace-pre-line text-ink">
+            {item.conteudo ? (
+              <p className="mt-1.5 text-sm leading-snug break-words whitespace-pre-wrap text-ink">
                 <span className="font-semibold">Descrição:</span>
                 <br />
-                {textoEncaixado(item.conteudo)}
+                {textoPrazo(item.conteudo)}
               </p>
-            ) : item.conteudo ? (
-              <details className="mt-1.5" open>
-                <summary className="btn-texto cursor-pointer">
-                  Descrição
-                </summary>
-                <p className="mt-1.5 rounded-lg bg-paper p-3 text-sm leading-snug whitespace-pre-line text-ink">
-                  {textoEncaixado(item.conteudo)}
-                </p>
-              </details>
             ) : null}
             {item.observacao ? (
-              <p className="mt-1.5 text-sm leading-snug whitespace-pre-line text-ink">
+              <p className="mt-1.5 text-sm leading-snug break-words whitespace-pre-wrap text-ink">
                 <span className="font-semibold">Observação:</span>
                 <br />
-                {textoEncaixado(item.observacao)}
+                {textoPrazo(item.observacao)}
               </p>
             ) : null}
           </>
         }
         acoes={
           <>
+            {item.conteudo ? <VerPublicacao texto={item.conteudo} /> : null}
             <Link
               href={`/prazos/impressao?id=${item.id}`}
               className="btn btn-pequeno"

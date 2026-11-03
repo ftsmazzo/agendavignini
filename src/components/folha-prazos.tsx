@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { dataBr } from "@/lib/datas";
+import { textoPrazo } from "@/lib/texto-prazo";
 
 export type LinhaFolha = {
   id: number;
@@ -169,17 +170,17 @@ function Item({
             </p>
           ) : null}
           {item.conteudo ? (
-            <p className="mt-3 whitespace-pre-wrap text-lg text-ink">
+            <p className="mt-3 break-words whitespace-pre-wrap text-lg text-ink">
               <strong>Descrição:</strong>
               <br />
-              {item.conteudo}
+              {textoPrazo(item.conteudo)}
             </p>
           ) : null}
           {item.observacao ? (
-            <p className="mt-3 whitespace-pre-wrap text-lg text-ink">
+            <p className="mt-3 break-words whitespace-pre-wrap text-lg text-ink">
               <strong>Observação:</strong>
               <br />
-              {item.observacao}
+              {textoPrazo(item.observacao)}
             </p>
           ) : null}
         </>

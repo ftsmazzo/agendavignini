@@ -281,7 +281,12 @@ export function sugerirPublicacao(
   hoje: string,
   pessoas: Array<{ id: number; nome: string }>,
 ): SugestaoPublicacao {
-  const conteudo = textoBruto.replaceAll("\u0000", "").trim().slice(0, 200000);
+  const conteudo = textoBruto
+    .replaceAll("\u0000", "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .trim()
+    .slice(0, 200000);
   const vazio: SugestaoPublicacao = {
     area: null,
     data: null,

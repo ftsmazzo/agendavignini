@@ -21,14 +21,12 @@ import {
   instanteEscritorio,
 } from "@/lib/datas";
 import { datasRecorrentes } from "@/lib/recorrencia";
+import { textoPrazo } from "@/lib/texto-prazo";
 
 const AREAS = new Set(["administrativo", "civil", "trabalhista"]);
 
 function texto(formData: FormData, nome: string, limite: number) {
-  return String(formData.get(nome) ?? "")
-    .replaceAll("\u0000", "")
-    .trim()
-    .slice(0, limite);
+  return textoPrazo(String(formData.get(nome) ?? "")).slice(0, limite);
 }
 
 function voltarDe(formData: FormData) {
