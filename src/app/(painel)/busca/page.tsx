@@ -1,9 +1,17 @@
 import { and, eq, or, sql } from "drizzle-orm";
 import Link from "next/link";
 import { Suspense } from "react";
+import {
+  cumprir,
+  desfazer,
+  excluirPrazo,
+} from "@/app/(painel)/admin/prazos/actions";
+import { BotaoCumprir } from "@/components/botao-cumprir";
+import { BotaoExcluir } from "@/components/botao-excluir";
 import { ProcessoPrazo } from "@/components/processo-prazo";
 import { obterDb } from "@/db/client";
 import { audiencias, prazos } from "@/db/schema";
+import { exigirUsuario } from "@/lib/acesso";
 import { dataBr, dataHoraBr } from "@/lib/datas";
 import { formatarProcesso } from "@/lib/publicacao";
 import { faixaDaArea, prazoEhDefesa, rotuloArea } from "@/lib/resumo";
@@ -65,6 +73,9 @@ async function Resultado({
     situacao === "aberto" || situacao === "cumprido" ? situacao : null;
   const formatado = formatarProcesso(termo);
   const consulta = formatado && formatado !== termo ? formatado : termo;
+  const usuario = await exigirUsuario();
+  const admin = usuario.papel === "admin";
+  const voltar = consultaBusca(termo, situacaoOk ?? undefined);
   const db = obterDb();
   const filtro = padrao(consulta);
   const filtroTexto = or(
@@ -247,6 +258,47 @@ async function Resultado({
                         {textoEncaixado(item.observacao)}
                       </p>
                     ) : null}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link
+                        href={`/prazos/impressao?id=${item.id}`}
+                        className="btn btn-pequeno"
+                      >
+                        Imprimir
+                      </Link>
+                      {item.situacao === "aberto" ? (
+                        <BotaoCumprir action={cumprir}>
+                          <input type="hidden" name="id" value={item.id} />
+                          <input type="hidden" name="voltar" value={voltar} />
+                        </BotaoCumprir>
+                      ) : null}
+                      {admin && item.situacao === "cumprido" ? (
+                        <form action={desfazer}>
+                          <input type="hidden" name="id" value={item.id} />
+                          <input type="hidden" name="voltar" value={voltar} />
+                          <button type="submit" className="btn btn-pequeno">
+                            Desfazer
+                          </button>
+                        </form>
+                      ) : null}
+                      {admin ? (
+                        <>
+                          <Link
+                            href={`/admin/prazos/${item.id}`}
+                            className="btn btn-pequeno"
+                          >
+                            Editar
+                          </Link>
+                          <BotaoExcluir
+                            action={excluirPrazo}
+                            pergunta="Excluir este prazo?"
+                            rotulo="Excluir"
+                          >
+                            <input type="hidden" name="id" value={item.id} />
+                            <input type="hidden" name="voltar" value={voltar} />
+                          </BotaoExcluir>
+                        </>
+                      ) : null}
+                    </div>
                   </li>
                 ))}
               </ul>
