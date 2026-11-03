@@ -854,11 +854,11 @@ const GUIAS: Guia[] = [
     gatilhos: ["aviso", "avisos", "mudaram a data", "notificacao"],
     relacionados: ["conta", "adiar"],
     abertura:
-      "Aviso de prazo aparece quando alguém muda a data de um prazo seu. Não é e-mail.",
+      "Avisos de mudança de data vão só para a conta do Jonathas, com quem mudou e o prazo. Não é e-mail.",
     passos: [
       {
         texto:
-          "Abra Alterar dados. Os avisos ficam no alto da página, antes dos formulários.",
+          "Com a conta do Jonathas, abra Alterar dados. Os avisos ficam no alto da página.",
         href: "/conta",
         rotulo: "Abrir alterar dados",
       },

@@ -41,7 +41,8 @@ async function Conteudo() {
       <section className="mt-8">
         <h2 className="titulo-secao">Avisos de prazo</h2>
         <p className="mt-2 text-base text-muted">
-          Quando a data de um prazo seu muda, a data antiga e a nova ficam aqui.
+          Quando alguém muda a data de um prazo, o aviso com quem mudou e as
+          datas fica aqui.
         </p>
         {pendentes > 0 ? (
           <form action={marcarAvisosLidos} className="mt-4">
@@ -54,21 +55,28 @@ async function Conteudo() {
           <p className="vazio mt-6">Nenhum aviso por enquanto.</p>
         ) : (
           <ul className="lista-cartoes mt-6">
-            {avisos.map((item) => (
-              <li
-                key={item.id}
-                className={`px-4 py-3 ${item.lida ? "" : "bg-pen-soft"}`}
-              >
-                <p className="font-semibold text-ink">{item.titulo}</p>
-                <p className="mt-1 text-base text-ink">
-                  {dataBr(item.dataAnterior)} passou para{" "}
-                  {dataBr(item.dataNova)}
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  {dataHoraBr(item.criadaEm)}
-                </p>
-              </li>
-            ))}
+            {avisos.map((item) => {
+              const quem = [item.atorNome, item.atorSobrenome]
+                .filter(Boolean)
+                .join(" ")
+                .trim();
+              return (
+                <li
+                  key={item.id}
+                  className={`px-4 py-3 ${item.lida ? "" : "bg-pen-soft"}`}
+                >
+                  <p className="font-semibold text-ink">{item.titulo}</p>
+                  <p className="mt-1 text-base text-ink">
+                    {dataBr(item.dataAnterior)} passou para{" "}
+                    {dataBr(item.dataNova)}
+                  </p>
+                  <p className="mt-1 text-sm text-muted">
+                    {quem ? `Alterado por ${quem} · ` : null}
+                    {dataHoraBr(item.criadaEm)}
+                  </p>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

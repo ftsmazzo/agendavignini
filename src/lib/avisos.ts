@@ -1,27 +1,54 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { obterDb } from "@/db/client";
-import { notificacoes } from "@/db/schema";
+import { notificacoes, usuarios } from "@/db/schema";
+
+/** Conta que recebe todos os avisos de mudança de data. */
+export const LOGIN_DESTINO_AVISOS = "Jonathas";
+
+export async function idDestinoAvisos() {
+  const db = obterDb();
+  const [pessoa] = await db
+    .select({ id: usuarios.id })
+    .from(usuarios)
+    .where(
+      and(eq(usuarios.login, LOGIN_DESTINO_AVISOS), eq(usuarios.ativo, true)),
+    )
+    .limit(1);
+  return pessoa?.id ?? null;
+}
 
 export function linhasDeAviso(entrada: {
   prazoId: number;
   titulo: string;
   dataAnterior: string;
   dataNova: string;
-  advogados: number[];
+  destinatarioId: number | null;
   atorId: number;
 }) {
-  if (entrada.dataAnterior === entrada.dataNova) {
+  if (!entrada.destinatarioId || entrada.dataAnterior === entrada.dataNova) {
     return [];
   }
-  const titulo = entrada.titulo.slice(0, 180);
-  return [...new Set(entrada.advogados)].map((usuarioId) => ({
-    usuarioId,
-    prazoId: entrada.prazoId,
-    titulo,
-    dataAnterior: entrada.dataAnterior,
-    dataNova: entrada.dataNova,
-    atorId: entrada.atorId,
-  }));
+  return [
+    {
+      usuarioId: entrada.destinatarioId,
+      prazoId: entrada.prazoId,
+      titulo: entrada.titulo.slice(0, 180),
+      dataAnterior: entrada.dataAnterior,
+      dataNova: entrada.dataNova,
+      atorId: entrada.atorId,
+    },
+  ];
+}
+
+/** Apaga da fila dos demais usuários avisos ainda não lidos. */
+export async function limparAvisosForaDoDestino(destinoId: number) {
+  const db = obterDb();
+  await db
+    .update(notificacoes)
+    .set({ lida: true })
+    .where(
+      and(ne(notificacoes.usuarioId, destinoId), eq(notificacoes.lida, false)),
+    );
 }
 
 export async function contarAvisosNaoLidos(usuarioId: number) {
@@ -46,8 +73,11 @@ export async function listarAvisos(usuarioId: number) {
       lida: notificacoes.lida,
       criadaEm: notificacoes.criadaEm,
       prazoId: notificacoes.prazoId,
+      atorNome: usuarios.nome,
+      atorSobrenome: usuarios.sobrenome,
     })
     .from(notificacoes)
+    .leftJoin(usuarios, eq(usuarios.id, notificacoes.atorId))
     .where(eq(notificacoes.usuarioId, usuarioId))
     .orderBy(desc(notificacoes.criadaEm), desc(notificacoes.id))
     .limit(40);

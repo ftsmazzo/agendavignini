@@ -8,6 +8,7 @@ import { Campo, classeCampo } from "@/components/campo";
 import { dataBr, dataIsoValida, ehFimDeSemana } from "@/lib/datas";
 import { sugerirPublicacao } from "@/lib/publicacao";
 import { datasRecorrentes } from "@/lib/recorrencia";
+import { prazoEhDefesa } from "@/lib/resumo";
 
 const AREAS = [
   { valor: "administrativo", rotulo: "Administrativo" },
@@ -46,6 +47,9 @@ export function FormularioPrazo({
   const [area, setArea] = useState(prazo?.area ?? "administrativo");
   const [data, setData] = useState(prazo?.data ?? hoje);
   const [titulo, setTitulo] = useState(prazo?.titulo ?? "");
+  const [ehDefesa, setEhDefesa] = useState(
+    prazoEhDefesa(Boolean(prazo?.defesa), prazo?.titulo ?? ""),
+  );
   const [observacao, setObservacao] = useState(prazo?.observacao ?? "");
   const [advogadosMarcados, setAdvogadosMarcados] = useState(
     advogados.map(String),
@@ -78,6 +82,9 @@ export function FormularioPrazo({
     }
     if (sugestao.titulo) {
       setTitulo(sugestao.titulo);
+      if (prazoEhDefesa(false, sugestao.titulo)) {
+        setEhDefesa(true);
+      }
     }
     if (sugestao.advogados.length > 0) {
       setAdvogadosMarcados(sugestao.advogados.map(String));
@@ -205,7 +212,13 @@ export function FormularioPrazo({
             name="titulo"
             required
             value={titulo}
-            onChange={(evento) => setTitulo(evento.target.value)}
+            onChange={(evento) => {
+              const valor = evento.target.value;
+              setTitulo(valor);
+              if (prazoEhDefesa(false, valor)) {
+                setEhDefesa(true);
+              }
+            }}
             className={classeCampo}
           />
         </Campo>
@@ -219,7 +232,8 @@ export function FormularioPrazo({
                 type="radio"
                 name="defesa"
                 value=""
-                defaultChecked={!prazo?.defesa}
+                checked={!ehDefesa}
+                onChange={() => setEhDefesa(false)}
                 className="h-5 w-5"
               />
               Prazo comum
@@ -229,7 +243,8 @@ export function FormularioPrazo({
                 type="radio"
                 name="defesa"
                 value="1"
-                defaultChecked={Boolean(prazo?.defesa)}
+                checked={ehDefesa}
+                onChange={() => setEhDefesa(true)}
                 className="h-5 w-5"
               />
               Defesa

@@ -4,9 +4,9 @@ import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { obterDb } from "@/db/client";
-import { auditoria, notificacoes, prazos, prazosUsuarios } from "@/db/schema";
+import { auditoria, notificacoes, prazos } from "@/db/schema";
 import { exigirAdmin } from "@/lib/acesso";
-import { linhasDeAviso } from "@/lib/avisos";
+import { idDestinoAvisos, linhasDeAviso } from "@/lib/avisos";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataIsoValida } from "@/lib/datas";
 import { ehDiaUtil } from "@/lib/publicacao";
@@ -75,19 +75,7 @@ export async function adiarPrazos(
       return 0;
     }
     const movidosIds = new Set(movidos.map((item) => item.id));
-    const vinculos = await tx
-      .select({
-        prazoId: prazosUsuarios.prazoId,
-        usuarioId: prazosUsuarios.usuarioId,
-      })
-      .from(prazosUsuarios)
-      .where(inArray(prazosUsuarios.prazoId, [...movidosIds]));
-    const porPrazo = new Map<number, number[]>();
-    for (const vinculo of vinculos) {
-      const lista = porPrazo.get(vinculo.prazoId) ?? [];
-      lista.push(vinculo.usuarioId);
-      porPrazo.set(vinculo.prazoId, lista);
-    }
+    const destinoAvisos = await idDestinoAvisos();
     const avisos = atuais
       .filter((item) => movidosIds.has(item.id))
       .flatMap((item) =>
@@ -96,7 +84,7 @@ export async function adiarPrazos(
           titulo: item.titulo,
           dataAnterior: item.data,
           dataNova: destino,
-          advogados: porPrazo.get(item.id) ?? [],
+          destinatarioId: destinoAvisos,
           atorId: usuario.id,
         }),
       );

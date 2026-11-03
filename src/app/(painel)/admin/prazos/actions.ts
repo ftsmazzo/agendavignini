@@ -12,7 +12,7 @@ import {
   usuarios,
 } from "@/db/schema";
 import { exigirAdmin, exigirUsuario } from "@/lib/acesso";
-import { linhasDeAviso } from "@/lib/avisos";
+import { idDestinoAvisos, linhasDeAviso } from "@/lib/avisos";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import {
   caminhoInterno,
@@ -21,6 +21,7 @@ import {
   instanteEscritorio,
 } from "@/lib/datas";
 import { datasRecorrentes } from "@/lib/recorrencia";
+import { prazoEhDefesa } from "@/lib/resumo";
 import { textoPrazo } from "@/lib/texto-prazo";
 
 const AREAS = new Set(["administrativo", "civil", "trabalhista"]);
@@ -178,6 +179,7 @@ export async function salvarPrazo(
     }
     const cumpridoEm =
       situacao === "cumprido" ? (cumpridoEmInformado ?? new Date()) : null;
+    const destinoAvisos = await idDestinoAvisos();
     const avisos =
       atual.data === data
         ? []
@@ -186,9 +188,10 @@ export async function salvarPrazo(
             titulo,
             dataAnterior: atual.data,
             dataNova: data,
-            advogados: ids,
+            destinatarioId: destinoAvisos,
             atorId: usuario.id,
           });
+    const defesa = prazoEhDefesa(formData.get("defesa") === "1", titulo);
     await db.transaction(async (tx) => {
       await tx
         .update(prazos)
@@ -198,7 +201,7 @@ export async function salvarPrazo(
           titulo,
           observacao,
           conteudo,
-          defesa: formData.get("defesa") === "1",
+          defesa,
           situacao,
           cumpridoPorId,
           cumpridoEm,
@@ -233,6 +236,7 @@ export async function salvarPrazo(
   }
   const datas = serie?.datas.length ? serie.datas : [data];
 
+  const defesa = prazoEhDefesa(formData.get("defesa") === "1", titulo);
   const criadoId = await db.transaction(async (tx) => {
     let primeiro: number | null = null;
     for (const dia of datas) {
@@ -244,7 +248,7 @@ export async function salvarPrazo(
           titulo,
           observacao,
           conteudo,
-          defesa: formData.get("defesa") === "1",
+          defesa,
           situacao,
           cumpridoPorId,
           cumpridoEm:
