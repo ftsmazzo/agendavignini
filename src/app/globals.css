@@ -544,6 +544,33 @@ p {
   }
 }
 
+/* Fora da layer: a cor da faixa precisa vencer o hover genérico da lista. */
+.prazo-admin,
+.lista-cartoes > li.prazo-admin,
+.lista-cartoes > li.prazo-admin:hover {
+  background: #e5f6ec;
+}
+.prazo-civil,
+.lista-cartoes > li.prazo-civil,
+.lista-cartoes > li.prazo-civil:hover {
+  background: #1c1f24;
+}
+.prazo-trab,
+.lista-cartoes > li.prazo-trab,
+.lista-cartoes > li.prazo-trab:hover {
+  background: #0c2f5b;
+}
+.prazo-cumprido,
+.lista-cartoes > li.prazo-cumprido,
+.lista-cartoes > li.prazo-cumprido:hover {
+  background: #c0261c;
+}
+.prazo-defesa,
+.lista-cartoes > li.prazo-defesa,
+.lista-cartoes > li.prazo-defesa:hover {
+  background: #c48be0;
+}
+
 .prazo-trab,
 .prazo-civil,
 .prazo-cumprido,
@@ -557,7 +584,8 @@ p {
 }
 
 .prazo-defesa,
-.prazo-defesa :where(p, h1, h2, h3, h4, a, span, li, summary, label, strong, em, div) {
+.prazo-defesa
+  :where(p, h1, h2, h3, h4, a, span, li, summary, label, strong, em, div) {
   color: #0f1b33;
 }
 

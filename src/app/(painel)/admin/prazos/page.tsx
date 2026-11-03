@@ -7,7 +7,12 @@ import { obterDb } from "@/db/client";
 import { prazos, usuarios } from "@/db/schema";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr, dataIsoValida } from "@/lib/datas";
-import { faixaDaArea, rotuloArea, statusDoPrazo } from "@/lib/resumo";
+import {
+  faixaDaArea,
+  prazoEhDefesa,
+  rotuloArea,
+  statusDoPrazo,
+} from "@/lib/resumo";
 
 export default function ListarPrazosAdmin({
   searchParams,
@@ -148,6 +153,7 @@ async function Lista({
       situacao: prazos.situacao,
       observacao: prazos.observacao,
       conteudo: prazos.conteudo,
+      defesa: prazos.defesa,
       cumpridoNome: usuarios.nome,
       cumpridoSobrenome: usuarios.sobrenome,
       cumpridoEm: prazos.cumpridoEm,
@@ -211,7 +217,10 @@ async function Lista({
       ) : (
         <ul className="lista-cartoes mt-4">
           {itens.map((item) => (
-            <li key={item.id} className={`px-5 py-4 ${faixaDaArea(item.area)}`}>
+            <li
+              key={item.id}
+              className={`px-5 py-4 ${faixaDaArea(item.area, item.situacao, prazoEhDefesa(item.defesa, item.titulo))}`}
+            >
               <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
                 <span className="selo">{rotuloArea(item.area)}</span>
                 <span

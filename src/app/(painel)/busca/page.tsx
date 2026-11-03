@@ -6,7 +6,7 @@ import { obterDb } from "@/db/client";
 import { audiencias, prazos } from "@/db/schema";
 import { dataBr, dataHoraBr } from "@/lib/datas";
 import { formatarProcesso } from "@/lib/publicacao";
-import { rotuloArea } from "@/lib/resumo";
+import { faixaDaArea, prazoEhDefesa, rotuloArea } from "@/lib/resumo";
 
 function diaDaAudiencia(valor: Date) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -81,6 +81,7 @@ async function Resultado({
           titulo: prazos.titulo,
           observacao: prazos.observacao,
           conteudo: prazos.conteudo,
+          defesa: prazos.defesa,
           situacao: prazos.situacao,
           processo: sql<
             string | null
@@ -205,7 +206,10 @@ async function Resultado({
               </p>
               <ul className="lista-cartoes mt-3">
                 {itens.map((item) => (
-                  <li key={item.id} className="px-5 py-4">
+                  <li
+                    key={item.id}
+                    className={`px-5 py-4 ${faixaDaArea(item.area, item.situacao, prazoEhDefesa(item.defesa, item.titulo))}`}
+                  >
                     <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] text-muted">
                       <span className="selo">{rotuloArea(item.area)}</span>
                       {dataBr(item.data)}

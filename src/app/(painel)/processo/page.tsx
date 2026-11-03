@@ -14,6 +14,7 @@ import { formatarProcesso, numeroDoProcesso } from "@/lib/publicacao";
 import {
   faixaDaArea,
   marcaDoPrazo,
+  prazoEhDefesa,
   rotuloArea,
   statusDoPrazo,
 } from "@/lib/resumo";
@@ -71,6 +72,7 @@ async function Ficha({
       area: prazos.area,
       data: prazos.data,
       titulo: prazos.titulo,
+      defesa: prazos.defesa,
       situacao: prazos.situacao,
       cumpridoNome: usuarios.nome,
       cumpridoSobrenome: usuarios.sobrenome,
@@ -211,6 +213,7 @@ function Grupo({
     area: "administrativo" | "civil" | "trabalhista";
     data: string;
     titulo: string;
+    defesa: boolean;
     situacao: "aberto" | "cumprido";
     cumpridoNome: string | null;
     cumpridoSobrenome: string | null;
@@ -232,7 +235,10 @@ function Grupo({
           const marca = marcaDoPrazo(item.situacao, item.data, hoje);
           const nomes = advogados.get(item.id) ?? [];
           return (
-            <li key={item.id} className={`px-5 py-4 ${faixaDaArea(item.area)}`}>
+            <li
+              key={item.id}
+              className={`px-5 py-4 ${faixaDaArea(item.area, item.situacao, prazoEhDefesa(item.defesa, item.titulo))}`}
+            >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="flex flex-wrap items-center gap-2 text-[0.9375rem] text-muted">
                   <span className="selo">{rotuloArea(item.area)}</span>
