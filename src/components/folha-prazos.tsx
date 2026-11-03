@@ -168,14 +168,18 @@ function Item({
               <strong>Advogados:</strong> {item.advogados}
             </p>
           ) : null}
-          {item.observacao ? (
-            <p className="mt-3 whitespace-pre-wrap text-lg text-ink">
-              {item.observacao}
-            </p>
-          ) : null}
           {item.conteudo ? (
             <p className="mt-3 whitespace-pre-wrap text-lg text-ink">
+              <strong>Descrição:</strong>
+              <br />
               {item.conteudo}
+            </p>
+          ) : null}
+          {item.observacao ? (
+            <p className="mt-3 whitespace-pre-wrap text-lg text-ink">
+              <strong>Observação:</strong>
+              <br />
+              {item.observacao}
             </p>
           ) : null}
         </>

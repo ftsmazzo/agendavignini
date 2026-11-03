@@ -92,7 +92,7 @@ export function FormularioPrazo({
       <form action={acao} className="cartao mt-6 space-y-5 p-5">
         {prazo?.id ? <input type="hidden" name="id" value={prazo.id} /> : null}
         <div className="space-y-3">
-          <Campo id="publicacao" rotulo="Publicação">
+          <Campo id="publicacao" rotulo="Publicação / Descrição">
             <textarea
               id="publicacao"
               name="conteudo"
@@ -100,7 +100,7 @@ export function FormularioPrazo({
               rows={8}
               onChange={(evento) => setRascunho(evento.target.value)}
               className={classeCampo}
-              placeholder="Cole aqui o texto da publicação ou intimação"
+              placeholder="Cole aqui o processo, reclamante, reclamada ou a intimação"
             />
           </Campo>
           {prazo?.id ? null : (
@@ -109,9 +109,9 @@ export function FormularioPrazo({
             </button>
           )}
           <p className="ajuda-campo">
-            O texto colado fica gravado com o prazo e aparece na pesquisa e na
-            lista. A sugestão só preenche tipo, data e título. O prazo só entra
-            quando você salva.
+            Esse texto é a descrição do prazo: aparece na pesquisa do processo,
+            na lista e na impressão. A sugestão só preenche tipo, data e título.
+            O prazo só entra quando você salva.
           </p>
           {avisos.length > 0 ? (
             <ul className="aviso list-disc pl-8">
@@ -248,12 +248,12 @@ export function FormularioPrazo({
             value={observacao}
             onChange={(evento) => setObservacao(evento.target.value)}
             className={classeCampo}
-            placeholder="Anotação livre, se precisar"
+            placeholder="Ex.: O prazo pode ser cumprido antes da data agendada"
           />
         </Campo>
         <p className="ajuda-campo">
-          Use a observação só para um recado a mais. A publicação completa fica
-          no campo Publicação, acima.
+          Observação é só o recado do advogado. Processo, reclamante e reclamada
+          ficam em Publicação / Descrição, acima.
         </p>
         <Campo id="cumpridoPor" rotulo="Status">
           <select

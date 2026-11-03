@@ -667,24 +667,28 @@ function CartaoPrazo({
                 {advogados.join(", ")}
               </p>
             ) : null}
-            {item.observacao ? (
-              <p className="mt-1.5 text-sm leading-snug whitespace-pre-line text-ink">
-                {textoEncaixado(item.observacao)}
-              </p>
-            ) : null}
             {item.conteudo && inteiro ? (
               <p className="mt-1.5 text-sm leading-snug whitespace-pre-line text-ink">
+                <span className="font-semibold">Descrição:</span>
+                <br />
                 {textoEncaixado(item.conteudo)}
               </p>
             ) : item.conteudo ? (
-              <details className="mt-1.5">
+              <details className="mt-1.5" open>
                 <summary className="btn-texto cursor-pointer">
-                  Ver publicação
+                  Descrição
                 </summary>
                 <p className="mt-1.5 rounded-lg bg-paper p-3 text-sm leading-snug whitespace-pre-line text-ink">
                   {textoEncaixado(item.conteudo)}
                 </p>
               </details>
+            ) : null}
+            {item.observacao ? (
+              <p className="mt-1.5 text-sm leading-snug whitespace-pre-line text-ink">
+                <span className="font-semibold">Observação:</span>
+                <br />
+                {textoEncaixado(item.observacao)}
+              </p>
             ) : null}
           </>
         }

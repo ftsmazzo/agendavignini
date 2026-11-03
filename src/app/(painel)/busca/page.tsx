@@ -224,25 +224,25 @@ async function Resultado({
                       {item.titulo}
                     </Link>
                     <ProcessoPrazo numero={item.processo} />
+                    {item.conteudo ? (
+                      <p className="mt-2 text-sm leading-snug whitespace-pre-line text-ink">
+                        <span className="font-semibold">Descrição:</span>
+                        <br />
+                        {textoEncaixado(item.conteudo)}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-sm text-muted">
+                        Sem descrição gravada. Cole o texto em Publicação ao
+                        editar o prazo.
+                      </p>
+                    )}
                     {item.observacao ? (
-                      <p className="mt-1.5 text-sm leading-snug whitespace-pre-line text-ink">
+                      <p className="mt-2 text-sm leading-snug whitespace-pre-line text-ink">
+                        <span className="font-semibold">Observação:</span>
+                        <br />
                         {textoEncaixado(item.observacao)}
                       </p>
                     ) : null}
-                    {item.conteudo ? (
-                      <details className="mt-1.5">
-                        <summary className="btn-texto cursor-pointer">
-                          Ver publicação
-                        </summary>
-                        <p className="mt-1.5 rounded-lg bg-paper p-3 text-sm leading-snug whitespace-pre-line text-ink">
-                          {textoEncaixado(item.conteudo)}
-                        </p>
-                      </details>
-                    ) : (
-                      <p className="mt-1.5 text-sm text-muted">
-                        Sem publicação gravada neste prazo.
-                      </p>
-                    )}
                   </li>
                 ))}
               </ul>

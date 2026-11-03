@@ -236,20 +236,19 @@ async function Lista({
               >
                 {item.titulo}
               </Link>
-              {item.observacao ? (
+              {item.conteudo ? (
                 <p className="mt-2 whitespace-pre-wrap text-ink">
-                  {item.observacao}
+                  <span className="font-semibold">Descrição:</span>
+                  <br />
+                  {item.conteudo}
                 </p>
               ) : null}
-              {item.conteudo ? (
-                <details className="mt-2">
-                  <summary className="cursor-pointer font-semibold text-pen">
-                    Ver publicação
-                  </summary>
-                  <p className="mt-2 whitespace-pre-wrap text-muted">
-                    {item.conteudo}
-                  </p>
-                </details>
+              {item.observacao ? (
+                <p className="mt-2 whitespace-pre-wrap text-ink">
+                  <span className="font-semibold">Observação:</span>
+                  <br />
+                  {item.observacao}
+                </p>
               ) : null}
             </li>
           ))}
