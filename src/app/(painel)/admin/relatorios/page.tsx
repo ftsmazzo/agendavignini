@@ -11,6 +11,7 @@ import {
   painelAdvogados,
   periodoDoMonitor,
 } from "@/lib/monitor";
+import { relatorioUsaIa } from "@/lib/relatorio-prazos-dia";
 import { marcaDoPrazo, rotuloArea } from "@/lib/resumo";
 
 const TOM = {
@@ -141,7 +142,7 @@ async function Painel({
         hoje. Os cumpridos seguem o período escolhido.
       </p>
 
-      <RelatorioPrazosDia hoje={hoje} />
+      <RelatorioPrazosDia hoje={hoje} usaIa={relatorioUsaIa()} />
 
       <h2 className="titulo-secao mt-12">Carga dos advogados</h2>
       <p className="mt-2 text-base text-muted">

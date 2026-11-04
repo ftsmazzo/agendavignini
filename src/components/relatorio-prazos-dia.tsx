@@ -11,7 +11,13 @@ type Geracao = {
   geradoEm: string;
 };
 
-export function RelatorioPrazosDia({ hoje }: { hoje: string }) {
+export function RelatorioPrazosDia({
+  hoje,
+  usaIa = false,
+}: {
+  hoje: string;
+  usaIa?: boolean;
+}) {
   const [dia, setDia] = useState(hoje);
   const [erro, setErro] = useState("");
   const [geracoes, setGeracoes] = useState<Geracao[]>([]);
@@ -60,6 +66,9 @@ export function RelatorioPrazosDia({ hoje }: { hoje: string }) {
           <p className="mt-2 max-w-2xl text-base text-muted">
             Reclamante, processo, reclamada, data adicional (quando o texto cita
             outro dia) e status (observação).
+            {usaIa
+              ? " A leitura das partes usa IA sobre a publicação completa."
+              : " Configure OPENROUTER_API_KEY no servidor para a leitura por IA."}
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-3 px-5 py-4">

@@ -2,11 +2,13 @@ import { asc, eq, inArray, sql } from "drizzle-orm";
 import { obterDb } from "@/db/client";
 import { audiencias, prazos } from "@/db/schema";
 import { dataBr, dataIsoValida } from "@/lib/datas";
+import { chaveOpenRouter } from "@/lib/openrouter";
 import {
   datasAdicionaisDoTexto,
   numeroDoProcesso,
   partesDaPublicacao,
 } from "@/lib/publicacao";
+import { extrairPartesRelatorioIa } from "@/lib/relatorio-prazos-dia-ia";
 
 export type LinhaRelatorioPrazosDia = {
   reclamante: string;
@@ -17,27 +19,17 @@ export type LinhaRelatorioPrazosDia = {
 };
 
 function statusLimpo(observacao: string | null) {
-  const texto = (observacao ?? "").replace(/\s+/g, " ").trim();
-  if (!texto) {
-    return "";
-  }
-  if (texto.length <= 100) {
-    return texto;
-  }
-  return `${texto.slice(0, 97).trim()}…`;
+  return (observacao ?? "").replace(/\s+/g, " ").trim().slice(0, 180);
 }
 
-function escolherNome(
-  preferido: string | null | undefined,
-  reserva: string | null | undefined,
-) {
-  const a = (preferido ?? "").trim();
-  const b = (reserva ?? "").trim();
-  if (a && b) {
-    // Prefere o nome mais completo (ex.: SYLVAMO DO BRASIL LTDA > SYLVAMO).
-    return a.length >= b.length ? a : b;
+function primeiroPreenchido(...valores: Array<string | null | undefined>) {
+  for (const valor of valores) {
+    const limpo = (valor ?? "").replace(/\s+/g, " ").trim();
+    if (limpo) {
+      return limpo;
+    }
   }
-  return a || b || "";
+  return "";
 }
 
 export async function linhasRelatorioPrazosDia(dia: string) {
@@ -48,6 +40,7 @@ export async function linhasRelatorioPrazosDia(dia: string) {
   const db = obterDb();
   const itens = await db
     .select({
+      id: prazos.id,
       data: prazos.data,
       titulo: prazos.titulo,
       observacao: prazos.observacao,
@@ -90,19 +83,31 @@ export async function linhasRelatorioPrazosDia(dia: string) {
     }
   }
 
+  const porIa = await extrairPartesRelatorioIa(itens);
+
   return itens.map((item): LinhaRelatorioPrazosDia => {
-    // Observação é status/recado — não entra na extração de partes.
-    const partes = partesDaPublicacao(item.conteudo, item.titulo);
     const processo =
       numeroDoProcesso(item.conteudo, item.titulo, item.observacao) ?? "";
     const ficha = processo ? cadastro.get(processo) : undefined;
-    const extras = datasAdicionaisDoTexto(item.conteudo ?? "", item.data);
+    const ia = porIa.get(item.id);
+    const regex = partesDaPublicacao(item.conteudo, item.titulo);
+    const extrasRegex = datasAdicionaisDoTexto(item.conteudo ?? "", item.data)
+      .map(dataBr)
+      .join("; ");
+
     return {
-      // Cadastro da audiência é estruturado; a publicação completa o que faltar.
-      reclamante: escolherNome(ficha?.reclamante, partes.reclamante),
+      reclamante: primeiroPreenchido(
+        ia?.reclamante,
+        ficha?.reclamante,
+        regex.reclamante,
+      ),
       processo,
-      reclamada: escolherNome(ficha?.reclamado, partes.reclamada),
-      dataAdicional: extras.map(dataBr).join("; "),
+      reclamada: primeiroPreenchido(
+        ia?.reclamada,
+        ficha?.reclamado,
+        regex.reclamada,
+      ),
+      dataAdicional: primeiroPreenchido(ia?.dataAdicional, extrasRegex),
       status: statusLimpo(item.observacao),
     };
   });
@@ -110,4 +115,8 @@ export async function linhasRelatorioPrazosDia(dia: string) {
 
 export function nomeArquivoPrazosDia(dia: string, extensao: "xlsx" | "pdf") {
   return `prazos-${dia}.${extensao}`;
+}
+
+export function relatorioUsaIa() {
+  return Boolean(chaveOpenRouter());
 }
