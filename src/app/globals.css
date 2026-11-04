@@ -220,23 +220,30 @@ p {
     border-color: var(--pen);
   }
 
-  /* Lista de cartões (ul) */
+  /* Lista de cartões (ul): cards separados para o olho achar o início/fim */
   .lista-cartoes {
-    background: var(--sheet);
-    border: 1px solid var(--line);
-    border-radius: 1rem;
-    box-shadow: var(--sombra-1);
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
   }
   .lista-cartoes > li {
-    border-top: 1px solid var(--line);
-    transition: background 0.12s ease;
-  }
-  .lista-cartoes > li:first-child {
-    border-top: 0;
+    background: var(--sheet);
+    border: 1px solid var(--line);
+    border-radius: 0.875rem;
+    box-shadow: var(--sombra-1);
+    overflow: hidden;
+    transition:
+      background 0.12s ease,
+      box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .lista-cartoes > li:hover {
     background: color-mix(in srgb, var(--pen-soft) 45%, transparent);
+    box-shadow: var(--sombra-2);
   }
   .prazo-admin {
     background: #e5f6ec;

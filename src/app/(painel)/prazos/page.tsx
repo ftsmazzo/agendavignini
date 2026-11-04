@@ -663,18 +663,18 @@ function CartaoPrazo({
                 {advogados.join(", ")}
               </p>
             ) : null}
-            {item.conteudo ? (
-              <p className="mt-1.5 text-sm leading-snug break-words whitespace-pre-wrap text-ink">
-                <span className="font-semibold">Descrição:</span>
-                <br />
-                {textoPrazo(item.conteudo)}
-              </p>
-            ) : null}
             {item.observacao ? (
               <p className="mt-1.5 text-sm leading-snug break-words whitespace-pre-wrap text-ink">
                 <span className="font-semibold">Observação:</span>
                 <br />
                 {textoPrazo(item.observacao)}
+              </p>
+            ) : null}
+            {item.conteudo ? (
+              <p className="mt-1.5 text-sm leading-snug break-words whitespace-pre-wrap text-ink">
+                <span className="font-semibold">Descrição:</span>
+                <br />
+                {textoPrazo(item.conteudo)}
               </p>
             ) : null}
           </>

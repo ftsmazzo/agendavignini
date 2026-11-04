@@ -169,18 +169,18 @@ function Item({
               <strong>Advogados:</strong> {item.advogados}
             </p>
           ) : null}
-          {item.conteudo ? (
-            <p className="mt-3 break-words whitespace-pre-wrap text-lg text-ink">
-              <strong>Descrição:</strong>
-              <br />
-              {textoPrazo(item.conteudo)}
-            </p>
-          ) : null}
           {item.observacao ? (
             <p className="mt-3 break-words whitespace-pre-wrap text-lg text-ink">
               <strong>Observação:</strong>
               <br />
               {textoPrazo(item.observacao)}
+            </p>
+          ) : null}
+          {item.conteudo ? (
+            <p className="mt-3 break-words whitespace-pre-wrap text-lg text-ink">
+              <strong>Descrição:</strong>
+              <br />
+              {textoPrazo(item.conteudo)}
             </p>
           ) : null}
         </>

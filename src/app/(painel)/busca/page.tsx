@@ -252,6 +252,13 @@ async function Resultado({
                       {item.titulo}
                     </Link>
                     <ProcessoPrazo numero={item.processo} />
+                    {item.observacao ? (
+                      <p className="mt-2 text-sm leading-snug break-words whitespace-pre-wrap text-ink">
+                        <span className="font-semibold">Observação:</span>
+                        <br />
+                        {textoPrazo(item.observacao)}
+                      </p>
+                    ) : null}
                     {item.conteudo ? (
                       <p className="mt-2 text-sm leading-snug break-words whitespace-pre-wrap text-ink">
                         <span className="font-semibold">Descrição:</span>
@@ -264,13 +271,6 @@ async function Resultado({
                         editar o prazo.
                       </p>
                     )}
-                    {item.observacao ? (
-                      <p className="mt-2 text-sm leading-snug break-words whitespace-pre-wrap text-ink">
-                        <span className="font-semibold">Observação:</span>
-                        <br />
-                        {textoPrazo(item.observacao)}
-                      </p>
-                    ) : null}
                     <div className="mt-3 flex flex-wrap gap-2">
                       {item.conteudo ? (
                         <VerPublicacao texto={item.conteudo} />
