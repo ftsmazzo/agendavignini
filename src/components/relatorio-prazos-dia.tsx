@@ -37,6 +37,10 @@ export function RelatorioPrazosDia({ hoje }: { hoje: string }) {
     });
   }
 
+  function excluir(id: string) {
+    setGeracoes((lista) => lista.filter((item) => item.id !== id));
+  }
+
   return (
     <section className="mt-8">
       <h2 className="titulo-secao">Exportações</h2>
@@ -98,7 +102,7 @@ export function RelatorioPrazosDia({ hoje }: { hoje: string }) {
                 <th className="py-2 pr-3 font-semibold">Data do relatório</th>
                 <th className="py-2 pr-3 font-semibold">Gerado em</th>
                 <th className="py-2 pr-3 font-semibold">Prazos</th>
-                <th className="py-2 font-semibold">Baixar</th>
+                <th className="py-2 font-semibold">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -125,6 +129,13 @@ export function RelatorioPrazosDia({ hoje }: { hoje: string }) {
                       >
                         Baixar PDF
                       </a>
+                      <button
+                        type="button"
+                        className="btn btn-perigo btn-pequeno"
+                        onClick={() => excluir(item.id)}
+                      >
+                        Excluir
+                      </button>
                     </div>
                   </td>
                 </tr>

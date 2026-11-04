@@ -216,12 +216,43 @@ function datasDeAudiencia(texto: string) {
   return datas;
 }
 
+const PARADA_NOME =
+  /\b(?:intima[cç][aã]o|fica\s+v\.?\s*sa\.?|fls\.?|disponibiliza[cç][aã]o|publica[cç][aã]o|arquivo:|decis[aã]o|despacho|senten[cç]a|audi[eê]ncia|prazo|processo|vara|trt|tj-|n[uú]mero|advogad|dr\.|dra\.|id\s+[a-f0-9]{5,}|tomar\s+ci[eê]ncia|proferida|autos)\b/i;
+
 function limparParte(valor: string) {
-  return valor
+  let limpo = valor
+    .replace(/\r\n/g, "\n")
+    .replace(/\u00a0/g, " ")
     .replace(/\s+/g, " ")
-    .replace(/^[\s\-–—:,.;]+|[\s\-–—:,.;]+$/g, "")
-    .slice(0, 200)
     .trim();
+  // Tira prefixo de vara/foro: "1ª VT Sertãozinho - NOME"
+  limpo = limpo.replace(
+    /^.*?\b(?:\d[\wªº]*\s*)?(?:vt|vara|juizado|foro|comarca|trt|tj-?[a-z]{0,2}|n[ºo°]?\s*ordem)\b[^-–—\n]*[-–—]\s*/i,
+    "",
+  );
+  const corte = limpo.search(PARADA_NOME);
+  if (corte > 8) {
+    limpo = limpo.slice(0, corte);
+  }
+  limpo = limpo
+    .replace(/\s*[-–—:,.;/|]+\s*$/g, "")
+    .replace(/^[-–—:,.;/|\s]+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (limpo.length < 3 || limpo.length > 120) {
+    return "";
+  }
+  if (/^(s\/?a|ltda|me|epp|eireli)$/i.test(limpo)) {
+    return "";
+  }
+  // Recado/tag de cliente (ex.: "Sylvamo + BNG...") não é nome de parte.
+  if (
+    /\+/.test(limpo) &&
+    !/\b(ltda|s\/?a|s\.a\.)\b/i.test(limpo.split("+")[0] ?? "")
+  ) {
+    return "";
+  }
+  return limpo;
 }
 
 function rotuloParte(texto: string, rotulos: RegExp): string | null {
@@ -233,9 +264,64 @@ function rotuloParte(texto: string, rotulos: RegExp): string | null {
   return limpo || null;
 }
 
+function dueloNoTexto(texto: string): {
+  reclamante: string;
+  reclamada: string;
+} | null {
+  // Preferência: trecho logo após o número do processo (padrão do DJ).
+  const aposProcesso = [
+    ...texto.matchAll(
+      /(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})[^\n]{0,120}?([A-ZÁÉÍÓÚÂÊÔÃÕÇ][^.\n]{2,90}?)\s+[xX×]\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ][^.\n]{2,90}?)(?=\s*[-–—.,]|\s*$|\s*\n)/g,
+    ),
+  ];
+  for (const item of aposProcesso) {
+    const reclamante = limparParte(item[2] ?? "");
+    const reclamada = limparParte(item[3] ?? "");
+    if (reclamante && reclamada) {
+      return { reclamante, reclamada };
+    }
+  }
+
+  const gerais = [
+    ...texto.matchAll(
+      /([A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-ZÁÉÍÓÚÂÊÔÃÕÇa-záéíóúâêôãõç0-9 .,&'/-]{2,90}?)\s+[xX×]\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-ZÁÉÍÓÚÂÊÔÃÕÇa-záéíóúâêôãõç0-9 .,&'/-]{2,90}?)(?=\s*[-–—.,]|\s*$|\s*\n|,\s*Fls)/g,
+    ),
+  ];
+  for (const item of gerais) {
+    const reclamante = limparParte(item[1] ?? "");
+    const reclamada = limparParte(item[2] ?? "");
+    if (reclamante && reclamada && !/prazo|intima/i.test(reclamante)) {
+      return { reclamante, reclamada };
+    }
+  }
+  return null;
+}
+
+function completarNomeEmpresa(curto: string, texto: string) {
+  if (!curto) {
+    return curto;
+  }
+  if (/\b(ltda|s\/?a|s\.a\.|eireli)\b/i.test(curto)) {
+    return curto;
+  }
+  const base = curto.split(/\s+/)[0] ?? curto;
+  if (base.length < 3) {
+    return curto;
+  }
+  const escapado = base.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const completo = texto.match(
+    new RegExp(
+      `\\b(${escapado}(?:\\s+[A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-ZÁÉÍÓÚÂÊÔÃÕÇa-z]{1,20}){0,4}\\s+(?:LTDA\\.?|S\\/?A\\.?|S\\.A\\.?|EIRELI)\\.?)`,
+      "i",
+    ),
+  );
+  const limpo = limparParte(completo?.[1] ?? "");
+  return limpo || curto;
+}
+
 /**
- * Reclamante / reclamada a partir da publicação.
- * Aceita rótulos explícitos ou o padrão "NOME X NOME".
+ * Reclamante / reclamada a partir da publicação (conteúdo/título).
+ * Não usa observação — lá fica o status/recado do advogado.
  */
 export function partesDaPublicacao(
   ...trechos: Array<string | null | undefined>
@@ -248,31 +334,33 @@ export function partesDaPublicacao(
   let reclamante =
     rotuloParte(
       texto,
-      /reclamante\s*[:\-–—]\s*([^\n\r;]+?)(?=\s*(?:reclamad[ao]|réu|reu|autor|processo|\d{7}-)|[\n\r]|$)/i,
+      /reclamante\s*[:\-–—]\s*([^\n\r.]+?)(?=\s*(?:reclamad[ao]|réu|reu|autor|\.|$))/i,
     ) ||
     rotuloParte(
       texto,
-      /(?:autor|reqte|polo ativo)\s*[:\-–—]\s*([^\n\r;]+?)(?=\s*(?:reclamad|réu|reu|reqdo|polo|processo|\d{7}-)|[\n\r]|$)/i,
+      /(?:autor|reqte|polo ativo)\s*[:\-–—]\s*([^\n\r.]+?)(?=\s*(?:reclamad|réu|reu|reqdo|polo|\.|$))/i,
     );
 
   let reclamada =
     rotuloParte(
       texto,
-      /reclamad[ao]\s*[:\-–—]\s*([^\n\r;]+?)(?=\s*(?:reclamante|autor|processo|\d{7}-)|[\n\r]|$)/i,
+      /reclamad[ao]\s*[:\-–—]\s*([^\n\r.]+?)(?=\s*(?:reclamante|autor|réu|reu|\.|$))/i,
     ) ||
     rotuloParte(
       texto,
-      /(?:réu|reu|reqdo|polo passivo)\s*[:\-–—]\s*([^\n\r;]+?)(?=\s*(?:reclamante|autor|processo|\d{7}-)|[\n\r]|$)/i,
+      /(?:réu|reu|reqdo|polo passivo)\s*[:\-–—]\s*([^\n\r.]+?)(?=\s*(?:reclamante|autor|\.|$))/i,
     );
 
   if (!reclamante || !reclamada) {
-    const duelo = texto.match(
-      /([A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 .,&'/-]{2,80}?)\s+[xX×]\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 .,&'/-]{2,80}?)(?=\s*[-–—]|\s*$|\s*\n|\s*\.|,\s*Fls)/,
-    );
+    const duelo = dueloNoTexto(texto);
     if (duelo) {
-      reclamante = reclamante || limparParte(duelo[1] ?? "");
-      reclamada = reclamada || limparParte(duelo[2] ?? "");
+      reclamante = reclamante || duelo.reclamante;
+      reclamada = reclamada || duelo.reclamada;
     }
+  }
+
+  if (reclamada) {
+    reclamada = completarNomeEmpresa(reclamada, texto);
   }
 
   return {
@@ -281,7 +369,10 @@ export function partesDaPublicacao(
   };
 }
 
-/** Datas no texto diferentes da data do prazo (audiência primeiro). */
+/**
+ * Datas extras: só audiência no texto, ou no máximo 2 datas futuras
+ * diferentes do dia do prazo (evita encher com histórico da publicação).
+ */
 export function datasAdicionaisDoTexto(
   texto: string,
   dataPrazo: string,
@@ -289,15 +380,16 @@ export function datasAdicionaisDoTexto(
   if (!texto.trim() || !dataIsoValida(dataPrazo)) {
     return [];
   }
-  const audiencias = [...datasDeAudiencia(texto)].filter(
-    (data) => data !== dataPrazo,
-  );
-  if (audiencias.length > 0) {
-    return audiencias.sort();
-  }
-  return datasNoTexto(texto)
+  const audiencias = [...datasDeAudiencia(texto)]
     .filter((data) => data !== dataPrazo)
     .sort();
+  if (audiencias.length > 0) {
+    return audiencias.slice(0, 2);
+  }
+  return datasNoTexto(texto)
+    .filter((data) => data !== dataPrazo && data >= dataPrazo)
+    .sort()
+    .slice(0, 2);
 }
 
 function areaDoTexto(
