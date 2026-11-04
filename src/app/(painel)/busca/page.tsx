@@ -11,11 +11,17 @@ import { BotaoExcluir } from "@/components/botao-excluir";
 import { ProcessoPrazo } from "@/components/processo-prazo";
 import { VerPublicacao } from "@/components/ver-publicacao";
 import { obterDb } from "@/db/client";
-import { audiencias, prazos } from "@/db/schema";
+import { audiencias, prazos, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { dataBr, dataHoraBr } from "@/lib/datas";
 import { formatarProcesso } from "@/lib/publicacao";
-import { faixaDaArea, prazoEhDefesa, rotuloArea } from "@/lib/resumo";
+import {
+  faixaDaArea,
+  prazoEhDefesa,
+  rotuloArea,
+  rotuloCumpridor,
+  statusDoPrazo,
+} from "@/lib/resumo";
 import { textoPrazo } from "@/lib/texto-prazo";
 
 function diaDaAudiencia(valor: Date) {
@@ -88,11 +94,16 @@ async function Resultado({
           conteudo: prazos.conteudo,
           defesa: prazos.defesa,
           situacao: prazos.situacao,
+          cumpridoNome: usuarios.nome,
+          cumpridoSobrenome: usuarios.sobrenome,
+          cumpridoLogin: usuarios.login,
+          cumpridoEm: prazos.cumpridoEm,
           processo: sql<
             string | null
           >`substring((${prazos.titulo} || ' ' || ${prazos.observacao} || ' ' || ${prazos.conteudo}) from '[0-9]{7}-[0-9]{2}\\.[0-9]{4}\\.[0-9]\\.[0-9]{2}\\.[0-9]{4}')`,
         })
         .from(prazos)
+        .leftJoin(usuarios, eq(usuarios.id, prazos.cumpridoPorId))
         .where(
           situacaoOk
             ? and(filtroTexto, eq(prazos.situacao, situacaoOk))
@@ -222,7 +233,15 @@ async function Resultado({
                         className={`selo ${item.situacao === "cumprido" ? "selo-ok" : "selo-neutro"}`}
                       >
                         {item.situacao === "cumprido"
-                          ? "Cumprido"
+                          ? statusDoPrazo({
+                              situacao: item.situacao,
+                              cumpridoPor: rotuloCumpridor({
+                                nome: item.cumpridoNome,
+                                sobrenome: item.cumpridoSobrenome,
+                                login: item.cumpridoLogin,
+                              }),
+                              cumpridoEm: item.cumpridoEm,
+                            })
                           : "Em aberto"}
                       </span>
                     </p>

@@ -7,7 +7,7 @@ import { obterDb } from "@/db/client";
 import { prazos, prazosUsuarios, usuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { dataBr, dataIsoValida, semanaDe } from "@/lib/datas";
-import { rotuloArea, statusDoPrazo } from "@/lib/resumo";
+import { rotuloArea, rotuloCumpridor, statusDoPrazo } from "@/lib/resumo";
 
 const AREAS = ["administrativo", "civil", "trabalhista"] as const;
 
@@ -81,6 +81,7 @@ async function Folha({
           situacao: prazos.situacao,
           cumpridoNome: usuarios.nome,
           cumpridoSobrenome: usuarios.sobrenome,
+          cumpridoLogin: usuarios.login,
           cumpridoEm: prazos.cumpridoEm,
         })
         .from(prazos)
@@ -130,9 +131,11 @@ async function Folha({
     processo: item.processo ?? "",
     status: statusDoPrazo({
       situacao: item.situacao,
-      cumpridoPor: item.cumpridoNome
-        ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-        : null,
+      cumpridoPor: rotuloCumpridor({
+        nome: item.cumpridoNome,
+        sobrenome: item.cumpridoSobrenome,
+        login: item.cumpridoLogin,
+      }),
       cumpridoEm: item.cumpridoEm,
     }),
     advogados: (advogados.get(item.id) ?? []).join(", "),

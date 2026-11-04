@@ -4,7 +4,7 @@ import { and, asc, desc, eq, gt, inArray, lt } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { obterDb } from "@/db/client";
-import { auditoria, prazos } from "@/db/schema";
+import { auditoria, prazos, prazosUsuarios } from "@/db/schema";
 import { exigirUsuario } from "@/lib/acesso";
 import { dataIsoValida } from "@/lib/datas";
 
@@ -50,6 +50,15 @@ export async function cumprirVarios(
     if (marcados.length === 0) {
       return { quantidade: 0, destino: diaBruto };
     }
+    await tx
+      .insert(prazosUsuarios)
+      .values(
+        marcados.map((item) => ({
+          prazoId: item.id,
+          usuarioId: usuario.id,
+        })),
+      )
+      .onConflictDoNothing();
     await tx.insert(auditoria).values({
       atorId: usuario.id,
       acao: "cumprir",

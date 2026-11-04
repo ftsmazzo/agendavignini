@@ -16,6 +16,7 @@ import {
   marcaDoPrazo,
   prazoEhDefesa,
   rotuloArea,
+  rotuloCumpridor,
   statusDoPrazo,
 } from "@/lib/resumo";
 
@@ -76,6 +77,7 @@ async function Ficha({
       situacao: prazos.situacao,
       cumpridoNome: usuarios.nome,
       cumpridoSobrenome: usuarios.sobrenome,
+      cumpridoLogin: usuarios.login,
       cumpridoEm: prazos.cumpridoEm,
     })
     .from(prazos)
@@ -217,6 +219,7 @@ function Grupo({
     situacao: "aberto" | "cumprido";
     cumpridoNome: string | null;
     cumpridoSobrenome: string | null;
+    cumpridoLogin: string | null;
     cumpridoEm: Date | null;
   }>;
   advogados: Map<number, string[]>;
@@ -250,9 +253,11 @@ function Grupo({
                   </Link>
                   {statusDoPrazo({
                     situacao: item.situacao,
-                    cumpridoPor: item.cumpridoNome
-                      ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-                      : null,
+                    cumpridoPor: rotuloCumpridor({
+                      nome: item.cumpridoNome,
+                      sobrenome: item.cumpridoSobrenome,
+                      login: item.cumpridoLogin,
+                    }),
                     cumpridoEm: item.cumpridoEm,
                   })}
                 </p>

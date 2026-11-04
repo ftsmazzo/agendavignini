@@ -12,7 +12,7 @@ import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataIsoValida, semanaDe } from "@/lib/datas";
 import type { SessaoMcp } from "@/lib/mcp/auth";
 import { numeroDoProcesso } from "@/lib/publicacao";
-import { resumoDoDia } from "@/lib/resumo";
+import { resumoDoDia, rotuloCumpridor } from "@/lib/resumo";
 
 function cortar(texto: string, limite: number) {
   const limpo = texto.replace(/\s+/g, " ").trim();
@@ -261,6 +261,7 @@ export async function prazoDetalheMcp(
       cumpridoEm: prazos.cumpridoEm,
       cumpridoNome: usuarios.nome,
       cumpridoSobrenome: usuarios.sobrenome,
+      cumpridoLogin: usuarios.login,
     })
     .from(prazos)
     .leftJoin(usuarios, eq(usuarios.id, prazos.cumpridoPorId))
@@ -308,9 +309,11 @@ export async function prazoDetalheMcp(
     defesa: item.defesa,
     situacao: item.situacao,
     processo: numeroDoProcesso(item.titulo, item.observacao, item.conteudo),
-    cumprido_por: item.cumpridoNome
-      ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-      : null,
+    cumprido_por: rotuloCumpridor({
+      nome: item.cumpridoNome,
+      sobrenome: item.cumpridoSobrenome,
+      login: item.cumpridoLogin,
+    }),
     cumprido_em: item.cumpridoEm,
     responsaveis: responsaveis.map((pessoa) => ({
       id: pessoa.id,

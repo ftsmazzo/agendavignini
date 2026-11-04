@@ -12,6 +12,7 @@ import {
   faixaDaArea,
   prazoEhDefesa,
   rotuloArea,
+  rotuloCumpridor,
   statusDoPrazo,
 } from "@/lib/resumo";
 import { textoPrazo } from "@/lib/texto-prazo";
@@ -158,6 +159,7 @@ async function Lista({
       defesa: prazos.defesa,
       cumpridoNome: usuarios.nome,
       cumpridoSobrenome: usuarios.sobrenome,
+      cumpridoLogin: usuarios.login,
       cumpridoEm: prazos.cumpridoEm,
     })
     .from(prazos)
@@ -234,9 +236,11 @@ async function Lista({
                 >
                   {statusDoPrazo({
                     situacao: item.situacao,
-                    cumpridoPor: item.cumpridoNome
-                      ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-                      : null,
+                    cumpridoPor: rotuloCumpridor({
+                      nome: item.cumpridoNome,
+                      sobrenome: item.cumpridoSobrenome,
+                      login: item.cumpridoLogin,
+                    }),
                     cumpridoEm: item.cumpridoEm,
                   })}
                 </span>

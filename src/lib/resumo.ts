@@ -48,6 +48,24 @@ export function assuntoDoDia(dia: string) {
   return `Prazos e Audiências para ${dataBr(dia)} - Agenda Coelho Vignini`;
 }
 
+export function rotuloCumpridor(
+  pessoa: {
+    nome?: string | null;
+    sobrenome?: string | null;
+    login?: string | null;
+  } | null,
+) {
+  if (!pessoa) {
+    return null;
+  }
+  const nome = `${pessoa.nome ?? ""} ${pessoa.sobrenome ?? ""}`.trim();
+  const login = (pessoa.login ?? "").trim();
+  if (nome && login) {
+    return `${nome} (${login})`;
+  }
+  return nome || login || null;
+}
+
 export function statusDoPrazo(item: {
   situacao: PrazoDoDia["situacao"];
   cumpridoPor: string | null;
@@ -228,6 +246,7 @@ export async function resumoDoDia(
       situacao: prazos.situacao,
       cumpridoNome: usuarios.nome,
       cumpridoSobrenome: usuarios.sobrenome,
+      cumpridoLogin: usuarios.login,
       cumpridoEm: prazos.cumpridoEm,
     })
     .from(prazosUsuarios)
@@ -245,9 +264,11 @@ export async function resumoDoDia(
       titulo: item.titulo,
       conteudo: item.conteudo,
       situacao: item.situacao,
-      cumpridoPor: item.cumpridoNome
-        ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-        : null,
+      cumpridoPor: rotuloCumpridor({
+        nome: item.cumpridoNome,
+        sobrenome: item.cumpridoSobrenome,
+        login: item.cumpridoLogin,
+      }),
       cumpridoEm: item.cumpridoEm,
     })),
   };
@@ -481,6 +502,7 @@ export async function itensDoDia(dia: string, advogadoId: number | null) {
         situacao: prazos.situacao,
         cumpridoNome: usuarios.nome,
         cumpridoSobrenome: usuarios.sobrenome,
+        cumpridoLogin: usuarios.login,
         cumpridoEm: prazos.cumpridoEm,
       })
       .from(prazos)
@@ -536,9 +558,11 @@ export async function itensDoDia(dia: string, advogadoId: number | null) {
       conteudo: item.conteudo,
       defesa: item.defesa,
       situacao: item.situacao,
-      cumpridoPor: item.cumpridoNome
-        ? `${item.cumpridoNome} ${item.cumpridoSobrenome ?? ""}`.trim()
-        : null,
+      cumpridoPor: rotuloCumpridor({
+        nome: item.cumpridoNome,
+        sobrenome: item.cumpridoSobrenome,
+        login: item.cumpridoLogin,
+      }),
       cumpridoEm: item.cumpridoEm,
       advogados: nomes.get(item.id) ?? [],
     })),

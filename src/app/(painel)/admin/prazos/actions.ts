@@ -303,22 +303,33 @@ export async function cumprir(formData: FormData) {
   }
 
   const db = obterDb();
-  const marcado = await db
-    .update(prazos)
-    .set({
-      situacao: "cumprido",
-      cumpridoPorId: usuario.id,
-      cumpridoEm: new Date(),
-    })
-    .where(and(eq(prazos.id, id), eq(prazos.situacao, "aberto")))
-    .returning({ id: prazos.id });
-  if (marcado[0]) {
-    await db.insert(auditoria).values({
+  const marcado = await db.transaction(async (tx) => {
+    const [linha] = await tx
+      .update(prazos)
+      .set({
+        situacao: "cumprido",
+        cumpridoPorId: usuario.id,
+        cumpridoEm: new Date(),
+      })
+      .where(and(eq(prazos.id, id), eq(prazos.situacao, "aberto")))
+      .returning({ id: prazos.id });
+    if (!linha) {
+      return null;
+    }
+    await tx
+      .insert(prazosUsuarios)
+      .values({ prazoId: linha.id, usuarioId: usuario.id })
+      .onConflictDoNothing();
+    await tx.insert(auditoria).values({
       atorId: usuario.id,
       acao: "cumprir",
       entidade: "prazos",
       entidadeId: String(id),
     });
+    return linha;
+  });
+  if (!marcado) {
+    redirect(voltar);
   }
   atualizarListas();
   redirect(voltar);
