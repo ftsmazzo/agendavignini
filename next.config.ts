@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  serverExternalPackages: ["postgres", "hash-wasm"],
+  serverExternalPackages: ["postgres", "hash-wasm", "exceljs", "pdfkit"],
   outputFileTracingIncludes: {
     "/*": ["./drizzle/**/*"],
   },

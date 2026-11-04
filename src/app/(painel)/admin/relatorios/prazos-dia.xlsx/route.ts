@@ -7,8 +7,6 @@ import {
 } from "@/lib/relatorio-prazos-dia";
 import { montarXlsxPrazosDia } from "@/lib/relatorio-prazos-dia-arquivos";
 
-export const runtime = "nodejs";
-
 export async function GET(pedido: Request) {
   await connection();
   await exigirAdmin();
