@@ -17,20 +17,26 @@ type ItemBruto = {
   conteudo: string;
 };
 
-const SISTEMA = `Você extrai dados de publicações jurídicas brasileiras para a planilha da Agenda Coelho Vignini.
+const SISTEMA = `Você é assistente de um escritório trabalhista/cível brasileiro.
+Sua tarefa é ler a publicação e devolver os nomes das partes.
 
-Para cada prazo, preencha:
-- reclamante: nome da pessoa ou empresa autora / polo ativo (quem move a ação). Só o nome, limpo.
-- reclamada: nome da pessoa ou empresa ré / polo passivo (quem responde). Só o nome, limpo. Se aparecer "SYLVAMO", complete para o nome empresarial completo quando o texto tiver (ex.: SYLVAMO DO BRASIL LTDA).
-- data_adicional: outra data agendada no texto diferente da data do prazo (audiência, retorno, etc.), no formato dd/mm/aaaa. Se houver mais de uma, use no máximo duas separadas por "; ". Se não houver, string vazia.
+Campos:
+- reclamante: autor / polo ativo (pessoa física ou empresa que move a ação)
+- reclamada: réu / polo passivo (ex.: SYLVAMO DO BRASIL LTDA, BANCO ..., empresa)
+- data_adicional: outra data de ato futuro citada no texto (audiência etc.), dd/mm/aaaa; no máximo 2, separadas por "; "; senão ""
 
-Regras:
-- Leia o texto inteiro (título + publicação). Não invente nomes.
-- Ignore intimação, despacho, "Fica V. Sa.", fls., IDs de documento e instruções internas.
-- Não use a observação/status como nome de parte (observação é recado do escritório).
-- Se não encontrar com segurança, deixe string vazia.
-- Responda SOMENTE JSON válido no formato:
-{"itens":[{"id":1,"reclamante":"","reclamada":"","data_adicional":""}]}`;
+Como achar:
+1) Padrão "NOME X NOME" ou "NOME x NOME" perto do número do processo.
+2) Rótulos "Reclamante:", "Reclamada:", "Reclamado:", "Autor:", "Réu:".
+3) Complete nomes curtos de empresa (SYLVAMO → SYLVAMO DO BRASIL LTDA) se o texto tiver a forma longa.
+
+Proibido:
+- Inventar nome
+- Copiar intimação, fls., "Fica V. Sa.", despacho
+- Usar a observação/status do escritório como nome
+
+Se o texto tiver o padrão X, preencha os dois lados. Responda só JSON:
+{"reclamante":"","reclamada":"","data_adicional":""}`;
 
 function cortar(texto: string, limite: number) {
   const limpo = texto.replaceAll("\u0000", "").trim();
@@ -40,84 +46,114 @@ function cortar(texto: string, limite: number) {
   return `${limpo.slice(0, limite)}…`;
 }
 
-function parseJson(conteudo: string): ExtracaoPrazoIa[] {
+function nomeValido(valor: string) {
+  const limpo = valor.replace(/\s+/g, " ").trim();
+  if (limpo.length < 2 || limpo.length > 160) {
+    return "";
+  }
+  if (
+    /^(n\/?a|não encontrado|nao encontrado|desconhecido|null|undefined|—|-|sem nome|não informado|nao informado)$/i.test(
+      limpo,
+    )
+  ) {
+    return "";
+  }
+  return limpo;
+}
+
+function parseJson(conteudo: string, id: number): ExtracaoPrazoIa | null {
   const cru = conteudo.trim();
   const bloco = cru.match(/\{[\s\S]*\}/)?.[0] ?? cru;
-  const dados = JSON.parse(bloco) as {
-    itens?: Array<{
-      id?: number;
+  try {
+    const dados = JSON.parse(bloco) as {
       reclamante?: string;
       reclamada?: string;
       data_adicional?: string;
-    }>;
-  };
-  const itens = Array.isArray(dados.itens) ? dados.itens : [];
-  return itens
-    .map((item) => ({
-      id: Number(item.id),
-      reclamante: String(item.reclamante ?? "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 160),
-      reclamada: String(item.reclamada ?? "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 160),
-      dataAdicional: String(item.data_adicional ?? "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 80),
-    }))
-    .filter((item) => Number.isInteger(item.id) && item.id > 0);
+    };
+    return {
+      id,
+      reclamante: nomeValido(String(dados.reclamante ?? "")),
+      reclamada: nomeValido(String(dados.reclamada ?? "")),
+      dataAdicional: nomeValido(String(dados.data_adicional ?? "")).slice(
+        0,
+        80,
+      ),
+    };
+  } catch {
+    return null;
+  }
 }
 
-async function extrairLote(lote: ItemBruto[]): Promise<ExtracaoPrazoIa[]> {
-  const payload = lote.map((item) => ({
-    id: item.id,
-    data_do_prazo: dataBr(item.data),
-    titulo: cortar(item.titulo, 300),
-    publicacao: cortar(item.conteudo, 4500),
-    processo_sugerido:
-      numeroDoProcesso(item.conteudo, item.titulo, item.observacao) ?? "",
-  }));
-
+async function extrairUm(item: ItemBruto): Promise<ExtracaoPrazoIa | null> {
+  const processo =
+    numeroDoProcesso(item.conteudo, item.titulo, item.observacao) ?? "";
   const conteudo = await chatOpenRouter({
     json: true,
     temperature: 0,
-    maxTokens: 3500,
+    maxTokens: 400,
     messages: [
       { role: "system", content: SISTEMA },
       {
         role: "user",
-        content: `Extraia as partes destes ${lote.length} prazos:\n${JSON.stringify(payload)}`,
+        content: [
+          `Data do prazo: ${dataBr(item.data)}`,
+          `Processo (se já achado): ${processo || "(não achado)"}`,
+          `Título: ${cortar(item.titulo, 400)}`,
+          `Publicação:\n${cortar(item.conteudo, 6000)}`,
+        ].join("\n"),
       },
     ],
   });
-
-  return parseJson(conteudo);
+  return parseJson(conteudo, item.id);
 }
 
-/** Extrai reclamante/reclamada/data adicional via modelo. Sem chave, retorna mapa vazio. */
-export async function extrairPartesRelatorioIa(itens: ItemBruto[]) {
+async function mapaEmParalelo(
+  itens: ItemBruto[],
+  concorrencia: number,
+): Promise<Map<number, ExtracaoPrazoIa>> {
   const mapa = new Map<number, ExtracaoPrazoIa>();
-  if (!chaveOpenRouter() || itens.length === 0) {
-    return mapa;
-  }
+  let indice = 0;
 
-  const validos = itens.filter((item) => dataIsoValida(item.data));
-  const tamanhoLote = 8;
-
-  for (let i = 0; i < validos.length; i += tamanhoLote) {
-    const lote = validos.slice(i, i + tamanhoLote);
-    try {
-      const extraidos = await extrairLote(lote);
-      for (const item of extraidos) {
-        mapa.set(item.id, item);
+  async function trabalhador() {
+    while (indice < itens.length) {
+      const atual = indice;
+      indice += 1;
+      const item = itens[atual];
+      if (!item) {
+        continue;
       }
-    } catch {
-      // Mantém o que já veio; o relatório completa com fallback.
+      try {
+        const extraido = await extrairUm(item);
+        if (extraido) {
+          mapa.set(extraido.id, extraido);
+        }
+      } catch {
+        // Fallback local cobre este item.
+      }
     }
   }
 
+  await Promise.all(
+    Array.from({ length: Math.min(concorrencia, itens.length) }, () =>
+      trabalhador(),
+    ),
+  );
   return mapa;
+}
+
+/**
+ * Completa só os prazos que ainda estão sem reclamante ou reclamada.
+ * Sem chave OpenRouter, devolve mapa vazio.
+ */
+export async function extrairPartesRelatorioIa(
+  itens: ItemBruto[],
+  precisar: Set<number>,
+) {
+  if (!chaveOpenRouter() || precisar.size === 0) {
+    return new Map<number, ExtracaoPrazoIa>();
+  }
+  const fila = itens.filter(
+    (item) => dataIsoValida(item.data) && precisar.has(item.id),
+  );
+  return mapaEmParalelo(fila, 4);
 }

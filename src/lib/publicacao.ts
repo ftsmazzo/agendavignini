@@ -217,7 +217,7 @@ function datasDeAudiencia(texto: string) {
 }
 
 const PARADA_NOME =
-  /\b(?:intima[cç][aã]o|fica\s+v\.?\s*sa\.?|fls\.?|disponibiliza[cç][aã]o|publica[cç][aã]o|arquivo:|decis[aã]o|despacho|senten[cç]a|audi[eê]ncia|prazo|processo|vara|trt|tj-|n[uú]mero|advogad|dr\.|dra\.|id\s+[a-f0-9]{5,}|tomar\s+ci[eê]ncia|proferida|autos)\b/i;
+  /\b(?:intima[cç][aã]o|fica\s+v\.?\s*sa\.?|fls\.?|disponibiliza[cç][aã]o|arquivo:|tomar\s+ci[eê]ncia|proferida\s+nos\s+autos|id\s+[a-f0-9]{5,})\b/i;
 
 function limparParte(valor: string) {
   let limpo = valor
@@ -225,13 +225,13 @@ function limparParte(valor: string) {
     .replace(/\u00a0/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  // Tira prefixo de vara/foro: "1ª VT Sertãozinho - NOME"
+  // "1ª VT Sertãozinho - NOME" → NOME
   limpo = limpo.replace(
-    /^.*?\b(?:\d[\wªº]*\s*)?(?:vt|vara|juizado|foro|comarca|trt|tj-?[a-z]{0,2}|n[ºo°]?\s*ordem)\b[^-–—\n]*[-–—]\s*/i,
+    /^(?:\d[\wªº]*\s*)?(?:vt|vara|juizado|foro|comarca)\b[^-–—\n]{0,60}[-–—]\s*/i,
     "",
   );
   const corte = limpo.search(PARADA_NOME);
-  if (corte > 8) {
+  if (corte > 3) {
     limpo = limpo.slice(0, corte);
   }
   limpo = limpo
@@ -239,17 +239,10 @@ function limparParte(valor: string) {
     .replace(/^[-–—:,.;/|\s]+/g, "")
     .replace(/\s+/g, " ")
     .trim();
-  if (limpo.length < 3 || limpo.length > 120) {
+  if (limpo.length < 2 || limpo.length > 140) {
     return "";
   }
   if (/^(s\/?a|ltda|me|epp|eireli)$/i.test(limpo)) {
-    return "";
-  }
-  // Recado/tag de cliente (ex.: "Sylvamo + BNG...") não é nome de parte.
-  if (
-    /\+/.test(limpo) &&
-    !/\b(ltda|s\/?a|s\.a\.)\b/i.test(limpo.split("+")[0] ?? "")
-  ) {
     return "";
   }
   return limpo;

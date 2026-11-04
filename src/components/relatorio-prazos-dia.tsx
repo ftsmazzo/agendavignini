@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { gerarPrazosDoDia } from "@/app/(painel)/admin/relatorios/actions";
+import {
+  gerarPrazosDoDia,
+  prepararPrazosDoDia,
+} from "@/app/(painel)/admin/relatorios/actions";
 import { dataBr, dataHoraBr } from "@/lib/datas";
 
 type Geracao = {
@@ -30,6 +33,13 @@ export function RelatorioPrazosDia({
       if (resultado.erro) {
         setErro(resultado.erro);
         return;
+      }
+      if (usaIa) {
+        const preparado = await prepararPrazosDoDia(dia);
+        if (preparado.erro) {
+          setErro(preparado.erro);
+          return;
+        }
       }
       setGeracoes((lista) => [
         {
@@ -93,7 +103,11 @@ export function RelatorioPrazosDia({
             disabled={pendente || !dia}
             onClick={gerar}
           >
-            {pendente ? "Gerando…" : "Gerar"}
+            {pendente
+              ? usaIa
+                ? "Lendo publicações…"
+                : "Gerando…"
+              : "Gerar"}
           </button>
         </div>
         {erro ? (
