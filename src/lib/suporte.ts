@@ -955,14 +955,28 @@ const GUIAS: Guia[] = [
     id: "relatorios",
     titulo: "Abrir relatórios",
     admin: true,
-    gatilhos: ["relatorio", "relatorios", "planilha"],
+    gatilhos: [
+      "relatorio",
+      "relatorios",
+      "planilha",
+      "exportar prazos",
+      "xlsx",
+      "pdf prazos",
+    ],
     relacionados: ["resumo", "usuarios"],
-    abertura: "Relatórios ficam no painel do administrador.",
+    abertura:
+      "Em Relatórios dá para exportar os prazos do dia em XLS ou PDF e ver a carga dos advogados.",
     passos: [
       {
         texto: "No fim do menu do administrador, clique em Relatórios.",
         href: "/admin/relatorios",
         rotulo: "Abrir relatórios",
+      },
+      {
+        texto:
+          "No card Prazos do dia, escolha a data e clique em Gerar. Depois baixe o XLS ou o PDF.",
+        href: "/admin/relatorios",
+        rotulo: "Exportar prazos do dia",
       },
     ],
   },

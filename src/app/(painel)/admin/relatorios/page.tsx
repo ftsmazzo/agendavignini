@@ -2,6 +2,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { ProcessoPrazo } from "@/components/processo-prazo";
+import { RelatorioPrazosDia } from "@/components/relatorio-prazos-dia";
 import { hojeNoEscritorio } from "@/lib/contagens";
 import { dataBr } from "@/lib/datas";
 import {
@@ -136,8 +137,15 @@ async function Painel({
     <section className="entrada mx-auto w-full max-w-6xl">
       <h1 className="titulo-pagina">Relatórios</h1>
       <p className="subtitulo-pagina">
+        Exporte os prazos do dia e acompanhe a carga dos advogados. A carga é de
+        hoje. Os cumpridos seguem o período escolhido.
+      </p>
+
+      <RelatorioPrazosDia hoje={hoje} />
+
+      <h2 className="titulo-secao mt-12">Carga dos advogados</h2>
+      <p className="mt-2 text-base text-muted">
         Quem está com prazo vencido, quem vence agora e quem cumpriu no período.
-        A carga é de hoje. Os cumpridos seguem o período escolhido.
       </p>
       <nav
         aria-label="Período dos cumpridos"

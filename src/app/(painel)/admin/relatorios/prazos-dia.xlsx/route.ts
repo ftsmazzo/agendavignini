@@ -1,0 +1,31 @@
+import { connection } from "next/server";
+import { exigirAdmin } from "@/lib/acesso";
+import { dataIsoValida } from "@/lib/datas";
+import {
+  linhasRelatorioPrazosDia,
+  nomeArquivoPrazosDia,
+} from "@/lib/relatorio-prazos-dia";
+import { montarXlsxPrazosDia } from "@/lib/relatorio-prazos-dia-arquivos";
+
+export const runtime = "nodejs";
+
+export async function GET(pedido: Request) {
+  await connection();
+  await exigirAdmin();
+  const url = new URL(pedido.url);
+  const dia = String(url.searchParams.get("data") ?? "").slice(0, 10);
+  if (!dataIsoValida(dia)) {
+    return new Response("Dia inválido.", { status: 400 });
+  }
+  const geradoEm = new Date();
+  const linhas = await linhasRelatorioPrazosDia(dia);
+  const arquivo = await montarXlsxPrazosDia(dia, linhas, geradoEm);
+  return new Response(new Uint8Array(arquivo), {
+    headers: {
+      "Content-Type":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="${nomeArquivoPrazosDia(dia, "xlsx")}"`,
+      "Cache-Control": "no-store",
+    },
+  });
+}

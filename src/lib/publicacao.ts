@@ -216,6 +216,90 @@ function datasDeAudiencia(texto: string) {
   return datas;
 }
 
+function limparParte(valor: string) {
+  return valor
+    .replace(/\s+/g, " ")
+    .replace(/^[\s\-–—:,.;]+|[\s\-–—:,.;]+$/g, "")
+    .slice(0, 200)
+    .trim();
+}
+
+function rotuloParte(texto: string, rotulos: RegExp): string | null {
+  const achado = texto.match(rotulos);
+  if (!achado?.[1]) {
+    return null;
+  }
+  const limpo = limparParte(achado[1]);
+  return limpo || null;
+}
+
+/**
+ * Reclamante / reclamada a partir da publicação.
+ * Aceita rótulos explícitos ou o padrão "NOME X NOME".
+ */
+export function partesDaPublicacao(
+  ...trechos: Array<string | null | undefined>
+): { reclamante: string | null; reclamada: string | null } {
+  const texto = trechos.filter(Boolean).join("\n");
+  if (!texto.trim()) {
+    return { reclamante: null, reclamada: null };
+  }
+
+  let reclamante =
+    rotuloParte(
+      texto,
+      /reclamante\s*[:\-–—]\s*([^\n\r;]+?)(?=\s*(?:reclamad[ao]|réu|reu|autor|processo|\d{7}-)|[\n\r]|$)/i,
+    ) ||
+    rotuloParte(
+      texto,
+      /(?:autor|reqte|polo ativo)\s*[:\-–—]\s*([^\n\r;]+?)(?=\s*(?:reclamad|réu|reu|reqdo|polo|processo|\d{7}-)|[\n\r]|$)/i,
+    );
+
+  let reclamada =
+    rotuloParte(
+      texto,
+      /reclamad[ao]\s*[:\-–—]\s*([^\n\r;]+?)(?=\s*(?:reclamante|autor|processo|\d{7}-)|[\n\r]|$)/i,
+    ) ||
+    rotuloParte(
+      texto,
+      /(?:réu|reu|reqdo|polo passivo)\s*[:\-–—]\s*([^\n\r;]+?)(?=\s*(?:reclamante|autor|processo|\d{7}-)|[\n\r]|$)/i,
+    );
+
+  if (!reclamante || !reclamada) {
+    const duelo = texto.match(
+      /([A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 .,&'/-]{2,80}?)\s+[xX×]\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ][A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9 .,&'/-]{2,80}?)(?=\s*[-–—]|\s*$|\s*\n|\s*\.|,\s*Fls)/,
+    );
+    if (duelo) {
+      reclamante = reclamante || limparParte(duelo[1] ?? "");
+      reclamada = reclamada || limparParte(duelo[2] ?? "");
+    }
+  }
+
+  return {
+    reclamante: reclamante || null,
+    reclamada: reclamada || null,
+  };
+}
+
+/** Datas no texto diferentes da data do prazo (audiência primeiro). */
+export function datasAdicionaisDoTexto(
+  texto: string,
+  dataPrazo: string,
+): string[] {
+  if (!texto.trim() || !dataIsoValida(dataPrazo)) {
+    return [];
+  }
+  const audiencias = [...datasDeAudiencia(texto)].filter(
+    (data) => data !== dataPrazo,
+  );
+  if (audiencias.length > 0) {
+    return audiencias.sort();
+  }
+  return datasNoTexto(texto)
+    .filter((data) => data !== dataPrazo)
+    .sort();
+}
+
 function areaDoTexto(
   texto: string,
   processo: string | null,
