@@ -1,6 +1,7 @@
 import { and, desc, eq, ne, sql } from "drizzle-orm";
 import { obterDb } from "@/db/client";
-import { notificacoes, usuarios } from "@/db/schema";
+import { notificacoes, prazos, usuarios } from "@/db/schema";
+import { numeroDoProcesso } from "@/lib/publicacao";
 
 /** Conta que recebe todos os avisos de mudança de data. */
 export const LOGIN_DESTINO_AVISOS = "Jonathas";
@@ -62,9 +63,14 @@ export async function contarAvisosNaoLidos(usuarioId: number) {
   return linha?.total ?? 0;
 }
 
+/** Abre o prazo no dia em que ele está, com destaque no cartão. */
+export function caminhoDoPrazo(prazoId: number, data: string) {
+  return `/prazos?data=${data}&id=${prazoId}`;
+}
+
 export async function listarAvisos(usuarioId: number) {
   const db = obterDb();
-  return db
+  const linhas = await db
     .select({
       id: notificacoes.id,
       titulo: notificacoes.titulo,
@@ -73,12 +79,43 @@ export async function listarAvisos(usuarioId: number) {
       lida: notificacoes.lida,
       criadaEm: notificacoes.criadaEm,
       prazoId: notificacoes.prazoId,
+      prazoData: prazos.data,
+      prazoTitulo: prazos.titulo,
+      prazoObservacao: prazos.observacao,
+      prazoConteudo: prazos.conteudo,
       atorNome: usuarios.nome,
       atorSobrenome: usuarios.sobrenome,
     })
     .from(notificacoes)
     .leftJoin(usuarios, eq(usuarios.id, notificacoes.atorId))
+    .leftJoin(prazos, eq(prazos.id, notificacoes.prazoId))
     .where(eq(notificacoes.usuarioId, usuarioId))
     .orderBy(desc(notificacoes.criadaEm), desc(notificacoes.id))
     .limit(40);
+
+  return linhas.map((item) => {
+    const dataAlvo = item.prazoData ?? item.dataNova;
+    const processo = numeroDoProcesso(
+      item.prazoTitulo,
+      item.prazoObservacao,
+      item.prazoConteudo,
+      item.titulo,
+    );
+    return {
+      id: item.id,
+      titulo: item.titulo,
+      dataAnterior: item.dataAnterior,
+      dataNova: item.dataNova,
+      lida: item.lida,
+      criadaEm: item.criadaEm,
+      prazoId: item.prazoId,
+      processo,
+      caminho:
+        item.prazoId && dataAlvo
+          ? caminhoDoPrazo(item.prazoId, dataAlvo)
+          : null,
+      atorNome: item.atorNome,
+      atorSobrenome: item.atorSobrenome,
+    };
+  });
 }

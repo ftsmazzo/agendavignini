@@ -9,6 +9,7 @@ import {
 import { BotaoCumprir } from "@/components/botao-cumprir";
 import { BotaoExcluir } from "@/components/botao-excluir";
 import { CorpoPrazo } from "@/components/corpo-prazo";
+import { FocoPrazo } from "@/components/foco-prazo";
 import { MarcarAdvogado } from "@/components/marcar-advogado";
 import { ProcessoPrazo } from "@/components/processo-prazo";
 import { VerPublicacao } from "@/components/ver-publicacao";
@@ -86,6 +87,7 @@ export default function Prazos({
     meus?: string;
     advogado?: string;
     repetidos?: string;
+    id?: string;
   }>;
 }) {
   return (
@@ -122,6 +124,7 @@ async function Lista({
     advogado?: string;
     defesa?: string;
     repetidos?: string;
+    id?: string;
   }>;
 }) {
   const {
@@ -134,10 +137,14 @@ async function Lista({
     advogado,
     defesa,
     repetidos,
+    id,
   } = await searchParams;
   const usuario = await exigirUsuario();
   const hoje = hojeNoEscritorio();
   const dataPedida = data && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : null;
+  const prazoFoco = Number(id);
+  const destaqueId =
+    Number.isInteger(prazoFoco) && prazoFoco > 0 ? prazoFoco : null;
   const areaOk = AREAS.find((item) => item === area);
   const situacaoOk =
     situacao === "aberto" || situacao === "cumprido" ? situacao : undefined;
@@ -532,6 +539,7 @@ async function Lista({
           {`${repetidos} prazos foram gravados a partir de ${dataBr(dataPedida ?? hoje)}.`}
         </output>
       ) : null}
+      <FocoPrazo id={destaqueId} />
       {itens.length === 0 ? (
         <p className="vazio mt-8">
           {soDefesas
@@ -554,7 +562,8 @@ async function Lista({
                   .map((item) => (
                     <li
                       key={item.id}
-                      className={`px-4 py-3 ${faixaDaArea(item.area, item.situacao, prazoEhDefesa(item.defesa, item.titulo))}`}
+                      id={`prazo-${item.id}`}
+                      className={`scroll-mt-24 px-4 py-3 ${faixaDaArea(item.area, item.situacao, prazoEhDefesa(item.defesa, item.titulo))}${destaqueId === item.id ? " prazo-selecionado" : ""}`}
                     >
                       <CartaoPrazo
                         item={item}
@@ -575,7 +584,8 @@ async function Lista({
           {itens.map((item) => (
             <li
               key={item.id}
-              className={`px-4 py-3 ${faixaDaArea(item.area, item.situacao, prazoEhDefesa(item.defesa, item.titulo))}`}
+              id={`prazo-${item.id}`}
+              className={`scroll-mt-24 px-4 py-3 ${faixaDaArea(item.area, item.situacao, prazoEhDefesa(item.defesa, item.titulo))}${destaqueId === item.id ? " prazo-selecionado" : ""}`}
             >
               <CartaoPrazo
                 item={item}

@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { marcarAvisosLidos } from "@/app/(painel)/conta/actions";
@@ -41,8 +42,8 @@ async function Conteudo() {
       <section className="mt-8">
         <h2 className="titulo-secao">Avisos de prazo</h2>
         <p className="mt-2 text-base text-muted">
-          Quando alguém muda a data de um prazo, o aviso com quem mudou e as
-          datas fica aqui.
+          Quando alguém muda a data de um prazo, o aviso com quem mudou, o
+          processo e as datas fica aqui.
         </p>
         {pendentes > 0 ? (
           <form action={marcarAvisosLidos} className="mt-4">
@@ -66,6 +67,22 @@ async function Conteudo() {
                   className={`px-4 py-3 ${item.lida ? "" : "bg-pen-soft"}`}
                 >
                   <p className="font-semibold text-ink">{item.titulo}</p>
+                  {item.processo ? (
+                    <p className="mt-1">
+                      {item.caminho ? (
+                        <Link
+                          href={item.caminho}
+                          className="text-sm font-semibold tracking-tight text-pen hover:underline"
+                        >
+                          {item.processo}
+                        </Link>
+                      ) : (
+                        <span className="text-sm font-semibold tracking-tight text-ink">
+                          {item.processo}
+                        </span>
+                      )}
+                    </p>
+                  ) : null}
                   <p className="mt-1 text-base text-ink">
                     {dataBr(item.dataAnterior)} passou para{" "}
                     {dataBr(item.dataNova)}
@@ -74,6 +91,16 @@ async function Conteudo() {
                     {quem ? `Alterado por ${quem} · ` : null}
                     {dataHoraBr(item.criadaEm)}
                   </p>
+                  {item.caminho ? (
+                    <div className="mt-3">
+                      <Link
+                        href={item.caminho}
+                        className="btn btn-primario btn-pequeno"
+                      >
+                        Abrir prazo
+                      </Link>
+                    </div>
+                  ) : null}
                 </li>
               );
             })}
