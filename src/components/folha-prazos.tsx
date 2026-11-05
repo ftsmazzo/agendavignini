@@ -124,10 +124,15 @@ function Item({
   marcado: boolean;
   onAlternar: (id: number) => void;
 }) {
+  const area =
+    item.area === "trabalhista"
+      ? "Trabalhista"
+      : item.area === "civil"
+        ? "Cível"
+        : "Administrativo";
+
   return (
-    <article
-      className={`folha-item mt-4 border-b border-line pb-4 ${marcado ? "" : "fora-da-folha"}`}
-    >
+    <article className={`folha-item ${marcado ? "" : "fora-da-folha"}`}>
       <label className="nao-imprimir flex items-start gap-3 text-base text-ink">
         <input
           type="checkbox"
@@ -136,52 +141,38 @@ function Item({
           onChange={() => onAlternar(item.id)}
         />
         <span>
-          {item.titulo}
+          Incluir na impressão
           {item.situacao === "cumprido" ? " · cumprido" : ""}
         </span>
       </label>
-      <h3 className="mt-2 text-xl font-semibold text-ink">{item.titulo}</h3>
+      <p className="folha-meta">
+        {area}
+        {` · ${dataBr(item.data)} · ${item.status}`}
+      </p>
+      <h3 className="folha-titulo">{item.titulo}</h3>
+      {item.processo ? <p className="folha-processo">{item.processo}</p> : null}
       {item.compacta ? (
-        <p className="mt-1 text-lg text-ink">
-          {item.area === "trabalhista"
-            ? "Trabalhista"
-            : item.area === "civil"
-              ? "Cível"
-              : "Administrativo"}
-          {item.processo ? ` · ${item.processo}` : ""}
-          {` · ${item.advogados || "Sem advogado marcado"} · ${item.status}`}
+        <p className="folha-linha">
+          {item.advogados || "Sem advogado marcado"}
         </p>
       ) : (
         <>
-          <p className="mt-2 text-lg text-ink">
-            {item.area === "trabalhista"
-              ? "Trabalhista"
-              : item.area === "civil"
-                ? "Cível"
-                : "Administrativo"}
-            {` · ${dataBr(item.data)} · ${item.status}`}
-          </p>
-          {item.processo ? (
-            <p className="mt-2 text-lg text-ink">{item.processo}</p>
-          ) : null}
           {item.advogados ? (
-            <p className="mt-3 text-lg text-ink">
-              <strong>Advogados:</strong> {item.advogados}
+            <p className="folha-linha">
+              <strong>Advogados</strong> {item.advogados}
             </p>
           ) : null}
           {item.observacao ? (
-            <p className="mt-3 break-words whitespace-pre-wrap text-lg text-ink">
-              <strong>Observação:</strong>
-              <br />
-              {textoPrazo(item.observacao)}
-            </p>
+            <div className="folha-bloco">
+              <p className="folha-rotulo">Observação</p>
+              <p className="folha-texto">{textoPrazo(item.observacao)}</p>
+            </div>
           ) : null}
           {item.conteudo ? (
-            <p className="mt-3 break-words whitespace-pre-wrap text-lg text-ink">
-              <strong>Descrição:</strong>
-              <br />
-              {textoPrazo(item.conteudo)}
-            </p>
+            <div className="folha-bloco">
+              <p className="folha-rotulo">Descrição</p>
+              <p className="folha-texto">{textoPrazo(item.conteudo)}</p>
+            </div>
           ) : null}
         </>
       )}

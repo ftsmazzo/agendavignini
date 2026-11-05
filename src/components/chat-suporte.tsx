@@ -142,7 +142,7 @@ export function ChatSuporte({ admin }: { admin: boolean }) {
   }
 
   return (
-    <div className="pointer-events-none fixed right-4 bottom-4 z-40 flex flex-col items-end gap-3">
+    <div className="nao-imprimir pointer-events-none fixed right-4 bottom-4 z-40 flex flex-col items-end gap-3">
       {aberto ? (
         <section
           role="dialog"

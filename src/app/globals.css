@@ -832,6 +832,62 @@ dialog.confirmacao .confirmacao-acoes {
   }
 }
 
+.folha-item {
+  margin-top: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem 1rem;
+  background: var(--sheet);
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.folha-meta {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.folha-titulo {
+  margin-top: 0.2rem;
+  font-size: 1.15rem;
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--ink);
+}
+.folha-processo {
+  margin-top: 0.2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.folha-linha {
+  margin-top: 0.45rem;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.folha-bloco {
+  margin-top: 0.65rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+}
+.folha-rotulo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.folha-texto {
+  margin-top: 0.2rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
 @media print {
   .folha-prazo,
   .folha-prazo p,
@@ -840,12 +896,42 @@ dialog.confirmacao .confirmacao-acoes {
     font-size: 9pt;
     line-height: 1.35;
   }
-  .folha-prazo h1,
-  .folha-prazo h2,
-  .folha-prazo h3 {
+  .folha-prazo h1 {
     font-family: "Arial Black", Arial, sans-serif;
+    font-size: 14pt;
+    line-height: 1.2;
+    margin-bottom: 8pt;
+  }
+  .folha-prazo h2 {
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 12pt;
+    line-height: 1.2;
+  }
+  .folha-item {
+    margin: 0 0 10pt;
+    border: 1.25pt solid #111;
+    border-radius: 0;
+    padding: 7pt 8pt 8pt;
+    background: #fff;
+  }
+  .folha-meta,
+  .folha-rotulo {
+    color: #333;
+    font-size: 8pt;
+  }
+  .folha-titulo {
+    font-family: "Arial Black", Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.25;
+  }
+  .folha-processo,
+  .folha-linha,
+  .folha-texto {
     font-size: 9pt;
-    line-height: 1.3;
+    color: #111;
+  }
+  .folha-bloco {
+    border-top: 0.6pt solid #999;
   }
   .fora-da-folha,
   .bloco-dia:not(:has(.folha-item:not(.fora-da-folha))) {
