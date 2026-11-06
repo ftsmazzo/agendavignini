@@ -842,17 +842,14 @@ dialog.confirmacao .confirmacao-acoes {
   page-break-inside: avoid;
 }
 .folha-meta {
-  margin-top: 0.35rem;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--muted);
 }
 .folha-titulo {
-  margin-top: 0.2rem;
+  margin-top: 0.35rem;
   font-size: 1.15rem;
-  line-height: 1.25;
+  line-height: 1.35;
   font-weight: 700;
   color: var(--ink);
 }
@@ -868,9 +865,7 @@ dialog.confirmacao .confirmacao-acoes {
   color: var(--ink);
 }
 .folha-bloco {
-  margin-top: 0.65rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--line);
+  margin-top: 0.55rem;
 }
 .folha-rotulo {
   font-size: 0.75rem;
@@ -914,7 +909,10 @@ dialog.confirmacao .confirmacao-acoes {
     padding: 7pt 8pt 8pt;
     background: #fff;
   }
-  .folha-meta,
+  .folha-meta {
+    color: #222;
+    font-size: 10pt;
+  }
   .folha-rotulo {
     color: #333;
     font-size: 8pt;
@@ -931,7 +929,7 @@ dialog.confirmacao .confirmacao-acoes {
     color: #111;
   }
   .folha-bloco {
-    border-top: 0.6pt solid #999;
+    margin-top: 6pt;
   }
   .fora-da-folha,
   .bloco-dia:not(:has(.folha-item:not(.fora-da-folha))) {

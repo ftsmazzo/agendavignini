@@ -178,9 +178,11 @@ async function Folha({
           </Link>
         ) : null}
       </div>
-      <h1 className="mt-6 text-4xl leading-tight font-bold text-ink">
-        {titulo}
-      </h1>
+      {unico ? null : (
+        <h1 className="mt-6 text-4xl leading-tight font-bold text-ink">
+          {titulo}
+        </h1>
+      )}
       {linhas.length === 400 ? (
         <p className="mt-2 text-lg text-ink">Mostrando os 400 primeiros.</p>
       ) : null}

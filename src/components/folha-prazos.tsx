@@ -145,11 +145,12 @@ function Item({
           {item.situacao === "cumprido" ? " · cumprido" : ""}
         </span>
       </label>
-      <p className="folha-meta">
-        {area}
-        {` · ${dataBr(item.data)} · ${item.status}`}
-      </p>
-      <h3 className="folha-titulo">{item.titulo}</h3>
+      <h3 className="folha-titulo">
+        <span className="folha-meta">
+          {`Prazo ${area.toLowerCase()} · ${dataBr(item.data)} · ${item.status}`}
+        </span>{" "}
+        {item.titulo}
+      </h3>
       {item.processo ? <p className="folha-processo">{item.processo}</p> : null}
       {item.compacta ? (
         <p className="folha-linha">
