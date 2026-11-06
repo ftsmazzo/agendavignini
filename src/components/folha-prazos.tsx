@@ -124,13 +124,6 @@ function Item({
   marcado: boolean;
   onAlternar: (id: number) => void;
 }) {
-  const area =
-    item.area === "trabalhista"
-      ? "Trabalhista"
-      : item.area === "civil"
-        ? "Cível"
-        : "Administrativo";
-
   return (
     <article className={`folha-item ${marcado ? "" : "fora-da-folha"}`}>
       <label className="nao-imprimir flex items-start gap-3 text-base text-ink">
@@ -145,13 +138,7 @@ function Item({
           {item.situacao === "cumprido" ? " · cumprido" : ""}
         </span>
       </label>
-      <h3 className="folha-titulo">
-        <span className="folha-meta">
-          {`Prazo ${area.toLowerCase()} · ${dataBr(item.data)} · ${item.status}`}
-        </span>{" "}
-        {item.titulo}
-      </h3>
-      {item.processo ? <p className="folha-processo">{item.processo}</p> : null}
+      <h3 className="folha-titulo">{item.titulo}</h3>
       {item.compacta ? (
         <p className="folha-linha">
           {item.advogados || "Sem advogado marcado"}
@@ -162,12 +149,6 @@ function Item({
             <p className="folha-linha">
               <strong>Advogados</strong> {item.advogados}
             </p>
-          ) : null}
-          {item.observacao ? (
-            <div className="folha-bloco">
-              <p className="folha-rotulo">Observação</p>
-              <p className="folha-texto">{textoPrazo(item.observacao)}</p>
-            </div>
           ) : null}
           {item.conteudo ? (
             <div className="folha-bloco">
